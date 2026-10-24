@@ -32,7 +32,8 @@
     C.ad.requestAd(tipo === 'video' ? 'rewarded' : 'midgame', {
       adStarted: () => { try { Sonido.pausa(true); } catch (e) {} },
       adFinished: () => terminar(true),
-      adError: () => { if (tipo === 'video') avisos.push({ txt: _t('No hay un video ahora. Probá en un ratito.'), t: 1.8 }); terminar(tipo !== 'video'); },
+      // Si no hay anuncio (o el portal todavía no los habilitó), el premio se da igual: el botón nunca queda muerto.
+      adError: () => terminar(true),
     });
   };
 
