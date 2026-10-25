@@ -198,6 +198,8 @@ body.con-palanca .volante{height:170px; justify-content:flex-start; padding-left
   body:not(.de-a-dos):not(.pc) #mando1 .info{position:fixed; top:max(8px, env(safe-area-inset-top, 0px)); left:50%; transform:translateX(-50%); flex-basis:auto; width:auto; max-width:60vw;
     background:rgba(255,255,255,.8); border:2px solid var(--tinta); border-radius:12px; padding:2px 10px; pointer-events:none}
   body:not(.de-a-dos):not(.pc) #mando1 .teclas-pc{display:none}
+  /* Con un cartel abierto (fin, pausa, menús, dibujo) los mandos se esconden para no tapar sus botones. */
+  body.con-cartel:not(.de-a-dos):not(.pc) #mando1{display:none}
 }
 /* Celulares parados pero bajitos: mandos más compactos. */
 @media (orientation: portrait) and (max-height:720px){
@@ -1539,6 +1541,7 @@ function actualizarInfo() {
   if (cfg.modo === 'dos' && autos[1]) poner('#info2', autos[1]);
 }
 function cuadro(t) {
+  document.body.classList.toggle('con-cartel', !!document.querySelector('.capa:not([hidden])'));
   requestAnimationFrame(cuadro);
   const dt = Math.min(0.05, (t - ultimo) / 1000 || 0); ultimo = t;
   if (estado === 'cuenta') {
