@@ -1,0 +1,71 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VikingZone Promo</title>
+<style>
+:root{--bg:#f6f3ec;--card:#fff;--tx:#1d1d1d;--mu:#666;--ac:#e0452b;--bd:#ddd}
+@media (prefers-color-scheme:dark){:root{--bg:#16161a;--card:#222228;--tx:#eee;--mu:#aaa;--bd:#3a3a42}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,sans-serif}
+main{max-width:620px;margin:0 auto;padding:20px 16px 40px}h1{margin:.2em 0 0;font-size:1.7em}.sub{color:var(--mu);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px}
+label{display:block;font-weight:600;margin:12px 0 4px}input[type=text],textarea,select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:9px;background:var(--bg);color:var(--tx);font:inherit}
+textarea{min-height:120px}button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:12px 18px;cursor:pointer;background:var(--ac);color:#fff}
+button.sec{background:transparent;color:var(--tx);border:1px solid var(--bd)}button:disabled{opacity:.5;cursor:default}
+.fila{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.estado{color:var(--mu);font-size:.95em}
+progress{width:100%;height:14px;margin-top:12px}a{color:var(--ac)}footer{color:var(--mu);font-size:.9em;text-align:center}
+</style></head><body><main>
+<h1>VikingZone Promo</h1>
+<p class="sub" id="t-sub">Sube los clips de nuestros juegos a nuestro canal de YouTube.</p>
+<div class="card">
+  <div class="fila"><button id="btnConectar">Conectar con YouTube</button><button id="btnDesconectar" class="sec" hidden>Desconectar</button></div>
+  <p class="estado" id="estadoCuenta">No conectado.</p>
+</div>
+<div class="card" id="formulario">
+  <label for="video" id="t-video">Video (vertical, hasta 60 s)</label><input type="file" id="video" accept="video/*">
+  <label for="texto" id="t-texto">Texto sugerido</label><select id="texto"></select>
+  <label for="titulo" id="t-titulo">Título</label><input type="text" id="titulo" maxlength="100">
+  <label for="descripcion" id="t-desc">Descripción</label><textarea id="descripcion"></textarea>
+  <label for="etiquetas" id="t-tags">Etiquetas (separadas por coma)</label><input type="text" id="etiquetas">
+  <label for="privacidad" id="t-priv">Visibilidad</label>
+  <select id="privacidad"><option value="public">Pública</option><option value="unlisted">Oculta</option><option value="private">Privada</option></select>
+  <p class="estado" id="t-ninos">Se marca como "no es contenido para niños" y categoría Videojuegos.</p>
+  <button id="btnSubir" disabled>Subir a YouTube</button>
+  <progress id="barra" max="100" value="0" hidden></progress>
+  <p class="estado" id="estadoSubida"></p>
+</div>
+<footer><a href="privacidad.html">Política de privacidad / Privacy policy</a> · Usa los Servicios de la API de YouTube · <a href="https://www.youtube.com/t/terms">YouTube Terms of Service</a></footer>
+</main>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+const CLIENT_ID = 'PONER_CLIENT_ID';
+const SCOPE = 'https://www.googleapis.com/auth/youtube.upload';
+const en = !/^es|^pt/.test(navigator.language || 'es');
+const $ = id => document.getElementById(id);
+const T = en ? {sub:'Uploads gameplay clips of our games to our YouTube channel.',conectar:'Connect with YouTube',desconectar:'Disconnect',no:'Not connected.',si:'Connected. You can upload.',video:'Video (vertical, up to 60 s)',texto:'Suggested text',titulo:'Title',desc:'Description',tags:'Tags (comma separated)',priv:'Visibility',ninos:'It is marked as "not made for kids", category Gaming.',subir:'Upload to YouTube',subiendo:'Uploading… {0}%',listo:'Done! ',ver:'Watch the video',error:'Error: '} :
+ {sub:'Sube los clips de nuestros juegos a nuestro canal de YouTube.',conectar:'Conectar con YouTube',desconectar:'Desconectar',no:'No conectado.',si:'Conectado. Ya podés subir.',video:'Video (vertical, hasta 60 s)',texto:'Texto sugerido',titulo:'Título',desc:'Descripción',tags:'Etiquetas (separadas por coma)',priv:'Visibilidad',ninos:'Se marca como "no es contenido para niños" y categoría Videojuegos.',subir:'Subir a YouTube',subiendo:'Subiendo… {0}%',listo:'¡Listo! ',ver:'Ver el video',error:'Error: '};
+if (en) { document.documentElement.lang='en'; ['sub','video','texto','titulo','desc','tags','priv','ninos'].forEach(k=>$('t-'+k).textContent=T[k]); $('privacidad').innerHTML='<option value="public">Public</option><option value="unlisted">Unlisted</option><option value="private">Private</option>'; }
+$('btnConectar').textContent=T.conectar; $('btnDesconectar').textContent=T.desconectar; $('btnSubir').textContent=T.subir; $('estadoCuenta').textContent=T.no;
+let token = null, cliente = null, D = null;
+const idi = en ? 'en' : 'es';
+fetch('textos.json').then(r=>r.json()).then(d=>{ D=d; $('texto').innerHTML=d.variantes.map((v,i)=>`<option value="${i}">${i+1}. ${v.titulo[idi]}</option>`).join(''); $('texto').value=Math.floor(Date.now()/2592e5)%d.variantes.length; llenar(); });
+function llenar(){ const v=D.variantes[+$('texto').value]; $('titulo').value=v.titulo[idi];
+  $('descripcion').value = en ? `${v.en}\nCarrera en Miniatura — a hand-drawn mini racing game. Free on Android and in your browser 👉 ${D.link}\n${D.hashtags} #shorts` : `${v.es}\nCarrera en Miniatura — juego de autitos dibujado a mano. Gratis en Android y en el navegador 👉 ${D.link}\n${D.hashtags} #juegos #shorts`;
+  $('etiquetas').value=D.etiquetas; }
+$('texto').onchange=llenar;
+function listo(){ const ok=!!token; $('btnDesconectar').hidden=!ok; $('btnConectar').hidden=ok; $('estadoCuenta').textContent=ok?T.si:T.no; $('btnSubir').disabled=!ok||!$('video').files[0]; }
+$('video').onchange=listo;
+$('btnConectar').onclick=()=>{ if(!cliente) cliente=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:SCOPE,callback:r=>{ if(r.access_token){token=r.access_token;} listo(); }}); cliente.requestAccessToken(); };
+$('btnDesconectar').onclick=()=>{ if(token) google.accounts.oauth2.revoke(token,()=>{}); token=null; listo(); };
+$('btnSubir').onclick=async()=>{
+  const f=$('video').files[0]; if(!f||!token) return; $('btnSubir').disabled=true; $('barra').hidden=false; $('estadoSubida').textContent='';
+  const meta={snippet:{title:$('titulo').value.slice(0,100),description:$('descripcion').value,tags:$('etiquetas').value.split(',').map(s=>s.trim()).filter(Boolean),categoryId:'20'},status:{privacyStatus:$('privacidad').value,selfDeclaredMadeForKids:false}};
+  try{
+    const r=await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json; charset=UTF-8','X-Upload-Content-Type':f.type||'video/mp4','X-Upload-Content-Length':f.size},body:JSON.stringify(meta)});
+    if(!r.ok) throw new Error((await r.json()).error.message);
+    const url=r.headers.get('Location');
+    const res=await new Promise((ok,mal)=>{ const x=new XMLHttpRequest(); x.open('PUT',url); x.setRequestHeader('Content-Type',f.type||'video/mp4');
+      x.upload.onprogress=e=>{ if(e.lengthComputable){ const p=Math.round(e.loaded/e.total*100); $('barra').value=p; $('estadoSubida').textContent=T.subiendo.replace('{0}',p);} };
+      x.onload=()=>x.status<300?ok(JSON.parse(x.responseText)):mal(new Error(x.responseText)); x.onerror=()=>mal(new Error('red')); x.send(f); });
+    $('estadoSubida').innerHTML=T.listo+`<a href="https://youtube.com/shorts/${res.id}" target="_blank" rel="noopener">${T.ver}</a>`;
+  }catch(e){ $('estadoSubida').textContent=T.error+e.message; }
+  listo();
+};
+</script></body></html>
