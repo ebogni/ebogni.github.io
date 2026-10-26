@@ -27,7 +27,7 @@ async function descifrar(k, c) { const d = await crypto.subtle.decrypt({ name: '
 async function tokenGoogle(id, secreto, refresh) {
   const r = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ client_id: id, client_secret: secreto, refresh_token: refresh, grant_type: 'refresh_token' }) });
-  const j = await r.json(); if (!j.access_token) throw new Error('Google no dio permiso: ' + (j.error_description || j.error)); return j.access_token;
+  const j = await r.json(); if (!j.access_token) throw new Error('Google no dio permiso: ' + JSON.stringify(j).slice(0, 160) + ` [secreto ${/^GOCSPX-[\w-]+$/.test(secreto || '') ? 'con forma correcta' : 'MAL FORMADO'} (${(secreto || '').length} letras), permiso ${/^1\/\/[\w-]+$/.test(refresh || '') ? 'con forma correcta' : 'MAL FORMADO'} (${(refresh || '').length} letras)]`); return j.access_token;
 }
 
 // ---------- Fuentes ----------
