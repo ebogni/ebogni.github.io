@@ -67,11 +67,15 @@ async function admob() {
 
 async function youtube() {
   if (!E.YOUTUBE_KEY) return pendiente('youtube', 'YouTube', '▶️', 'Falta la llave de YouTube (paso de permisos).');
-  const ids = F.youtube.map(c => c.id).join(',');
-  const j = await (await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&id=${ids}&key=${E.YOUTUBE_KEY}`)).json();
-  if (!j.items) throw new Error(JSON.stringify(j.error || j).slice(0, 200));
+  const canales = [];
+  for (const ch of F.youtube) {
+    const q = ch.id ? `id=${ch.id}` : `forHandle=${encodeURIComponent(ch.handle)}`;
+    const j = await (await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&${q}&key=${E.YOUTUBE_KEY}`)).json();
+    if (!j.items) throw new Error(JSON.stringify(j.error || j).slice(0, 200));
+    canales.push(...j.items);
+  }
   const items = [];
-  for (const c of j.items) {
+  for (const c of canales) {
     const s = c.statistics;
     items.push({ nombre: c.snippet.title, valor: fmt(s.subscriberCount), unidad: 'suscriptores', detalle: `${fmt(s.viewCount)} vistas en total · ${fmt(s.videoCount)} videos`, num: +s.viewCount, link: 'https://www.youtube.com/channel/' + c.id });
     // Últimos videos con sus vistas.

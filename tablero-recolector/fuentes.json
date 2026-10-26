@@ -1,14 +1,44 @@
 {
   "play": [
-    { "nombre": "Carrera en Miniatura", "id": "com.ebogni.carreraenminiatura" },
-    { "nombre": "Anotador de Truco", "id": "com.ebogni.puntosdetruco" }
+    {
+      "nombre": "Carrera en Miniatura",
+      "id": "com.ebogni.carreraenminiatura"
+    },
+    {
+      "nombre": "Anotador de Truco",
+      "id": "com.ebogni.puntosdetruco"
+    }
   ],
   "youtube": [
-    { "nombre": "VikingZone Juegos", "id": "UCOnJ9g5yBcWLgqVG4GVT-aQ" }
+    {
+      "nombre": "VikingZone Juegos",
+      "id": "UCOnJ9g5yBcWLgqVG4GVT-aQ"
+    },
+    {
+      "nombre": "Emanuel Bogni (diseño 3D)",
+      "handle": "@EmanuelBogni"
+    }
   ],
-  "admob": { "cuenta": "pub-9335514305999185", "umbralUSD": 100 },
-  "y8": [{ "nombre": "Carrera en Miniatura", "url": "https://www.y8.com/games/carrera_en_miniatura" }],
-  "crazygames": [{ "nombre": "Carrera en Miniatura", "estado": "Rechazada (pedido de nueva revisión por mail)" }],
-  "cults3d": { "usuario": "" },
-  "creality": { "perfil": "" }
+  "admob": {
+    "cuenta": "pub-9335514305999185",
+    "umbralUSD": 100
+  },
+  "y8": [
+    {
+      "nombre": "Carrera en Miniatura",
+      "url": "https://www.y8.com/games/carrera_en_miniatura"
+    }
+  ],
+  "crazygames": [
+    {
+      "nombre": "Carrera en Miniatura",
+      "estado": "Rechazada (pedido de nueva revisión por mail)"
+    }
+  ],
+  "cults3d": {
+    "usuario": ""
+  },
+  "creality": {
+    "perfil": ""
+  }
 }
