@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-10-26T22:17:31.400Z",
+ "actualizado": "2026-10-26T22:18:09.038Z",
  "fuentes": [
   {
    "fuente": "Ganancias de AdMob",
@@ -23,6 +23,6 @@
   }
  ],
  "errores": [
-  "AdMob: Google no dio permiso: Bad Request"
+  "AdMob: Google no dio permiso: {\"error\":\"invalid_grant\",\"error_description\":\"Bad Request\"} [secreto con forma correcta (35 letras), permiso MAL FORMADO (2139 letras)]"
  ]
 }
