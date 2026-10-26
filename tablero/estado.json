@@ -1,9 +1,9 @@
 {
- "actualizado": "2026-10-26T22:18:09.038Z",
+ "actualizado": "2026-10-26T22:20:34.541Z",
  "fuentes": [
   {
    "fuente": "Ganancias de AdMob",
-   "estado": "error (muestra el dato anterior)"
+   "estado": "ok"
   },
   {
    "fuente": "Google Play",
@@ -22,7 +22,5 @@
    "estado": "ok"
   }
  ],
- "errores": [
-  "AdMob: Google no dio permiso: {\"error\":\"invalid_grant\",\"error_description\":\"Bad Request\"} [secreto con forma correcta (35 letras), permiso MAL FORMADO (2139 letras)]"
- ]
+ "errores": []
 }
