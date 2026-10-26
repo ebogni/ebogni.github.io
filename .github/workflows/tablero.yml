@@ -28,7 +28,7 @@ jobs:
       - name: Publicar
         run: |
           git config user.name "Tablero VikingZone"; git config user.email "ebogni@users.noreply.github.com"
-          git add tablero/datos.json
+          git add tablero/datos.json tablero/estado.json
           git diff --cached --quiet && exit 0
           git commit -qm "Tablero: datos nuevos"
           for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 5; done

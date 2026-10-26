@@ -129,4 +129,6 @@ const hist = (previo && previo.historial) || {}, dia = hoyISO();
 for (const s of secciones) for (const it of s.items) if (it.num != null && !it.sub) { const k = s.id + '|' + it.nombre; (hist[k] ||= {})[dia] = it.num; const ks = Object.keys(hist[k]).sort(); while (ks.length > 90) delete hist[k][ks.shift()]; }
 const datos = { actualizado: new Date().toISOString(), secciones, errores, historial: hist };
 fs.writeFileSync(SALIDA, JSON.stringify(await cifrar(K, datos)));
+// Estado público (sin números): qué fuentes andan, para revisar fallas sin abrir el tablero.
+fs.writeFileSync(DIR + '../tablero/estado.json', JSON.stringify({ actualizado: datos.actualizado, fuentes: secciones.map(s => ({ fuente: s.titulo, estado: s.viejo ? 'error (muestra el dato anterior)' : s.items[0]?.nombre === 'Sin conectar' ? 'sin conectar' : 'ok' })), errores }, null, 1));
 console.log('Listo:', secciones.map(s => s.titulo).join(', '), errores.length ? '| errores: ' + errores.join(' / ') : '');
