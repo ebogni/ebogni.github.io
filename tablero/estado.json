@@ -1,9 +1,9 @@
 {
- "actualizado": "2026-10-26T21:22:33.196Z",
+ "actualizado": "2026-10-26T22:15:10.600Z",
  "fuentes": [
   {
    "fuente": "Ganancias de AdMob",
-   "estado": "sin conectar"
+   "estado": "error (muestra el dato anterior)"
   },
   {
    "fuente": "Google Play",
@@ -22,5 +22,7 @@
    "estado": "ok"
   }
  ],
- "errores": []
+ "errores": [
+  "AdMob: Google no dio permiso: Bad Request"
+ ]
 }
