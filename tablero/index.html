@@ -39,6 +39,14 @@ header{display:flex;align-items:center;gap:10px;margin:4px 0 4px}h1{font-size:cl
 .fila.sub .n{font-weight:400;font-size:.93em;padding-left:10px}.fila.sub .v{font-size:.98em}
 .fila.alerta .v{color:var(--baja)}.fila.espera .v{color:var(--azul)}
 .prop{grid-column:1/-1;height:6px;background:var(--card2);border-radius:99px;overflow:hidden}.prop i{display:block;height:100%;background:var(--oro);border-radius:99px}
+.apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;margin-bottom:14px}
+.app{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px;min-width:0}
+.app .cab{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}.app .cab b{font-size:1.08em;flex:1;min-width:0;overflow-wrap:anywhere}.app .cab a{color:inherit;text-decoration:none}.app .cab span{color:var(--oro);font-size:.9em;white-space:nowrap}
+.app .plata{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}.app .plata .v{font-size:1.7em;font-weight:750;font-variant-numeric:tabular-nums}.app .plata .s{color:var(--mu);font-size:.85em}
+.datos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.dato{background:var(--card2);border-radius:12px;padding:8px 10px;min-width:0}
+.dato .v{font-weight:700;font-size:1.1em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dato .t{color:var(--mu);font-size:.75em;line-height:1.25}
+.app .pie{color:var(--mu);font-size:.8em;margin-top:8px}
+h2.titulo{font-size:1.05em;margin:6px 0 10px}
 svg.graf{width:100%;height:auto;display:block}
 @media (min-width:800px){.ancha{grid-column:span 2}}
 .vacio{color:var(--mu);font-size:.9em;padding:6px 0}
@@ -62,6 +70,8 @@ label.rec{display:flex;gap:8px;justify-content:center;align-items:center;color:v
     <p class="estado" id="estado"></p>
     <div id="avisos"></div>
     <div class="kpis" id="kpis"></div>
+    <h2 class="titulo" id="tituloApps">📱 Tus apps, una por una</h2>
+    <div class="apps" id="apps"></div>
     <div class="grilla" id="grilla"></div>
   </section>
 </main>
@@ -129,16 +139,27 @@ function pintar(D) {
   } else k += `<div class="kpi"><span class="t">💵 Ganancias</span><span class="v">—</span><span class="s">AdMob sin conectar</span></div>`;
   if (D.descargas != null) k += `<div class="kpi"><span class="t">📲 Descargas en Play</span><span class="v">${num(D.descargas)}+</span><span class="s">${cambio(H['total|descargas']) || 'Todas tus apps juntas'}</span></div>`;
   $('kpis').innerHTML = k;
+  // Una tarjeta por app: plata + descargas + instalaciones juntas.
+  const A = D.apps || [];
+  $('tituloApps').hidden = !A.length;
+  $('apps').innerHTML = A.map(a => {
+    const dato = (v, t) => `<div class="dato"><div class="v">${v}</div><div class="t">${t}</div></div>`;
+    const desc = a.instalaciones != null ? num(a.instalaciones) : a.descargasRango || (a.descargasMin != null ? num(a.descargasMin) + '+' : '—');
+    const cI = cambio(H['app|' + a.nombre + '|ins']);
+    return `<section class="app"><div class="cab"><b>${a.play ? `<a href="${esc(a.play)}" target="_blank" rel="noopener">${esc(a.nombre)} ↗</a>` : esc(a.nombre)}</b>${a.puntaje ? `<span>★ ${a.puntaje.toFixed(1)} <small>(${num(a.votos)})</small></span>` : ''}</div>
+      <div class="plata"><span class="v">${usd(a.ganMes || 0)}</span><span class="s">este mes · hoy ${usd(a.ganHoy || 0)}</span></div>
+      <div class="datos">${dato(desc, a.instalaciones != null ? 'Instalaciones' : 'Descargas (Play)')}${dato(a.activas != null ? num(a.activas) : '—', 'La tienen hoy')}${dato(a.nuevas7 != null ? '+' + num(a.nuevas7) : '—', 'Nuevas en 7 días')}${dato(a.bajas7 != null ? '−' + num(a.bajas7) : '—', 'Bajas en 7 días')}${dato(a.impMes != null ? num(a.impMes) : '—', 'Anuncios vistos este mes')}${dato(a.ecpm != null ? 'US$ ' + a.ecpm.toFixed(2) : '—', 'Pago cada 1.000 anuncios')}</div>
+      <div class="pie">${[cI, a.noFigura ? 'No aparece en Play' : '', a.datoDel ? `Instalaciones al ${a.datoDel} (Play las informa con 1 o 2 días de atraso)` : a.play ? 'Instalaciones exactas: Play todavía no mandó el informe' : ''].filter(Boolean).join(' · ')}</div></section>`;
+  }).join('');
   // Tarjetas
   let g = '';
   if (P) {
     g += `<section class="card ancha"><h2>📈 Ganancia por día <small>últimos 14 días</small></h2>${barras(P.serie)}</section>`;
     const mxA = Math.max(0.0001, ...P.porApp.map(x => x.gan)), mxF = Math.max(0.0001, ...P.porFormato.map(x => x.gan));
-    g += `<section class="card"><h2>🎯 Qué te hace ganar <small>este mes</small></h2><h3>Por app</h3>${P.porApp.length ? P.porApp.map(x => filaProp(x.nombre, usd(x.gan), `<span>${num(x.imp)} anuncios</span><span>US$ ${x.ecpm.toFixed(2)} cada 1.000</span>`, x.gan / mxA)).join('') : '<p class="vacio">Todavía sin datos este mes.</p>'}
-      <h3>Por tipo de anuncio</h3>${P.porFormato.length ? P.porFormato.map(x => filaProp(x.nombre, usd(x.gan), `<span>${num(x.imp)} vistos</span><span>US$ ${x.ecpm.toFixed(2)} cada 1.000</span>`, x.gan / mxF)).join('') : '<p class="vacio">Todavía sin datos este mes.</p>'}</section>`;
+    g += `<section class="card"><h2>🎯 Qué tipo de anuncio rinde más <small>este mes</small></h2><h3>Por tipo de anuncio</h3>${P.porFormato.length ? P.porFormato.map(x => filaProp(x.nombre, usd(x.gan), `<span>${num(x.imp)} vistos</span><span>US$ ${x.ecpm.toFixed(2)} cada 1.000</span>`, x.gan / mxF)).join('') : '<p class="vacio">Todavía sin datos este mes.</p>'}</section>`;
   }
   for (const s of D.secciones) {
-    if (s.oculta) continue;
+    if (s.oculta || (s.id === 'play' && A.length)) continue;
     g += `<section class="card"><h2>${s.icono} ${esc(s.titulo)}${s.viejo ? '<small>dato anterior</small>' : ''}</h2>${s.items.map(it => {
       const nom = it.link ? `<a href="${esc(it.link)}" target="_blank" rel="noopener">${esc(it.nombre)} ↗</a>` : esc(it.nombre);
       const c = cambio(H[s.id + '|' + it.nombre]);

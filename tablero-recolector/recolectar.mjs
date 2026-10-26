@@ -49,6 +49,8 @@ async function instalaciones(tok, pkg) {
   return { fecha: u.Date, total: n('Total User Installs'), activos: n('Active Device Installs'), semana: ult7.reduce((t, f) => t + +(f['Daily User Installs'] || 0), 0), bajasSemana: ult7.reduce((t, f) => t + +(f['Daily User Uninstalls'] || 0), 0) };
 }
 
+const APPS = {}; // Todo lo de cada app junto: descargas, instalaciones, puntaje y plata.
+const app = n => (APPS[n] ||= { nombre: n });
 async function play() {
   const items = [];
   let tok = null, errIns = null; if (E.ADMOB_REFRESH_TOKEN) { try { tok = await tokenGoogle(E.GOOGLE_CLIENT_ID || F.admob.clientId, E.GOOGLE_CLIENT_SECRET, E.ADMOB_REFRESH_TOKEN); } catch (e) { } }
@@ -56,9 +58,10 @@ async function play() {
     try {
       const d = await gplay.app({ appId: a.id, lang: 'es', country: 'ar' });
       let ins = null; if (tok) { try { ins = await instalaciones(tok, a.id); } catch (e) { errIns = e.message; } }
+      Object.assign(app(a.nombre), { play: d.url, descargasRango: d.installs, descargasMin: d.minInstalls, puntaje: d.score, votos: d.ratings, version: d.version, ...(ins ? { instalaciones: ins.total, activas: ins.activos, nuevas7: ins.semana, bajas7: ins.bajasSemana, datoDel: ins.fecha } : {}) });
       if (ins) items.push({ nombre: a.nombre, valor: fmt(ins.total), unidad: 'instalaciones', detalle: `${fmt(ins.activos)} la tienen instalada hoy · +${fmt(ins.semana)} nuevas y −${fmt(ins.bajasSemana)} bajas en 7 días · ★ ${d.score ? d.score.toFixed(1) : '—'} (${fmt(d.ratings)} votos) · dato del ${ins.fecha}`, link: d.url, num: ins.total });
       else items.push({ nombre: a.nombre, valor: d.installs || fmt(d.minInstalls), unidad: 'descargas', detalle: `★ ${d.score ? d.score.toFixed(1) : '—'} (${fmt(d.ratings)} votos) · versión ${d.version || '—'} · actualizada ${d.updated ? new Date(d.updated).toLocaleDateString('es-AR') : '—'}`, link: d.url, num: d.minInstalls });
-    } catch (e) { items.push({ nombre: a.nombre, valor: 'No figura', detalle: 'Google Play no la muestra (en revisión o sin publicar)', estado: 'alerta' }); }
+    } catch (e) { app(a.nombre).noFigura = true; items.push({ nombre: a.nombre, valor: 'No figura', detalle: 'Google Play no la muestra (en revisión o sin publicar)', estado: 'alerta' }); }
   }
   if (errIns) items.push({ nombre: 'Instalaciones exactas', valor: 'Sin permiso', detalle: errIns, estado: 'espera' });
   return { id: 'play', titulo: 'Google Play', icono: '📱', items };
@@ -77,7 +80,7 @@ async function admob() {
     const j = await r.json(); if (!Array.isArray(j)) throw new Error(JSON.stringify(j).slice(0, 200));
     return j.filter(x => x.row).map(x => ({ dims: Object.fromEntries(Object.entries(x.row.dimensionValues || {}).map(([k, v]) => [k, v.displayLabel || v.value])), gan: +(x.row.metricValues.ESTIMATED_EARNINGS?.microsValue || 0) / 1e6, imp: +(x.row.metricValues.IMPRESSIONS?.integerValue || 0) }));
   };
-  const porDia = await pedir(hace13, hoy, ['DATE']), porApp = await pedir(ini, hoy, ['APP']), porFormato = await pedir(ini, hoy, ['FORMAT']), antes = await pedir(iniAnt, finAnt, []);
+  const porAppHoy = await pedir(hoy, hoy, ['APP']), porDia = await pedir(hace13, hoy, ['DATE']), porApp = await pedir(ini, hoy, ['APP']), porFormato = await pedir(ini, hoy, ['FORMAT']), antes = await pedir(iniAnt, finAnt, []);
   const iso = x => x.slice(0, 4) + '-' + x.slice(4, 6) + '-' + x.slice(6, 8);
   const serie = []; for (let k = 13; k >= 0; k--) { const f = new Date(hoy - k * 864e5).toISOString().slice(0, 10); const r = porDia.find(x => iso(x.dims.DATE) === f); serie.push({ fecha: f, gan: r ? r.gan : 0, imp: r ? r.imp : 0 }); }
   const hoyD = serie[13], ayerD = serie[12];
@@ -91,6 +94,8 @@ async function admob() {
   PLATA = { hoy: hoyD.gan, ayer: ayerD.gan, impHoy: hoyD.imp, mes, proy, mesAnterior: antes.reduce((s, x) => s + x.gan, 0), saldo, umbral: F.admob.umbralUSD, serie,
     porApp: porApp.sort((a, b) => b.gan - a.gan).map(x => ({ nombre: x.dims.APP, gan: x.gan, imp: x.imp, ecpm: ecpm(x) })),
     porFormato: porFormato.sort((a, b) => b.gan - a.gan).map(x => ({ nombre: NOMBRES[x.dims.FORMAT] || x.dims.FORMAT, gan: x.gan, imp: x.imp, ecpm: ecpm(x) })) };
+  for (const x of porApp) Object.assign(app(x.dims.APP), { ganMes: x.gan, impMes: x.imp, ecpm: ecpm(x) });
+  for (const x of porAppHoy) Object.assign(app(x.dims.APP), { ganHoy: x.gan, impHoy: x.imp });
   const items = [{ nombre: 'Hoy', valor: usd(hoyD.gan), num: hoyD.gan }, { nombre: 'Este mes', valor: usd(mes), num: mes }];
   return { id: 'admob', titulo: 'Ganancias de AdMob', icono: '💰', items, oculta: true };
 }
@@ -168,7 +173,8 @@ if (PLATA) { const prom = PLATA.serie.slice(6, 13).reduce((t, x) => t + x.gan, 0
 const descargas = secciones.find(s => s.id === 'play')?.items.reduce((t, it) => t + (it.num || 0), 0) ?? null;
 if (descargas != null) (hist['total|descargas'] ||= {})[dia] = descargas;
 if (PLATA) (hist['total|mes'] ||= {})[dia] = PLATA.mes;
-const datos = { v: 2, actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist };
+for (const a of Object.values(APPS)) { if (a.instalaciones != null) (hist['app|' + a.nombre + '|ins'] ||= {})[dia] = a.instalaciones; if (a.ganMes != null) (hist['app|' + a.nombre + '|gan'] ||= {})[dia] = a.ganMes; }
+const datos = { v: 2, apps: Object.values(APPS).sort((a, b) => (b.ganMes || 0) - (a.ganMes || 0) || (b.instalaciones || b.descargasMin || 0) - (a.instalaciones || a.descargasMin || 0)), actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist };
 fs.writeFileSync(SALIDA, JSON.stringify(await cifrar(K, datos)));
 // Estado público (sin números): qué fuentes andan, para revisar fallas sin abrir el tablero.
 fs.writeFileSync(DIR + '../tablero/estado.json', JSON.stringify({ actualizado: datos.actualizado, fuentes: secciones.map(s => ({ fuente: s.titulo, estado: s.viejo ? 'error (muestra el dato anterior)' : s.items[0]?.nombre === 'Sin conectar' ? 'sin conectar' : 'ok', notas: s.items.filter(i => i.estado === 'espera' && i.nombre !== 'Sin conectar').map(i => i.nombre + ': ' + (i.detalle || i.valor)).concat(s.id === 'play' ? [`${s.items.filter(i => i.unidad === 'instalaciones').length} apps con instalaciones exactas`] : []) })), errores }, null, 1));
