@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Tablero VikingZone</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icono-192.png">
+<link rel="apple-touch-icon" href="icono-192.png">
+<meta name="theme-color" content="#14161c">
+<style>
+:root{--bg:#14161c;--card:#1d2029;--tx:#eef0f5;--mu:#9aa1b2;--ac:#ffbf12;--ok:#3fbf6f;--mal:#ff5a4f;--esp:#7aa7ff;--bd:#2b2f3b}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,sans-serif}
+main{max-width:640px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 14px 40px}
+header{display:flex;align-items:center;gap:10px;margin:4px 0 14px}h1{font-size:1.35em;margin:0;flex:1}
+.ctrl{background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;font:inherit;cursor:pointer}
+.estado{color:var(--mu);font-size:.85em;margin:-8px 0 12px}
+.sec{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:12px 14px;margin-bottom:12px}
+.sec h2{font-size:1.05em;margin:0 0 6px;display:flex;gap:8px;align-items:center}.sec h2 small{color:var(--mu);font-weight:400;font-size:.75em;margin-left:auto}
+.it{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:8px 0;border-top:1px solid var(--bd)}.it:first-of-type{border-top:0}
+.it .n{font-weight:600;min-width:0;overflow-wrap:anywhere}.it .v{font-weight:700;font-size:1.15em;text-align:right;white-space:nowrap}
+.it .v small{font-weight:400;color:var(--mu);font-size:.7em;margin-left:4px}.it .d{grid-column:1/-1;color:var(--mu);font-size:.85em}
+.it.sub .n{font-weight:400;font-size:.92em}.it.sub .v{font-size:1em}
+.it.alerta .v{color:var(--mal)}.it.espera .v{color:var(--esp)}
+.it a{color:inherit;text-decoration:none}.spark{grid-column:1/-1;height:26px;width:100%}
+.err{background:#3a1d1d;border:1px solid #6b2a2a;color:#ffd0cc;border-radius:12px;padding:10px 12px;font-size:.85em;margin-bottom:12px}
+#login{max-width:360px;margin:18vh auto 0;text-align:center}#login input{width:100%;padding:12px;font:inherit;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);margin:12px 0}
+#login button{width:100%;padding:12px;border:0;border-radius:12px;background:var(--ac);color:#111;font:inherit;font-weight:700}
+label.rec{display:flex;gap:8px;justify-content:center;align-items:center;color:var(--mu);font-size:.9em;margin-top:10px}
+.oculto{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <section id="login">
+    <h1>📊 Tablero VikingZone</h1>
+    <form id="fLogin"><input id="clave" type="password" autocomplete="current-password" placeholder="Clave del tablero" required>
+    <button>Entrar</button><label class="rec"><input type="checkbox" id="recordar" checked> Recordar en este celu</label></form>
+    <p id="msgLogin" class="estado"></p>
+  </section>
+  <section id="tablero" class="oculto">
+    <header><h1>📊 VikingZone</h1><button class="ctrl" id="btnAct" aria-label="Actualizar">↻</button><button class="ctrl" id="btnSalir">Salir</button></header>
+    <p class="estado" id="estado"></p>
+    <div id="errores"></div>
+    <div id="secciones"></div>
+  </section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const SAL = new TextEncoder().encode('vikingzone-tablero-v1');
+const LS = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} }, del: k => { try { localStorage.removeItem(k); } catch (e) {} } };
+const deb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0)), b64 = u => btoa(String.fromCharCode(...new Uint8Array(u)));
+let K = null, ultimo = null;
+async function derivar(pass) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: SAL, iterations: 250000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, true, ['decrypt']);
+}
+async function bajar() {
+  const c = await (await fetch('datos.json?t=' + Date.now(), { cache: 'no-store' })).json();
+  const d = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: deb64(c.iv) }, K, deb64(c.d));
+  return JSON.parse(new TextDecoder().decode(d));
+}
+const hace = iso => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? 'recién' : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m / 60)} h` : `hace ${Math.round(m / 1440)} días`; };
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function spark(serie) {
+  const v = Object.keys(serie).sort().map(k => serie[k]); if (v.length < 2) return '';
+  const mn = Math.min(...v), mx = Math.max(...v), r = mx - mn || 1, W = 300, H = 26;
+  const pts = v.map((y, i) => `${(i / (v.length - 1) * W).toFixed(1)},${(H - 3 - (y - mn) / r * (H - 6)).toFixed(1)}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="#ffbf12" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function pintar(D) {
+  ultimo = D;
+  $('estado').textContent = 'Actualizado ' + hace(D.actualizado) + ' · se renueva solo cada 30 min';
+  $('errores').innerHTML = (D.errores || []).length ? `<div class="err">⚠️ ${D.errores.map(esc).join('<br>')}</div>` : '';
+  $('secciones').innerHTML = D.secciones.map(s => `<section class="sec"><h2>${s.icono} ${esc(s.titulo)}${s.viejo ? '<small>dato anterior</small>' : ''}</h2>${s.items.map(it => {
+    const serie = D.historial && D.historial[s.id + '|' + it.nombre];
+    const nom = it.link ? `<a href="${esc(it.link)}" target="_blank" rel="noopener">${esc(it.nombre)} ↗</a>` : esc(it.nombre);
+    return `<div class="it ${it.sub ? 'sub' : ''} ${it.estado || ''}"><span class="n">${nom}</span><span class="v">${esc(it.valor)}${it.unidad ? `<small>${esc(it.unidad)}</small>` : ''}</span>${it.detalle ? `<span class="d">${esc(it.detalle)}</span>` : ''}${serie ? spark(serie) : ''}</div>`;
+  }).join('')}</section>`).join('');
+}
+async function cargar() {
+  $('estado').textContent = 'Cargando…';
+  try { pintar(await bajar()); } catch (e) { $('estado').textContent = 'No pude leer los datos: ' + e.message; }
+}
+async function entrar(k) {
+  K = k; try { pintar(await bajar()); } catch (e) { K = null; return false; }
+  $('login').classList.add('oculto'); $('tablero').classList.remove('oculto'); return true;
+}
+$('fLogin').onsubmit = async e => {
+  e.preventDefault(); $('msgLogin').textContent = 'Abriendo…';
+  const k = await derivar($('clave').value);
+  if (await entrar(k)) { if ($('recordar').checked) LS.set('tablero-k', b64(await crypto.subtle.exportKey('raw', k))); $('clave').value = ''; $('msgLogin').textContent = ''; }
+  else $('msgLogin').textContent = 'Clave incorrecta (o todavía no hay datos).';
+};
+$('btnAct').onclick = cargar;
+$('btnSalir').onclick = () => { LS.del('tablero-k'); K = null; $('tablero').classList.add('oculto'); $('login').classList.remove('oculto'); };
+document.addEventListener('visibilitychange', () => { if (!document.hidden && K) cargar(); });
+setInterval(() => { if (K && !document.hidden) cargar(); }, 5 * 60000);
+(async () => {
+  const g = LS.get('tablero-k');
+  if (g) { const k = await crypto.subtle.importKey('raw', deb64(g), 'AES-GCM', true, ['decrypt']); if (!(await entrar(k))) LS.del('tablero-k'); }
+})();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

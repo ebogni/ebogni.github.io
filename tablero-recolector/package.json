@@ -1,0 +1,1 @@
+{ "name": "tablero-recolector", "private": true, "type": "module", "dependencies": { "google-play-scraper": "10.1.4" } }
