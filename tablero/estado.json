@@ -1,9 +1,9 @@
 {
- "actualizado": "2026-10-26T22:26:56.359Z",
+ "actualizado": "2026-10-26T22:48:14.952Z",
  "fuentes": [
   {
    "fuente": "Ganancias de AdMob",
-   "estado": "ok"
+   "estado": "error (muestra el dato anterior)"
   },
   {
    "fuente": "Google Play",
@@ -22,5 +22,7 @@
    "estado": "ok"
   }
  ],
- "errores": []
+ "errores": [
+  "AdMob: Google no dio permiso: {\"error\":\"invalid_client\",\"error_description\":\"The provided client secret is invalid.\"} [secreto con forma correcta (35 letras), permiso con forma correcta (103 letras)]"
+ ]
 }
