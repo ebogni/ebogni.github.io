@@ -44,7 +44,7 @@ async function play() {
 
 async function admob() {
   if (!E.ADMOB_REFRESH_TOKEN) return pendiente('admob', 'Ganancias de AdMob', '💰', 'Falta conectar AdMob (paso de permisos).');
-  const tok = await tokenGoogle(E.GOOGLE_CLIENT_ID, E.GOOGLE_CLIENT_SECRET, E.ADMOB_REFRESH_TOKEN);
+  const tok = await tokenGoogle(E.GOOGLE_CLIENT_ID || F.admob.clientId, E.GOOGLE_CLIENT_SECRET, E.ADMOB_REFRESH_TOKEN);
   const hoy = new Date(Date.now() - 3 * 3600e3), d = (x) => ({ year: x.getUTCFullYear(), month: x.getUTCMonth() + 1, day: x.getUTCDate() });
   const ini = new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), 1)), hace7 = new Date(hoy - 6 * 864e5);
   const pedir = async (desde, dims) => {

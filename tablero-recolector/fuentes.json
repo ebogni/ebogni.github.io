@@ -21,7 +21,8 @@
   ],
   "admob": {
     "cuenta": "pub-9335514305999185",
-    "umbralUSD": 100
+    "umbralUSD": 100,
+    "clientId": "740201206532-mjnmfn73ll62k6m190dntq4cqng1hlid.apps.googleusercontent.com"
   },
   "y8": [
     {
