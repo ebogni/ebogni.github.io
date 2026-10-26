@@ -1,0 +1,28 @@
+{
+ "actualizado": "2026-10-26T21:21:24.148Z",
+ "fuentes": [
+  {
+   "fuente": "Ganancias de AdMob",
+   "estado": "sin conectar"
+  },
+  {
+   "fuente": "Google Play",
+   "estado": "ok"
+  },
+  {
+   "fuente": "YouTube",
+   "estado": "ok"
+  },
+  {
+   "fuente": "Portales web",
+   "estado": "ok"
+  },
+  {
+   "fuente": "Cults3D",
+   "estado": "error (muestra el dato anterior)"
+  }
+ ],
+ "errores": [
+  "Cults3D: Field 'price' doesn't exist on type 'Sale'"
+ ]
+}
