@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-10-26T21:22:02.462Z",
+ "actualizado": "2026-10-26T21:22:33.196Z",
  "fuentes": [
   {
    "fuente": "Ganancias de AdMob",
@@ -19,10 +19,8 @@
   },
   {
    "fuente": "Cults3D",
-   "estado": "error (muestra el dato anterior)"
+   "estado": "ok"
   }
  ],
- "errores": [
-  "Cults3D: Field 'price' doesn't exist on type 'Sale' | Sale: bundle,buyer,commission,commissionPercent,createdAt,creation,creationLikesCount,creationViewsCount,discount,id,income,orderCountry,payedOutAt,totalExcludingTax,totalTaxed,vat,vatBasePercent,vatPercent | User: bio,creations,creationsCount,followeesCount,followersCount,imageUrl,likedCreations,nick,printlistsBatch,shortUrl,url"
- ]
+ "errores": []
 }
