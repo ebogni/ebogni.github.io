@@ -31,14 +31,36 @@ async function tokenGoogle(id, secreto, refresh) {
 }
 
 // ---------- Fuentes ----------
+// Instalaciones exactas por app, de los informes que Play Console deja en su Cloud Storage (llegan con 1 o 2 días de atraso).
+async function instalaciones(tok, pkg) {
+  const B = F.playConsole.bucket, hoy = new Date(Date.now() - 3 * 3600e3), filas = [];
+  for (const m of [new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth() - 1, 1)), hoy]) {
+    const ym = m.getUTCFullYear() + String(m.getUTCMonth() + 1).padStart(2, '0');
+    const obj = encodeURIComponent(`stats/installs/installs_${pkg}_${ym}_overview.csv`);
+    const r = await fetch(`https://storage.googleapis.com/storage/v1/b/${B}/o/${obj}?alt=media`, { headers: { Authorization: 'Bearer ' + tok } });
+    if (r.status === 404) continue; if (!r.ok) throw new Error('Play Console ' + r.status + ': ' + (await r.text()).slice(0, 120));
+    const buf = Buffer.from(await r.arrayBuffer()), txt = buf[0] === 0xff && buf[1] === 0xfe ? buf.toString('utf16le') : buf.toString('utf8');
+    const lin = txt.replace(/^\ufeff/, '').trim().split(/\r?\n/), cab = lin[0].split(',').map(x => x.trim());
+    for (const l of lin.slice(1)) { const c = l.split(','); filas.push(Object.fromEntries(cab.map((k, i) => [k, c[i]]))); }
+  }
+  if (!filas.length) return null;
+  filas.sort((a, b) => a.Date < b.Date ? -1 : 1);
+  const u = filas[filas.length - 1], ult7 = filas.slice(-7), n = k => +(u[k] || 0);
+  return { fecha: u.Date, total: n('Total User Installs'), activos: n('Active Device Installs'), semana: ult7.reduce((t, f) => t + +(f['Daily User Installs'] || 0), 0), bajasSemana: ult7.reduce((t, f) => t + +(f['Daily User Uninstalls'] || 0), 0) };
+}
+
 async function play() {
   const items = [];
+  let tok = null, errIns = null; if (E.ADMOB_REFRESH_TOKEN) { try { tok = await tokenGoogle(E.GOOGLE_CLIENT_ID || F.admob.clientId, E.GOOGLE_CLIENT_SECRET, E.ADMOB_REFRESH_TOKEN); } catch (e) { } }
   for (const a of F.play) {
     try {
       const d = await gplay.app({ appId: a.id, lang: 'es', country: 'ar' });
-      items.push({ nombre: a.nombre, valor: d.installs || fmt(d.minInstalls), unidad: 'descargas', detalle: `★ ${d.score ? d.score.toFixed(1) : '—'} (${fmt(d.ratings)} votos) · versión ${d.version || '—'} · actualizada ${d.updated ? new Date(d.updated).toLocaleDateString('es-AR') : '—'}`, link: d.url, num: d.minInstalls });
+      let ins = null; if (tok) { try { ins = await instalaciones(tok, a.id); } catch (e) { errIns = e.message; } }
+      if (ins) items.push({ nombre: a.nombre, valor: fmt(ins.total), unidad: 'instalaciones', detalle: `${fmt(ins.activos)} la tienen instalada hoy · +${fmt(ins.semana)} nuevas y −${fmt(ins.bajasSemana)} bajas en 7 días · ★ ${d.score ? d.score.toFixed(1) : '—'} (${fmt(d.ratings)} votos) · dato del ${ins.fecha}`, link: d.url, num: ins.total });
+      else items.push({ nombre: a.nombre, valor: d.installs || fmt(d.minInstalls), unidad: 'descargas', detalle: `★ ${d.score ? d.score.toFixed(1) : '—'} (${fmt(d.ratings)} votos) · versión ${d.version || '—'} · actualizada ${d.updated ? new Date(d.updated).toLocaleDateString('es-AR') : '—'}`, link: d.url, num: d.minInstalls });
     } catch (e) { items.push({ nombre: a.nombre, valor: 'No figura', detalle: 'Google Play no la muestra (en revisión o sin publicar)', estado: 'alerta' }); }
   }
+  if (errIns) items.push({ nombre: 'Instalaciones exactas', valor: 'Sin permiso', detalle: errIns, estado: 'espera' });
   return { id: 'play', titulo: 'Google Play', icono: '📱', items };
 }
 

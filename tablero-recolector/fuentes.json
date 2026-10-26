@@ -45,5 +45,8 @@
   },
   "creality": {
     "perfil": ""
+  },
+  "playConsole": {
+    "bucket": "pubsite_prod_rev_02740969924565071534"
   }
 }
