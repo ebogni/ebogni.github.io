@@ -21,8 +21,12 @@
   ],
   "admob": {
     "cuenta": "pub-9335514305999185",
-    "umbralUSD": 100,
-    "clientId": "740201206532-mjnmfn73ll62k6m190dntq4cqng1hlid.apps.googleusercontent.com"
+    "umbralUSD": 500,
+    "clientId": "740201206532-mjnmfn73ll62k6m190dntq4cqng1hlid.apps.googleusercontent.com",
+    "saldoBase": {
+      "monto": 180,
+      "fecha": "2026-10-24"
+    }
   },
   "y8": [
     {

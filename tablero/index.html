@@ -8,26 +8,44 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icono-192.png">
 <link rel="apple-touch-icon" href="icono-192.png">
-<meta name="theme-color" content="#14161c">
+<meta name="theme-color" content="#101218">
 <style>
-:root{--bg:#14161c;--card:#1d2029;--tx:#eef0f5;--mu:#9aa1b2;--ac:#ffbf12;--ok:#3fbf6f;--mal:#ff5a4f;--esp:#7aa7ff;--bd:#2b2f3b}
-*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,sans-serif}
-main{max-width:640px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 14px 40px}
-header{display:flex;align-items:center;gap:10px;margin:4px 0 14px}h1{font-size:1.35em;margin:0;flex:1}
-.ctrl{background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;font:inherit;cursor:pointer}
-.estado{color:var(--mu);font-size:.85em;margin:-8px 0 12px}
-.sec{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:12px 14px;margin-bottom:12px}
-.sec h2{font-size:1.05em;margin:0 0 6px;display:flex;gap:8px;align-items:center}.sec h2 small{color:var(--mu);font-weight:400;font-size:.75em;margin-left:auto}
-.it{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:8px 0;border-top:1px solid var(--bd)}.it:first-of-type{border-top:0}
-.it .n{font-weight:600;min-width:0;overflow-wrap:anywhere}.it .v{font-weight:700;font-size:1.15em;text-align:right;white-space:nowrap}
-.it .v small{font-weight:400;color:var(--mu);font-size:.7em;margin-left:4px}.it .d{grid-column:1/-1;color:var(--mu);font-size:.85em}
-.it.sub .n{font-weight:400;font-size:.92em}.it.sub .v{font-size:1em}
-.it.alerta .v{color:var(--mal)}.it.espera .v{color:var(--esp)}
-.it a{color:inherit;text-decoration:none}.spark{grid-column:1/-1;height:26px;width:100%}
-.err{background:#3a1d1d;border:1px solid #6b2a2a;color:#ffd0cc;border-radius:12px;padding:10px 12px;font-size:.85em;margin-bottom:12px}
-#login{max-width:360px;margin:18vh auto 0;text-align:center}#login input{width:100%;padding:12px;font:inherit;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);margin:12px 0}
-#login button{width:100%;padding:12px;border:0;border-radius:12px;background:var(--ac);color:#111;font:inherit;font-weight:700}
-label.rec{display:flex;gap:8px;justify-content:center;align-items:center;color:var(--mu);font-size:.9em;margin-top:10px}
+:root{--bg:#101218;--card:#1a1d26;--card2:#222633;--tx:#eef0f6;--mu:#9299ab;--bd:#2a2e3b;--oro:#ffc53d;--sube:#3ecf7a;--baja:#ff6257;--azul:#6ea8ff;--r:18px}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%}
+main{max-width:1240px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) clamp(12px,3vw,28px) 40px}
+header{display:flex;align-items:center;gap:10px;margin:4px 0 4px}h1{font-size:clamp(1.25em,2.4vw,1.6em);margin:0;flex:1;letter-spacing:.2px}
+.ctrl{background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:12px;padding:8px 13px;font:inherit;cursor:pointer}
+.ctrl:hover{background:var(--card2)}
+.estado{color:var(--mu);font-size:.85em;margin:0 0 14px}
+.aviso{border-radius:14px;padding:10px 14px;font-size:.92em;margin-bottom:10px;display:flex;gap:8px}
+.aviso.amarillo{background:#3a3115;border:1px solid #6d5a1d;color:#ffe6a3}.aviso.rojo{background:#3a1b1b;border:1px solid #6b2a2a;color:#ffd0cc}
+/* Números grandes */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,155px),1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.kpi .t{color:var(--mu);font-size:.85em;display:flex;gap:6px;align-items:center}
+.kpi .v{font-size:clamp(1.45em,4.2vw,2.3em);font-weight:750;line-height:1.1;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.kpi .s{color:var(--mu);font-size:.85em}
+.barra{height:8px;background:var(--card2);border-radius:99px;overflow:hidden;margin-top:6px}.barra i{display:block;height:100%;background:linear-gradient(90deg,var(--oro),#ff9f1c);border-radius:99px}
+.d{font-weight:650;font-size:.85em;white-space:nowrap}.d.sube{color:var(--sube)}.d.baja{color:var(--baja)}.d.igual{color:var(--mu)}
+/* Tarjetas */
+.grilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:12px;align-items:start}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px;min-width:0}
+.card h2{font-size:1.02em;margin:0 0 10px;display:flex;gap:8px;align-items:center}.card h2 small{color:var(--mu);font-weight:400;font-size:.78em;margin-left:auto}
+.card h3{font-size:.85em;color:var(--mu);font-weight:600;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.6px}
+.fila{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:9px 0;border-top:1px solid var(--bd);align-items:baseline}.fila:first-of-type{border-top:0}
+.fila .n{font-weight:600;min-width:0;overflow-wrap:anywhere}.fila .n a{color:inherit;text-decoration:none}.fila .n a:hover{text-decoration:underline}
+.fila .v{font-weight:700;font-size:1.08em;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.fila .v small{font-weight:400;color:var(--mu);font-size:.72em;margin-left:4px}
+.fila .x{grid-column:1/-1;color:var(--mu);font-size:.84em;display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between}
+.fila.sub .n{font-weight:400;font-size:.93em;padding-left:10px}.fila.sub .v{font-size:.98em}
+.fila.alerta .v{color:var(--baja)}.fila.espera .v{color:var(--azul)}
+.prop{grid-column:1/-1;height:6px;background:var(--card2);border-radius:99px;overflow:hidden}.prop i{display:block;height:100%;background:var(--oro);border-radius:99px}
+svg.graf{width:100%;height:auto;display:block}
+@media (min-width:800px){.ancha{grid-column:span 2}}
+.vacio{color:var(--mu);font-size:.9em;padding:6px 0}
+/* Ingreso */
+#login{max-width:360px;margin:16vh auto 0;text-align:center}#login input[type=password]{width:100%;padding:13px;font:inherit;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);margin:14px 0}
+#login button{width:100%;padding:13px;border:0;border-radius:12px;background:var(--oro);color:#151515;font:inherit;font-weight:750;cursor:pointer}
+label.rec{display:flex;gap:8px;justify-content:center;align-items:center;color:var(--mu);font-size:.9em;margin-top:12px}
 .oculto{display:none!important}
 </style>
 </head>
@@ -36,14 +54,15 @@ label.rec{display:flex;gap:8px;justify-content:center;align-items:center;color:v
   <section id="login">
     <h1>📊 Tablero VikingZone</h1>
     <form id="fLogin"><input id="clave" type="password" autocomplete="current-password" placeholder="Clave del tablero" required>
-    <button>Entrar</button><label class="rec"><input type="checkbox" id="recordar" checked> Recordar en este celu</label></form>
+    <button>Entrar</button><label class="rec"><input type="checkbox" id="recordar" checked> Recordar en este dispositivo</label></form>
     <p id="msgLogin" class="estado"></p>
   </section>
   <section id="tablero" class="oculto">
     <header><h1>📊 VikingZone</h1><button class="ctrl" id="btnAct" aria-label="Actualizar">↻</button><button class="ctrl" id="btnSalir">Salir</button></header>
     <p class="estado" id="estado"></p>
-    <div id="errores"></div>
-    <div id="secciones"></div>
+    <div id="avisos"></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="grilla" id="grilla"></div>
   </section>
 </main>
 <script>
@@ -51,7 +70,7 @@ const $ = id => document.getElementById(id);
 const SAL = new TextEncoder().encode('vikingzone-tablero-v1');
 const LS = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} }, del: k => { try { localStorage.removeItem(k); } catch (e) {} } };
 const deb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0)), b64 = u => btoa(String.fromCharCode(...new Uint8Array(u)));
-let K = null, ultimo = null;
+let K = null;
 async function derivar(pass) {
   const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
   return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: SAL, iterations: 250000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, true, ['decrypt']);
@@ -61,23 +80,73 @@ async function bajar() {
   const d = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: deb64(c.iv) }, K, deb64(c.d));
   return JSON.parse(new TextDecoder().decode(d));
 }
-const hace = iso => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? 'recién' : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m / 60)} h` : `hace ${Math.round(m / 1440)} días`; };
+// ---------- Ayudas ----------
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-function spark(serie) {
-  const v = Object.keys(serie).sort().map(k => serie[k]); if (v.length < 2) return '';
-  const mn = Math.min(...v), mx = Math.max(...v), r = mx - mn || 1, W = 300, H = 26;
-  const pts = v.map((y, i) => `${(i / (v.length - 1) * W).toFixed(1)},${(H - 3 - (y - mn) / r * (H - 6)).toFixed(1)}`).join(' ');
-  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="#ffbf12" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+const usd = n => n == null ? '—' : 'US$ ' + Number(n).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const num = n => n == null ? '—' : Number(n).toLocaleString('es-AR');
+const hace = iso => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? 'recién' : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m / 60)} h` : `hace ${Math.round(m / 1440)} días`; };
+// Diferencia contra hace 7 días (o el dato más viejo que haya).
+function cambio(serie, dinero) {
+  if (!serie) return '';
+  const ks = Object.keys(serie).sort(); if (ks.length < 2) return '';
+  const ult = ks[ks.length - 1], lim = new Date(new Date(ult) - 7 * 864e5).toISOString().slice(0, 10);
+  const base = ks.filter(k => k <= lim).pop() || ks[0], dif = serie[ult] - serie[base];
+  const dias = Math.round((new Date(ult) - new Date(base)) / 864e5), cuando = dias >= 7 ? 'esta semana' : dias === 1 ? 'desde ayer' : `en ${dias} días`;
+  if (!dif) return `<span class="d igual">= sin cambios ${cuando}</span>`;
+  const txt = dinero ? usd(Math.abs(dif)) : num(Math.abs(dif));
+  return `<span class="d ${dif > 0 ? 'sube' : 'baja'}">${dif > 0 ? '▲ +' : '▼ −'}${txt} ${cuando}</span>`;
 }
+function versus(a, b, dinero) {
+  if (b == null || a == null) return '';
+  const dif = a - b; if (Math.abs(dif) < 0.005) return '<span class="d igual">= igual</span>';
+  return `<span class="d ${dif > 0 ? 'sube' : 'baja'}">${dif > 0 ? '▲ +' : '▼ −'}${dinero ? usd(Math.abs(dif)) : num(Math.abs(dif))}</span>`;
+}
+function barras(serie) {
+  const W = 700, H = 210, pi = 34, pb = 26, n = serie.length, mx = Math.max(0.01, ...serie.map(x => x.gan));
+  const paso = (W - pi) / n, an = paso * 0.62, alto = H - pb - 14;
+  const tope = mx >= 1 ? Math.ceil(mx) : Math.ceil(mx * 100) / 100;
+  let g = `<svg class="graf" viewBox="0 0 ${W} ${H}" role="img" aria-label="Ganancia por día, últimos ${n} días">`;
+  for (const f of [0, 0.5, 1]) { const y = 6 + alto * (1 - f); g += `<line x1="${pi}" x2="${W}" y1="${y}" y2="${y}" stroke="#2a2e3b"/><text x="${pi - 6}" y="${y + 4}" fill="#9299ab" font-size="12" text-anchor="end">$${(tope * f).toFixed(tope < 1 ? 2 : 0)}</text>`; }
+  serie.forEach((x, i) => {
+    const h = x.gan / tope * alto, xx = pi + i * paso + (paso - an) / 2, y = 6 + alto - h, hoy = i === n - 1;
+    g += `<rect x="${xx}" y="${y}" width="${an}" height="${Math.max(h, x.gan ? 2 : 0)}" rx="4" fill="${hoy ? '#ffc53d' : '#6ea8ff'}"><title>${x.fecha}: ${usd(x.gan)} · ${num(x.imp)} anuncios</title></rect>`;
+    if (i % 2 === (n - 1) % 2) g += `<text x="${xx + an / 2}" y="${H - 8}" fill="#9299ab" font-size="12" text-anchor="middle">${hoy ? 'hoy' : x.fecha.slice(8) + '/' + x.fecha.slice(5, 7)}</text>`;
+  });
+  return g + '</svg>';
+}
+const filaProp = (nombre, valor, extra, prop) => `<div class="fila"><span class="n">${esc(nombre)}</span><span class="v">${valor}</span>${extra ? `<span class="x">${extra}</span>` : ''}<span class="prop"><i style="width:${Math.max(2, prop * 100).toFixed(1)}%"></i></span></div>`;
+// ---------- Pintar ----------
 function pintar(D) {
-  ultimo = D;
+  const H = D.historial || {}, P = D.plata;
   $('estado').textContent = 'Actualizado ' + hace(D.actualizado) + ' · se renueva solo cada 30 min';
-  $('errores').innerHTML = (D.errores || []).length ? `<div class="err">⚠️ ${D.errores.map(esc).join('<br>')}</div>` : '';
-  $('secciones').innerHTML = D.secciones.map(s => `<section class="sec"><h2>${s.icono} ${esc(s.titulo)}${s.viejo ? '<small>dato anterior</small>' : ''}</h2>${s.items.map(it => {
-    const serie = D.historial && D.historial[s.id + '|' + it.nombre];
-    const nom = it.link ? `<a href="${esc(it.link)}" target="_blank" rel="noopener">${esc(it.nombre)} ↗</a>` : esc(it.nombre);
-    return `<div class="it ${it.sub ? 'sub' : ''} ${it.estado || ''}"><span class="n">${nom}</span><span class="v">${esc(it.valor)}${it.unidad ? `<small>${esc(it.unidad)}</small>` : ''}</span>${it.detalle ? `<span class="d">${esc(it.detalle)}</span>` : ''}${serie ? spark(serie) : ''}</div>`;
-  }).join('')}</section>`).join('');
+  $('avisos').innerHTML = (D.avisos || []).map(a => `<div class="aviso amarillo">🔔 <span>${esc(a)}</span></div>`).join('') + (D.errores || []).map(e => `<div class="aviso rojo">⚠️ <span>${esc(e)}</span></div>`).join('');
+  // Números grandes
+  let k = '';
+  if (P) {
+    k += `<div class="kpi"><span class="t">💵 Ganancia de hoy</span><span class="v">${usd(P.hoy)}</span><span class="s">Ayer ${usd(P.ayer)} · ${num(P.impHoy)} anuncios hoy</span></div>`;
+    k += `<div class="kpi"><span class="t">📅 Este mes</span><span class="v">${usd(P.mes)}</span><span class="s">Al ritmo actual cierra en ~${usd(P.proy)}</span><span class="s">Mes pasado ${usd(P.mesAnterior)}</span></div>`;
+    if (P.saldo != null) { const f = Math.min(1, P.saldo / P.umbral); k += `<div class="kpi"><span class="t">🏦 Para cobrar (aprox.)</span><span class="v">${usd(P.saldo)}</span><div class="barra"><i style="width:${(f * 100).toFixed(1)}%"></i></div><span class="s">${f >= 1 ? '¡Ya llegaste al mínimo de cobro!' : `Faltan ${usd(P.umbral - P.saldo)} para el cobro de US$ ${P.umbral}`}</span></div>`; }
+  } else k += `<div class="kpi"><span class="t">💵 Ganancias</span><span class="v">—</span><span class="s">AdMob sin conectar</span></div>`;
+  if (D.descargas != null) k += `<div class="kpi"><span class="t">📲 Descargas en Play</span><span class="v">${num(D.descargas)}+</span><span class="s">${cambio(H['total|descargas']) || 'Todas tus apps juntas'}</span></div>`;
+  $('kpis').innerHTML = k;
+  // Tarjetas
+  let g = '';
+  if (P) {
+    g += `<section class="card ancha"><h2>📈 Ganancia por día <small>últimos 14 días</small></h2>${barras(P.serie)}</section>`;
+    const mxA = Math.max(0.0001, ...P.porApp.map(x => x.gan)), mxF = Math.max(0.0001, ...P.porFormato.map(x => x.gan));
+    g += `<section class="card"><h2>🎯 Qué te hace ganar <small>este mes</small></h2><h3>Por app</h3>${P.porApp.length ? P.porApp.map(x => filaProp(x.nombre, usd(x.gan), `<span>${num(x.imp)} anuncios</span><span>US$ ${x.ecpm.toFixed(2)} cada 1.000</span>`, x.gan / mxA)).join('') : '<p class="vacio">Todavía sin datos este mes.</p>'}
+      <h3>Por tipo de anuncio</h3>${P.porFormato.length ? P.porFormato.map(x => filaProp(x.nombre, usd(x.gan), `<span>${num(x.imp)} vistos</span><span>US$ ${x.ecpm.toFixed(2)} cada 1.000</span>`, x.gan / mxF)).join('') : '<p class="vacio">Todavía sin datos este mes.</p>'}</section>`;
+  }
+  for (const s of D.secciones) {
+    if (s.oculta) continue;
+    g += `<section class="card"><h2>${s.icono} ${esc(s.titulo)}${s.viejo ? '<small>dato anterior</small>' : ''}</h2>${s.items.map(it => {
+      const nom = it.link ? `<a href="${esc(it.link)}" target="_blank" rel="noopener">${esc(it.nombre)} ↗</a>` : esc(it.nombre);
+      const c = cambio(H[s.id + '|' + it.nombre]);
+      const extra = [it.detalle ? `<span>${esc(it.detalle)}</span>` : '', c].filter(Boolean).join('');
+      return `<div class="fila ${it.sub ? 'sub' : ''} ${it.estado || ''}"><span class="n">${nom}</span><span class="v">${esc(it.valor)}${it.unidad ? `<small>${esc(it.unidad)}</small>` : ''}</span>${extra ? `<span class="x">${extra}</span>` : ''}</div>`;
+    }).join('')}</section>`;
+  }
+  $('grilla').innerHTML = g;
 }
 async function cargar() {
   $('estado').textContent = 'Cargando…';

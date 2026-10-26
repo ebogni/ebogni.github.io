@@ -42,27 +42,35 @@ async function play() {
   return { id: 'play', titulo: 'Google Play', icono: '📱', items };
 }
 
+let PLATA = null; // Resumen de plata para los números grandes y los gráficos del tablero.
 async function admob() {
   if (!E.ADMOB_REFRESH_TOKEN) return pendiente('admob', 'Ganancias de AdMob', '💰', 'Falta conectar AdMob (paso de permisos).');
   const tok = await tokenGoogle(E.GOOGLE_CLIENT_ID || F.admob.clientId, E.GOOGLE_CLIENT_SECRET, E.ADMOB_REFRESH_TOKEN);
-  const hoy = new Date(Date.now() - 3 * 3600e3), d = (x) => ({ year: x.getUTCFullYear(), month: x.getUTCMonth() + 1, day: x.getUTCDate() });
-  const ini = new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), 1)), hace7 = new Date(hoy - 6 * 864e5);
-  const pedir = async (desde, dims) => {
+  const hoy = new Date(Date.now() - 3 * 3600e3), d = x => ({ year: x.getUTCFullYear(), month: x.getUTCMonth() + 1, day: x.getUTCDate() });
+  const ini = new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), 1)), hace13 = new Date(hoy - 13 * 864e5);
+  const iniAnt = new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth() - 1, 1)), finAnt = new Date(ini - 864e5);
+  const pedir = async (desde, hasta, dims) => {
     const r = await fetch(`https://admob.googleapis.com/v1/accounts/${F.admob.cuenta}/networkReport:generate`, { method: 'POST', headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reportSpec: { dateRange: { startDate: d(desde), endDate: d(hoy) }, dimensions: dims, metrics: ['ESTIMATED_EARNINGS', 'IMPRESSIONS', 'AD_REQUESTS'], localizationSettings: { currencyCode: 'USD' } } }) });
+      body: JSON.stringify({ reportSpec: { dateRange: { startDate: d(desde), endDate: d(hasta) }, dimensions: dims, metrics: ['ESTIMATED_EARNINGS', 'IMPRESSIONS', 'AD_REQUESTS'], localizationSettings: { currencyCode: 'USD' } } }) });
     const j = await r.json(); if (!Array.isArray(j)) throw new Error(JSON.stringify(j).slice(0, 200));
     return j.filter(x => x.row).map(x => ({ dims: Object.fromEntries(Object.entries(x.row.dimensionValues || {}).map(([k, v]) => [k, v.displayLabel || v.value])), gan: +(x.row.metricValues.ESTIMATED_EARNINGS?.microsValue || 0) / 1e6, imp: +(x.row.metricValues.IMPRESSIONS?.integerValue || 0) }));
   };
-  const porDia = await pedir(hace7, ['DATE']), porApp = await pedir(ini, ['APP']);
-  const dHoy = porDia.find(x => x.dims.DATE === hoyISO().replace(/-/g, '')) || { gan: 0, imp: 0 };
-  const sem = porDia.reduce((s, x) => s + x.gan, 0), mes = porApp.reduce((s, x) => s + x.gan, 0);
-  const items = [
-    { nombre: 'Hoy', valor: usd(dHoy.gan), detalle: `${fmt(dHoy.imp)} anuncios vistos`, num: dHoy.gan },
-    { nombre: 'Últimos 7 días', valor: usd(sem), detalle: porDia.map(x => usd(x.gan).replace('US$ ', '$')).join(' · ') },
-    { nombre: 'Este mes', valor: usd(mes), detalle: `AdMob paga al llegar a US$ ${F.admob.umbralUSD} acumulados` },
-    ...porApp.sort((a, b) => b.gan - a.gan).map(x => ({ nombre: x.dims.APP, valor: usd(x.gan), detalle: `${fmt(x.imp)} anuncios este mes` })),
-  ];
-  return { id: 'admob', titulo: 'Ganancias de AdMob', icono: '💰', items };
+  const porDia = await pedir(hace13, hoy, ['DATE']), porApp = await pedir(ini, hoy, ['APP']), porFormato = await pedir(ini, hoy, ['FORMAT']), antes = await pedir(iniAnt, finAnt, []);
+  const iso = x => x.slice(0, 4) + '-' + x.slice(4, 6) + '-' + x.slice(6, 8);
+  const serie = []; for (let k = 13; k >= 0; k--) { const f = new Date(hoy - k * 864e5).toISOString().slice(0, 10); const r = porDia.find(x => iso(x.dims.DATE) === f); serie.push({ fecha: f, gan: r ? r.gan : 0, imp: r ? r.imp : 0 }); }
+  const hoyD = serie[13], ayerD = serie[12];
+  const mes = porApp.reduce((s, x) => s + x.gan, 0), dia = hoy.getUTCDate(), diasMes = new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth() + 1, 0)).getUTCDate();
+  const proy = dia > 1 ? (mes - hoyD.gan) / (dia - 1) * diasMes : mes; // días completos, sin contar hoy que va por la mitad
+  // Saldo a cobrar aproximado: el saldo que viste en AdMob en una fecha + lo ganado desde entonces.
+  let saldo = null; const sb = F.admob.saldoBase;
+  if (sb && sb.fecha) { const desde = new Date(sb.fecha + 'T12:00:00Z'); const extra = desde <= hoy ? (await pedir(new Date(+desde + 864e5), hoy, [])).reduce((s, x) => s + x.gan, 0) : 0; saldo = sb.monto + extra; }
+  const NOMBRES = { BANNER: 'Banner', INTERSTITIAL: 'Pantalla completa', REWARDED: 'Video con premio', REWARDED_INTERSTITIAL: 'Pantalla completa con premio', NATIVE: 'Nativo', APP_OPEN: 'Al abrir la app' };
+  const ecpm = x => x.imp ? x.gan / x.imp * 1000 : 0;
+  PLATA = { hoy: hoyD.gan, ayer: ayerD.gan, impHoy: hoyD.imp, mes, proy, mesAnterior: antes.reduce((s, x) => s + x.gan, 0), saldo, umbral: F.admob.umbralUSD, serie,
+    porApp: porApp.sort((a, b) => b.gan - a.gan).map(x => ({ nombre: x.dims.APP, gan: x.gan, imp: x.imp, ecpm: ecpm(x) })),
+    porFormato: porFormato.sort((a, b) => b.gan - a.gan).map(x => ({ nombre: NOMBRES[x.dims.FORMAT] || x.dims.FORMAT, gan: x.gan, imp: x.imp, ecpm: ecpm(x) })) };
+  const items = [{ nombre: 'Hoy', valor: usd(hoyD.gan), num: hoyD.gan }, { nombre: 'Este mes', valor: usd(mes), num: mes }];
+  return { id: 'admob', titulo: 'Ganancias de AdMob', icono: '💰', items, oculta: true };
 }
 
 async function youtube() {
@@ -132,7 +140,13 @@ for (const [n, f] of [['AdMob', admob], ['Google Play', play], ['YouTube', youtu
 // Historial diario para ver cómo crece cada número (se guarda el último valor de cada día, 90 días).
 const hist = (previo && previo.historial) || {}, dia = hoyISO();
 for (const s of secciones) for (const it of s.items) if (it.num != null && !it.sub) { const k = s.id + '|' + it.nombre; (hist[k] ||= {})[dia] = it.num; const ks = Object.keys(hist[k]).sort(); while (ks.length > 90) delete hist[k][ks.shift()]; }
-const datos = { actualizado: new Date().toISOString(), secciones, errores, historial: hist };
+const avisos = [];
+for (const s of secciones) for (const it of s.items) if (it.estado === 'alerta') avisos.push(`${s.titulo}: ${it.nombre} — ${it.valor}`);
+if (PLATA) { const prom = PLATA.serie.slice(6, 13).reduce((t, x) => t + x.gan, 0) / 7; if (prom > 0.05 && PLATA.ayer < prom * 0.5) avisos.push(`Ayer ganaste ${usd(PLATA.ayer)}, menos de la mitad de lo normal (${usd(prom)} por día).`); }
+const descargas = secciones.find(s => s.id === 'play')?.items.reduce((t, it) => t + (it.num || 0), 0) ?? null;
+if (descargas != null) (hist['total|descargas'] ||= {})[dia] = descargas;
+if (PLATA) (hist['total|mes'] ||= {})[dia] = PLATA.mes;
+const datos = { v: 2, actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist };
 fs.writeFileSync(SALIDA, JSON.stringify(await cifrar(K, datos)));
 // Estado público (sin números): qué fuentes andan, para revisar fallas sin abrir el tablero.
 fs.writeFileSync(DIR + '../tablero/estado.json', JSON.stringify({ actualizado: datos.actualizado, fuentes: secciones.map(s => ({ fuente: s.titulo, estado: s.viejo ? 'error (muestra el dato anterior)' : s.items[0]?.nombre === 'Sin conectar' ? 'sin conectar' : 'ok' })), errores }, null, 1));
