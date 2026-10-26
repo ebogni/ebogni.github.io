@@ -1,25 +1,34 @@
 {
- "actualizado": "2026-10-26T22:50:03.248Z",
+ "actualizado": "2026-10-26T22:50:42.769Z",
  "fuentes": [
   {
    "fuente": "Ganancias de AdMob",
-   "estado": "ok"
+   "estado": "ok",
+   "notas": []
   },
   {
    "fuente": "Google Play",
-   "estado": "ok"
+   "estado": "ok",
+   "notas": [
+    "1 apps con instalaciones exactas"
+   ]
   },
   {
    "fuente": "YouTube",
-   "estado": "ok"
+   "estado": "ok",
+   "notas": []
   },
   {
    "fuente": "Portales web",
-   "estado": "ok"
+   "estado": "ok",
+   "notas": [
+    "Y8 · Carrera en Miniatura: Todavía no está publicada"
+   ]
   },
   {
    "fuente": "Cults3D",
-   "estado": "ok"
+   "estado": "ok",
+   "notas": []
   }
  ],
  "errores": []
