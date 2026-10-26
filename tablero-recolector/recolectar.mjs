@@ -106,7 +106,12 @@ async function cults() {
   if (!E.CULTS_KEY || !F.cults3d.usuario) return pendiente('cults', 'Cults3D', '🧩', 'Falta tu usuario y la llave de la API de Cults3D (paso de permisos).');
   const q = `{ myself { user { nick creationsCount followersCount } salesBatch(limit: 5) { total results { createdAt price { cents currency } creation { name(locale: ES) } } } } }`;
   const r = await fetch('https://cults3d.com/graphql', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Basic ' + Buffer.from(F.cults3d.usuario + ':' + E.CULTS_KEY).toString('base64') }, body: JSON.stringify({ query: q }) });
-  const j = await r.json(); if (j.errors) throw new Error(j.errors.map(e => e.message).join('; ').slice(0, 200));
+  const j = await r.json();
+  if (j.errors) { // Si cambió la API, anoto qué campos tiene para corregir la consulta.
+    const ins = await (await fetch('https://cults3d.com/graphql', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Basic ' + Buffer.from(F.cults3d.usuario + ':' + E.CULTS_KEY).toString('base64') }, body: JSON.stringify({ query: '{ s: __type(name: "Sale") { fields { name } } u: __type(name: "User") { fields { name } } }' }) })).json().catch(() => ({}));
+    const camp = t => (ins.data?.[t]?.fields || []).map(f => f.name).join(',');
+    throw new Error(j.errors.map(e => e.message).join('; ').slice(0, 150) + ' | Sale: ' + camp('s') + ' | User: ' + camp('u'));
+  }
   const m = j.data.myself, u = m.user;
   const items = [{ nombre: u.nick, valor: fmt(u.followersCount), unidad: 'seguidores', detalle: `${fmt(u.creationsCount)} modelos publicados` },
     { nombre: 'Ventas', valor: fmt(m.salesBatch.total), unidad: 'en total' },
