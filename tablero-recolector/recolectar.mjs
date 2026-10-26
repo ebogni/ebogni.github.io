@@ -104,7 +104,7 @@ async function portales() {
 
 async function cults() {
   if (!E.CULTS_KEY || !F.cults3d.usuario) return pendiente('cults', 'Cults3D', '🧩', 'Falta tu usuario y la llave de la API de Cults3D (paso de permisos).');
-  const q = `{ myself { user { nick creationsCount followersCount } salesBatch(limit: 5) { total results { createdAt price { cents currency } creation { name(locale: ES) } } } } }`;
+  const q = `{ myself { user { nick creationsCount followersCount } salesBatch(limit: 5) { total results { createdAt income { cents currency } creation { name(locale: ES) } } } } }`;
   const r = await fetch('https://cults3d.com/graphql', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Basic ' + Buffer.from(F.cults3d.usuario + ':' + E.CULTS_KEY).toString('base64') }, body: JSON.stringify({ query: q }) });
   const j = await r.json();
   if (j.errors) { // Si cambió la API, anoto qué campos tiene para corregir la consulta.
@@ -115,7 +115,7 @@ async function cults() {
   const m = j.data.myself, u = m.user;
   const items = [{ nombre: u.nick, valor: fmt(u.followersCount), unidad: 'seguidores', detalle: `${fmt(u.creationsCount)} modelos publicados` },
     { nombre: 'Ventas', valor: fmt(m.salesBatch.total), unidad: 'en total' },
-    ...m.salesBatch.results.map(s => ({ nombre: '· ' + s.creation.name, valor: (s.price.cents / 100).toFixed(2) + ' ' + s.price.currency, detalle: new Date(s.createdAt).toLocaleDateString('es-AR'), sub: true }))];
+    ...m.salesBatch.results.map(s => ({ nombre: '· ' + s.creation.name, valor: (s.income.cents / 100).toFixed(2) + ' ' + s.income.currency, detalle: new Date(s.createdAt).toLocaleDateString('es-AR'), sub: true }))];
   return { id: 'cults', titulo: 'Cults3D', icono: '🧩', items };
 }
 
