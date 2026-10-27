@@ -15,5 +15,8 @@ a.web{background:#fff}</style></head>
 // Cuando Y8 o CrazyGames publiquen el juego, se puede sumar ese link (ahí sí hay publicidad que nos paga).
 const WEB = 'https://ebogni.github.io/carrera/demo/';
 document.getElementById('web').href = WEB;
+// De dónde viene la gente (?de=youtube, ?de=tiktok, ...): se lo pasamos a Play para ver en Play Console qué red trae más descargas.
+const de = (new URLSearchParams(location.search).get('de') || 'directo').replace(/[^a-z0-9_-]/gi, '').slice(0, 30);
+document.getElementById('play').href += '&referrer=' + encodeURIComponent('utm_source=' + de + '&utm_medium=promo');
 if (/Android/i.test(navigator.userAgent) && !location.search.includes('quedarse')) location.replace(document.getElementById('play').href);
 </script></body></html>
