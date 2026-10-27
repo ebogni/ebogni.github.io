@@ -2,7 +2,6 @@
 // La agrega armar_web.py demo al final de la página (carpeta web-demo/).
 (() => {
   const PLAY = 'https://play.google.com/store/apps/details?id=com.ebogni.carreraenminiatura';
-  const WEB = 'https://ebogni.github.io/carrera/jugar.html?quedarse=1';
   document.documentElement.classList.add('en-demo');
   verPublicidad = (tipo, alTerminar) => alTerminar(true);          // la demo no muestra publicidad
   const estilo = document.createElement('style');
@@ -26,7 +25,6 @@
       d.innerHTML = `<div class="tarjeta"><h2>${gano ? _t('¡Ganaste! 🏆') : humano.roto ? _t('¡Tu auto explotó! 💥') : _t('¡Casi! 🏁')}</h2>
         <p>${_t('Esto fue una probadita. El juego completo tiene niveles infinitos, campeonatos, de a dos, pistas que dibujás vos y tu auto pintado a tu gusto.')}</p>
         <a href="${PLAY}"><button type="button" class="grande enorme">${_t('Bajalo gratis en Google Play')}</button></a>
-        <a href="${WEB}"><button type="button" style="--c:var(--azul)">${_t('Jugar el completo en el navegador')}</button></a>
         <button type="button" id="demoOtra" style="--c:var(--violeta);margin-top:10px">${_t('Otra carrera')}</button></div>`;
       document.body.appendChild(d);
       document.getElementById('demoOtra').onclick = () => { d.remove(); correr(); };

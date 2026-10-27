@@ -1,18 +1,19 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Carrera en Miniatura — Jugar</title>
-<meta name="description" content="Juego de autitos dibujado a mano. Gratis en Android y en el navegador.">
+<meta name="description" content="Juego de carreras de autos. Gratis en Android.">
 <meta property="og:title" content="Carrera en Miniatura"><meta property="og:description" content="Juego de autitos dibujado a mano. ¡Gratis!">
 <style>body{font-family:system-ui,sans-serif;background:#1c2040;color:#fff;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px}
 a{display:block;margin:12px auto;max-width:320px;padding:16px;border-radius:16px;font-size:20px;font-weight:700;text-decoration:none;color:#1c2040;background:#ffbf12}
 a.web{background:#fff}</style></head>
-<body><main><h1>🏎️ Carrera en Miniatura</h1><p id="msg">Elegí dónde jugar:</p>
+<body><main><h1>🏎️ Carrera en Miniatura</h1><p id="msg">El juego completo es gratis en Android.</p>
 <a id="play" href="https://play.google.com/store/apps/details?id=com.ebogni.carreraenminiatura">Bajar en Google Play (Android)</a>
-<a id="web" class="web" href="https://ebogni.github.io/prueba/carrera/">Jugar en el navegador</a></main>
+<a id="web" class="web" href="https://ebogni.github.io/carrera/demo/">Probar una carrera en el navegador</a></main>
 <script>
-// Un solo link para todo: en Android va directo a Play (ahí está la publicidad de AdMob); en la compu, al juego web.
-// Cuando CrazyGames o Y8 publiquen el juego, cambiar WEB por esa dirección (ahí también hay publicidad).
-const WEB = 'https://ebogni.github.io/prueba/carrera/';
+// Un solo link para todo: en Android va directo a Play (ahí está la publicidad de AdMob).
+// En la compu o el iPhone solo se ofrece la DEMO (una carrera): el juego completo gratis en la web no deja plata.
+// Cuando Y8 o CrazyGames publiquen el juego, se puede sumar ese link (ahí sí hay publicidad que nos paga).
+const WEB = 'https://ebogni.github.io/carrera/demo/';
 document.getElementById('web').href = WEB;
 if (/Android/i.test(navigator.userAgent) && !location.search.includes('quedarse')) location.replace(document.getElementById('play').href);
 </script></body></html>
