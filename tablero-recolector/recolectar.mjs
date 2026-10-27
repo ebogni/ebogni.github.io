@@ -133,7 +133,7 @@ async function portales() {
     const jugadas = (html.match(/([\d.,]+)\s*(plays|partidas|jugadas)/i) || [])[1];
     items.push(r.ok ? { nombre: 'Y8 · ' + g.nombre, valor: jugadas || 'Publicado', unidad: jugadas ? 'partidas' : '', link: g.url } : { nombre: 'Y8 · ' + g.nombre, valor: 'En revisión', detalle: 'Todavía no está publicada', estado: 'espera' });
   }
-  for (const g of F.crazygames) items.push({ nombre: 'CrazyGames · ' + g.nombre, valor: g.estado, estado: 'alerta' });
+  for (const g of F.crazygames) items.push({ nombre: 'CrazyGames · ' + g.nombre, valor: g.estado, estado: /rechaz/i.test(g.estado) ? 'alerta' : 'espera' });
   return { id: 'portales', titulo: 'Portales web', icono: '🌐', items };
 }
 
