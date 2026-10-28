@@ -157,7 +157,7 @@ async function cults() {
 // Clics en el link de promoción (jugar.html): llegan al instante, mucho antes que las estadísticas de Google.
 async function clics() {
   const NS = 'https://abacus.jasoncameron.dev/get/vikingzone-clics/', items = [];
-  const leer = async k => { const r = await fetch(NS + k); if (r.status === 404) return 0; if (!r.ok) throw new Error('contador ' + r.status); return (await r.json()).value || 0; };
+  const leer = async k => { const r = await fetch(NS + k); if (r.status === 404) return 0; if (!r.ok) { const sal = await fetch('https://abacus.jasoncameron.dev/healthcheck').then(x => x.status + ' ' + x.statusText).catch(e => e.message); throw new Error(`contador ${r.status} en ${k}: ${(await r.text()).slice(0, 120)} | salud: ${sal}`); } return (await r.json()).value || 0; };
   const ayer = k => { const h = previo?.historial?.['clics|' + k] || {}; const ds = Object.keys(h).filter(d => d < hoyISO()).sort(); return ds.length ? h[ds[ds.length - 1]] : null; };
   let tot = 0;
   for (const de of (F.clics?.fuentes || ['youtube', 'tiktok', 'directo'])) {
