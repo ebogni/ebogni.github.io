@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-10-28T10:06:36.378Z",
+ "actualizado": "2026-10-28T11:35:59.306Z",
  "fuentes": [
   {
    "fuente": "Ganancias de AdMob",
@@ -22,8 +22,7 @@
    "fuente": "Clics en el link del juego",
    "estado": "ok",
    "notas": [
-    "Todavía nadie tocó el link: Cuenta los clics en ebogni.github.io/carrera/jugar.html?de=...",
-    "Contador lento: Se muestra el último valor conocido"
+    "Todavía nadie tocó el link: Cuenta los clics en ebogni.github.io/carrera/jugar.html?de=..."
    ]
   },
   {
