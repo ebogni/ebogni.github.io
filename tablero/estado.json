@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-10-28T09:57:24.359Z",
+ "actualizado": "2026-10-28T09:58:57.238Z",
  "fuentes": [
   {
    "fuente": "Ganancias de AdMob",
@@ -33,6 +33,6 @@
   }
  ],
  "errores": [
-  "Clics: contador 500"
+  "Clics: contador 500 en carrera-youtube-play: {\"error\":\"Failed to get data. Try again later.\"} | salud: 200 OK"
  ]
 }
