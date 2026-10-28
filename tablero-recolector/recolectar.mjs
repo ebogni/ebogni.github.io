@@ -162,7 +162,7 @@ async function clics() {
     await espera(400); const r = await fetch(NS + k); if (r.ok) return (await r.json()).value || 0;
     if (r.status === 404 || r.status === 500) { // si nadie hizo clic todavía, el contador no existe: lo creo en 0
       const c = await fetch(NS.replace('/get/', '/create/') + k + '?initializer=0'); if (c.ok) return 0;
-      if (c.status !== 409) throw new Error(`contador ${c.status} al crear ${k}`);
+      if (c.status !== 409) return 0; // no se pudo crear: se crea solo con el primer clic de verdad
     }
     throw new Error(`contador ${r.status} en ${k}: ${(await r.text()).slice(0, 100)}`);
   };
