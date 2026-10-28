@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-10-28T05:26:05.082Z",
+ "actualizado": "2026-10-28T09:57:24.359Z",
  "fuentes": [
   {
    "fuente": "Ganancias de AdMob",
@@ -32,5 +32,7 @@
    "notas": []
   }
  ],
- "errores": []
+ "errores": [
+  "Clics: contador 500"
+ ]
 }
