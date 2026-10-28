@@ -156,15 +156,18 @@ async function cults() {
 
 // Clics en el link de promoción (jugar.html): llegan al instante, mucho antes que las estadísticas de Google.
 async function clics() {
+  let fallas = 0;
   const NS = 'https://abacus.jasoncameron.dev/get/vikingzone-clics/', items = [];
   const espera = ms => new Promise(r => setTimeout(r, ms));
-  const leer = async k => { // de a uno y despacito: el servicio acepta 30 consultas cada 10 segundos
-    await espera(400); const r = await fetch(NS + k); if (r.ok) return (await r.json()).value || 0;
-    if (r.status === 404 || r.status === 500) { // si nadie hizo clic todavía, el contador no existe: lo creo en 0
-      const c = await fetch(NS.replace('/get/', '/create/') + k + '?initializer=0'); if (c.ok) return 0;
-      if (c.status !== 409) return 0; // no se pudo crear: se crea solo con el primer clic de verdad
+  const leer = async k => { // de a uno y despacito: el servicio acepta 30 consultas cada 10 segundos y a veces falla
+    for (let intento = 0; intento < 3; intento++) {
+      await espera(400 + intento * 1500); const r = await fetch(NS + k).catch(() => null);
+      if (r?.ok) return (CRUDOS[k] = (await r.json()).value || 0);
+      if (r?.status === 404 || (r?.status === 500 && intento === 0 && CRUDOS[k] == null)) { // nadie hizo clic todavía: lo creo en 0
+        const c = await fetch(NS.replace('/get/', '/create/') + k + '?initializer=0').catch(() => null); if (c?.ok) return (CRUDOS[k] = 0);
+      }
     }
-    throw new Error(`contador ${r.status} en ${k}: ${(await r.text()).slice(0, 100)}`);
+    fallas++; return CRUDOS[k] || 0; // si no contesta, uso el último valor que leí
   };
   const ayer = k => { const h = previo?.historial?.['clics|' + k] || {}; const ds = Object.keys(h).filter(d => d < hoyISO()).sort(); return ds.length ? h[ds[ds.length - 1]] : null; };
   let tot = 0;
@@ -175,6 +178,7 @@ async function clics() {
     items.push({ nombre: nom, valor: fmt(n), num: n, unidad: 'clics', detalle: `${fmt(play)} fueron a Google Play · ${fmt(demo)} a la demo${hoy != null ? ` · +${fmt(hoy)} hoy` : ''}` });
   }
   if (!items.length) items.push({ nombre: 'Todavía nadie tocó el link', valor: '0', detalle: 'Cuenta los clics en ebogni.github.io/carrera/jugar.html?de=...', estado: 'espera' });
+  if (fallas) items.push({ nombre: 'Contador lento', valor: fallas + ' sin leer', detalle: 'Se muestra el último valor conocido', estado: 'espera', sub: true });
   return { id: 'clics', titulo: 'Clics en el link del juego', icono: '👆', items, total: tot };
 }
 
@@ -185,6 +189,7 @@ const clv = E.TABLERO_CLAVE; if (!clv) { console.error('Falta el secreto TABLERO
 const K = await clave(clv);
 let previo = null; try { previo = await descifrar(K, JSON.parse(fs.readFileSync(SALIDA, 'utf8'))); } catch (e) { }
 const secciones = [], errores = [];
+const CRUDOS = { ...((previo && previo.clicsCrudos) || {}) };
 for (const [n, f] of [['AdMob', admob], ['Google Play', play], ['YouTube', youtube], ['Clics', clics], ['Portales', portales], ['Cults3D', cults]]) {
   try { secciones.push(await f()); } catch (e) { errores.push(n + ': ' + e.message); const p = previo && previo.secciones.find(s => s.titulo.includes(n)); if (p) secciones.push({ ...p, viejo: true }); }
 }
@@ -198,7 +203,7 @@ const descargas = secciones.find(s => s.id === 'play')?.items.reduce((t, it) => 
 if (descargas != null) (hist['total|descargas'] ||= {})[dia] = descargas;
 if (PLATA) (hist['total|mes'] ||= {})[dia] = PLATA.mes;
 for (const a of Object.values(APPS)) { if (a.instalaciones != null) (hist['app|' + a.nombre + '|ins'] ||= {})[dia] = a.instalaciones; if (a.ganMes != null) (hist['app|' + a.nombre + '|gan'] ||= {})[dia] = a.ganMes; }
-const datos = { v: 2, apps: Object.values(APPS).sort((a, b) => (b.ganMes || 0) - (a.ganMes || 0) || (b.instalaciones || b.descargasMin || 0) - (a.instalaciones || a.descargasMin || 0)), actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist };
+const datos = { v: 2, apps: Object.values(APPS).sort((a, b) => (b.ganMes || 0) - (a.ganMes || 0) || (b.instalaciones || b.descargasMin || 0) - (a.instalaciones || a.descargasMin || 0)), actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist, clicsCrudos: CRUDOS };
 fs.writeFileSync(SALIDA, JSON.stringify(await cifrar(K, datos)));
 // Estado público (sin números): qué fuentes andan, para revisar fallas sin abrir el tablero.
 fs.writeFileSync(DIR + '../tablero/estado.json', JSON.stringify({ actualizado: datos.actualizado, fuentes: secciones.map(s => ({ fuente: s.titulo, estado: s.viejo ? 'error (muestra el dato anterior)' : s.items[0]?.nombre === 'Sin conectar' ? 'sin conectar' : 'ok', notas: s.items.filter(i => i.estado === 'espera' && i.nombre !== 'Sin conectar').map(i => i.nombre + ': ' + (i.detalle || i.valor)).concat(s.id === 'play' ? [`${s.items.filter(i => i.unidad === 'instalaciones').length} apps con instalaciones exactas`] : []) })), errores }, null, 1));
