@@ -157,11 +157,19 @@ async function cults() {
 // Clics en el link de promoción (jugar.html): llegan al instante, mucho antes que las estadísticas de Google.
 async function clics() {
   const NS = 'https://abacus.jasoncameron.dev/get/vikingzone-clics/', items = [];
-  const leer = async k => { const r = await fetch(NS + k); if (r.status === 404) return 0; if (!r.ok) { const sal = await fetch('https://abacus.jasoncameron.dev/healthcheck').then(x => x.status + ' ' + x.statusText).catch(e => e.message); throw new Error(`contador ${r.status} en ${k}: ${(await r.text()).slice(0, 120)} | salud: ${sal}`); } return (await r.json()).value || 0; };
+  const espera = ms => new Promise(r => setTimeout(r, ms));
+  const leer = async k => { // de a uno y despacito: el servicio acepta 30 consultas cada 10 segundos
+    await espera(400); const r = await fetch(NS + k); if (r.ok) return (await r.json()).value || 0;
+    if (r.status === 404 || r.status === 500) { // si nadie hizo clic todavía, el contador no existe: lo creo en 0
+      const c = await fetch(NS.replace('/get/', '/create/') + k + '?initializer=0'); if (c.ok) return 0;
+      if (c.status !== 409) throw new Error(`contador ${c.status} al crear ${k}`);
+    }
+    throw new Error(`contador ${r.status} en ${k}: ${(await r.text()).slice(0, 100)}`);
+  };
   const ayer = k => { const h = previo?.historial?.['clics|' + k] || {}; const ds = Object.keys(h).filter(d => d < hoyISO()).sort(); return ds.length ? h[ds[ds.length - 1]] : null; };
   let tot = 0;
   for (const de of (F.clics?.fuentes || ['youtube', 'tiktok', 'directo'])) {
-    const [play, demo, visita] = await Promise.all(['play', 'demo', 'visita'].map(d => leer(`carrera-${de}-${d}`)));
+    const play = await leer(`carrera-${de}-play`), demo = await leer(`carrera-${de}-demo`), visita = await leer(`carrera-${de}-visita`);
     const n = play + demo + visita; tot += n; if (!n) continue;
     const nom = de[0].toUpperCase() + de.slice(1), a = ayer(nom), hoy = a == null ? null : n - a;
     items.push({ nombre: nom, valor: fmt(n), num: n, unidad: 'clics', detalle: `${fmt(play)} fueron a Google Play · ${fmt(demo)} a la demo${hoy != null ? ` · +${fmt(hoy)} hoy` : ''}` });
