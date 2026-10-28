@@ -154,6 +154,22 @@ async function cults() {
   return { id: 'cults', titulo: 'Cults3D', icono: '🧩', items };
 }
 
+// Clics en el link de promoción (jugar.html): llegan al instante, mucho antes que las estadísticas de Google.
+async function clics() {
+  const NS = 'https://abacus.jasoncameron.dev/get/vikingzone-clics/', items = [];
+  const leer = async k => { const r = await fetch(NS + k); if (r.status === 404) return 0; if (!r.ok) throw new Error('contador ' + r.status); return (await r.json()).value || 0; };
+  const ayer = k => { const h = previo?.historial?.['clics|' + k] || {}; const ds = Object.keys(h).filter(d => d < hoyISO()).sort(); return ds.length ? h[ds[ds.length - 1]] : null; };
+  let tot = 0;
+  for (const de of (F.clics?.fuentes || ['youtube', 'tiktok', 'directo'])) {
+    const [play, demo, visita] = await Promise.all(['play', 'demo', 'visita'].map(d => leer(`carrera-${de}-${d}`)));
+    const n = play + demo + visita; tot += n; if (!n) continue;
+    const nom = de[0].toUpperCase() + de.slice(1), a = ayer(nom), hoy = a == null ? null : n - a;
+    items.push({ nombre: nom, valor: fmt(n), num: n, unidad: 'clics', detalle: `${fmt(play)} fueron a Google Play · ${fmt(demo)} a la demo${hoy != null ? ` · +${fmt(hoy)} hoy` : ''}` });
+  }
+  if (!items.length) items.push({ nombre: 'Todavía nadie tocó el link', valor: '0', detalle: 'Cuenta los clics en ebogni.github.io/carrera/jugar.html?de=...', estado: 'espera' });
+  return { id: 'clics', titulo: 'Clics en el link del juego', icono: '👆', items, total: tot };
+}
+
 function pendiente(id, titulo, icono, txt) { return { id, titulo, icono, items: [{ nombre: 'Sin conectar', valor: '—', detalle: txt, estado: 'espera' }] }; }
 
 // ---------- Armado ----------
@@ -161,7 +177,7 @@ const clv = E.TABLERO_CLAVE; if (!clv) { console.error('Falta el secreto TABLERO
 const K = await clave(clv);
 let previo = null; try { previo = await descifrar(K, JSON.parse(fs.readFileSync(SALIDA, 'utf8'))); } catch (e) { }
 const secciones = [], errores = [];
-for (const [n, f] of [['AdMob', admob], ['Google Play', play], ['YouTube', youtube], ['Portales', portales], ['Cults3D', cults]]) {
+for (const [n, f] of [['AdMob', admob], ['Google Play', play], ['YouTube', youtube], ['Clics', clics], ['Portales', portales], ['Cults3D', cults]]) {
   try { secciones.push(await f()); } catch (e) { errores.push(n + ': ' + e.message); const p = previo && previo.secciones.find(s => s.titulo.includes(n)); if (p) secciones.push({ ...p, viejo: true }); }
 }
 // Historial diario para ver cómo crece cada número (se guarda el último valor de cada día, 90 días).

@@ -18,5 +18,13 @@ document.getElementById('web').href = WEB;
 // De dónde viene la gente (?de=youtube, ?de=tiktok, ...): se lo pasamos a Play para ver en Play Console qué red trae más descargas.
 const de = (new URLSearchParams(location.search).get('de') || 'directo').replace(/[^a-z0-9_-]/gi, '').slice(0, 30);
 document.getElementById('play').href += '&referrer=' + encodeURIComponent('utm_source=' + de + '&utm_medium=promo');
-if (/Android/i.test(navigator.userAgent) && !location.search.includes('quedarse')) location.replace(document.getElementById('play').href);
+// Contador de clics al instante (no espera a Google): suma 1 en un contador público, sin datos de la persona.
+// Clave: carrera-<de dónde viene>-<a dónde va>. El tablero lo lee cada media hora.
+const contar = destino => { try { return fetch(`https://abacus.jasoncameron.dev/hit/vikingzone-clics/carrera-${de}-${destino}`, { keepalive: true, mode: 'cors' }).catch(() => { }); } catch (e) { return Promise.resolve(); } };
+const ir = (destino, url) => Promise.race([contar(destino), new Promise(r => setTimeout(r, 700))]).then(() => location.replace(url));
+if (/Android/i.test(navigator.userAgent) && !location.search.includes('quedarse')) ir('play', document.getElementById('play').href);
+else {
+  contar('visita');
+  for (const [id, destino] of [['play', 'play'], ['web', 'demo']]) document.getElementById(id).addEventListener('click', e => { e.preventDefault(); ir(destino, e.currentTarget.href); });
+}
 </script></body></html>
