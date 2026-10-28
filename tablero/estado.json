@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-10-28T10:01:48.675Z",
+ "actualizado": "2026-10-28T10:06:36.378Z",
  "fuentes": [
   {
    "fuente": "Ganancias de AdMob",
@@ -19,6 +19,14 @@
    "notas": []
   },
   {
+   "fuente": "Clics en el link del juego",
+   "estado": "ok",
+   "notas": [
+    "Todavía nadie tocó el link: Cuenta los clics en ebogni.github.io/carrera/jugar.html?de=...",
+    "Contador lento: Se muestra el último valor conocido"
+   ]
+  },
+  {
    "fuente": "Portales web",
    "estado": "ok",
    "notas": [
@@ -32,7 +40,5 @@
    "notas": []
   }
  ],
- "errores": [
-  "Clics: contador 500 en carrera-tiktok-demo: {\"error\":\"Failed to get data. Try again later.\"}"
- ]
+ "errores": []
 }
