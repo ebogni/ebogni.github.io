@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-10-30T21:33:52.639Z",
+ "actualizado": "2026-10-30T22:55:41.482Z",
  "fuentes": [
   {
    "fuente": "Ganancias de AdMob",
@@ -33,6 +33,11 @@
   },
   {
    "fuente": "Clics en el link del juego",
+   "estado": "ok",
+   "notas": []
+  },
+  {
+   "fuente": "Celus usando las apps (al instante)",
    "estado": "ok",
    "notas": []
   },
