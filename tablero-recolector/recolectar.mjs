@@ -49,6 +49,7 @@ async function instalaciones(tok, pkg) {
   return { fecha: u.Date, total: n('Total User Installs'), activos: n('Active Device Installs'), semana: ult7.reduce((t, f) => t + +(f['Daily User Installs'] || 0), 0), bajasSemana: ult7.reduce((t, f) => t + +(f['Daily User Uninstalls'] || 0), 0) };
 }
 
+let INFORMES = null;
 const APPS = {}; // Todo lo de cada app junto: descargas, instalaciones, puntaje y plata.
 const app = n => (APPS[n] ||= { nombre: n });
 async function play() {
@@ -63,6 +64,9 @@ async function play() {
       else items.push({ nombre: a.nombre, valor: d.installs || fmt(d.minInstalls), unidad: 'descargas', detalle: `★ ${d.score ? d.score.toFixed(1) : '—'} (${fmt(d.ratings)} votos) · versión ${d.version || '—'} · actualizada ${d.updated ? new Date(d.updated).toLocaleDateString('es-AR') : '—'}`, link: d.url, num: d.minInstalls });
     } catch (e) { app(a.nombre).noFigura = true; items.push({ nombre: a.nombre, valor: 'No figura', detalle: 'Google Play no la muestra (en revisión o sin publicar)', estado: 'alerta' }); }
   }
+  if (tok) { try { // (diagnóstico) qué informes deja Play en el bucket, para armar conversión por canal
+    const l = await (await fetch(`https://storage.googleapis.com/storage/v1/b/${F.playConsole.bucket}/o?prefix=acquisition/&fields=items(name)&maxResults=200`, { headers: { Authorization: 'Bearer ' + tok } })).json();
+    INFORMES = (l.items || []).map(o => o.name).filter(n => /2026(09|10)/.test(n)); } catch (e) { INFORMES = ['error: ' + e.message]; } }
   if (errIns) items.push({ nombre: 'Instalaciones exactas', valor: 'Sin permiso', detalle: errIns, estado: 'espera' });
   return { id: 'play', titulo: 'Google Play', icono: '📱', items };
 }
@@ -206,5 +210,5 @@ for (const a of Object.values(APPS)) { if (a.instalaciones != null) (hist['app|'
 const datos = { v: 2, apps: Object.values(APPS).sort((a, b) => (b.ganMes || 0) - (a.ganMes || 0) || (b.instalaciones || b.descargasMin || 0) - (a.instalaciones || a.descargasMin || 0)), actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist, clicsCrudos: CRUDOS };
 fs.writeFileSync(SALIDA, JSON.stringify(await cifrar(K, datos)));
 // Estado público (sin números): qué fuentes andan, para revisar fallas sin abrir el tablero.
-fs.writeFileSync(DIR + '../tablero/estado.json', JSON.stringify({ actualizado: datos.actualizado, fuentes: secciones.map(s => ({ fuente: s.titulo, estado: s.viejo ? 'error (muestra el dato anterior)' : s.items[0]?.nombre === 'Sin conectar' ? 'sin conectar' : 'ok', notas: s.items.filter(i => i.estado === 'espera' && i.nombre !== 'Sin conectar').map(i => i.nombre + ': ' + (i.detalle || i.valor)).concat(s.id === 'play' ? [`${s.items.filter(i => i.unidad === 'instalaciones').length} apps con instalaciones exactas`] : []) })), errores }, null, 1));
+fs.writeFileSync(DIR + '../tablero/estado.json', JSON.stringify({ actualizado: datos.actualizado, informes: INFORMES, fuentes: secciones.map(s => ({ fuente: s.titulo, estado: s.viejo ? 'error (muestra el dato anterior)' : s.items[0]?.nombre === 'Sin conectar' ? 'sin conectar' : 'ok', notas: s.items.filter(i => i.estado === 'espera' && i.nombre !== 'Sin conectar').map(i => i.nombre + ': ' + (i.detalle || i.valor)).concat(s.id === 'play' ? [`${s.items.filter(i => i.unidad === 'instalaciones').length} apps con instalaciones exactas`] : []) })), errores }, null, 1));
 console.log('Listo:', secciones.map(s => s.titulo).join(', '), errores.length ? '| errores: ' + errores.join(' / ') : '');
