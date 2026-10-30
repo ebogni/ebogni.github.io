@@ -66,8 +66,11 @@ async function play() {
   }
   if (tok) { try { // (diagnóstico) qué informes deja Play en el bucket, para armar conversión por canal
     const L = async q => (await fetch(`https://storage.googleapis.com/storage/v1/b/${F.playConsole.bucket}/o?${q}`, { headers: { Authorization: 'Bearer ' + tok } })).json();
-    const raiz = await L('delimiter=/'), st = await L('prefix=stats/&delimiter=/'), ac = await L('prefix=acquisition/&maxResults=300&fields=items(name)');
-    INFORMES = [...(raiz.prefixes || []), ...(st.prefixes || []), ...(ac.items || []).map(o => o.name).filter(n => /ebogni/.test(n)).slice(-40), 'acq total: ' + (ac.items || []).length]; } catch (e) { INFORMES = ['error: ' + e.message]; } }
+    INFORMES = [];
+    for (const pre of ['stats/store_performance/', 'acquisition/retained_installers/retained_installers_com.ebogni.carrera', 'acquisition/retained_installers/retained_installers_com.ebogni.puntos', 'acquisition/buyers_7d/buyers_7d_com.ebogni.carrera'])
+      INFORMES.push(...((await L('prefix=' + encodeURIComponent(pre) + '&maxResults=1000&fields=items(name)')).items || []).map(o => o.name).filter(n => /carrera|puntosdetruco/.test(n)));
+    const sp = INFORMES.find(n => /store_performance.*carrera.*traffic|store_performance.*carrera/.test(n));
+    if (sp) { const r = await fetch(`https://storage.googleapis.com/storage/v1/b/${F.playConsole.bucket}/o/${encodeURIComponent(sp)}?alt=media`, { headers: { Authorization: 'Bearer ' + tok } }); const b = Buffer.from(await r.arrayBuffer()); const t = (b[0] === 0xff ? b.toString('utf16le') : b.toString('utf8')).split(/\r?\n/); INFORMES.push('CABECERA: ' + t[0], 'FILAS: ' + t.length); } } catch (e) { INFORMES = ['error: ' + e.message]; } }
   if (errIns) items.push({ nombre: 'Instalaciones exactas', valor: 'Sin permiso', detalle: errIns, estado: 'espera' });
   return { id: 'play', titulo: 'Google Play', icono: '📱', items };
 }
