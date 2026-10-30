@@ -65,8 +65,9 @@ async function play() {
     } catch (e) { app(a.nombre).noFigura = true; items.push({ nombre: a.nombre, valor: 'No figura', detalle: 'Google Play no la muestra (en revisión o sin publicar)', estado: 'alerta' }); }
   }
   if (tok) { try { // (diagnóstico) qué informes deja Play en el bucket, para armar conversión por canal
-    const l = await (await fetch(`https://storage.googleapis.com/storage/v1/b/${F.playConsole.bucket}/o?prefix=acquisition/&fields=items(name)&maxResults=200`, { headers: { Authorization: 'Bearer ' + tok } })).json();
-    INFORMES = (l.items || []).map(o => o.name).filter(n => /2026(09|10)/.test(n)); } catch (e) { INFORMES = ['error: ' + e.message]; } }
+    const L = async q => (await fetch(`https://storage.googleapis.com/storage/v1/b/${F.playConsole.bucket}/o?${q}`, { headers: { Authorization: 'Bearer ' + tok } })).json();
+    const raiz = await L('delimiter=/'), st = await L('prefix=stats/&delimiter=/'), ac = await L('prefix=acquisition/&maxResults=300&fields=items(name)');
+    INFORMES = [...(raiz.prefixes || []), ...(st.prefixes || []), ...(ac.items || []).map(o => o.name).filter(n => /ebogni/.test(n)).slice(-40), 'acq total: ' + (ac.items || []).length]; } catch (e) { INFORMES = ['error: ' + e.message]; } }
   if (errIns) items.push({ nombre: 'Instalaciones exactas', valor: 'Sin permiso', detalle: errIns, estado: 'espera' });
   return { id: 'play', titulo: 'Google Play', icono: '📱', items };
 }
