@@ -49,6 +49,13 @@
   "playConsole": {
     "bucket": "pubsite_prod_rev_02740969924565071534"
   },
+  "viva": {
+    "apps": [
+      { "clave": "carrera", "nombre": "Carrera en Miniatura" },
+      { "clave": "truco", "nombre": "Anotador de Truco" }
+    ],
+    "canales": ["organico", "youtube", "tiktok", "directo", "anotador_truco"]
+  },
   "clics": {
     "fuentes": [
       "youtube",

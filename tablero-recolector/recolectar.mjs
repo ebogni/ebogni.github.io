@@ -184,6 +184,39 @@ async function clics() {
   return { id: 'clics', titulo: 'Clics en el link del juego', icono: '👆', items, total: tot };
 }
 
+// "Estoy viva": lo que avisan las apps desde el celu (sale en las versiones nuevas de la Carrera y el Truco).
+// Instalaciones nuevas por canal (utm_source de Play) y celus que la abrieron hoy. Llega al instante.
+async function viva() {
+  const NS = 'https://abacus.jasoncameron.dev/get/vikingzone-clics/', espera = ms => new Promise(r => setTimeout(r, ms));
+  let fallas = 0;
+  const leer = async k => { // como en clics(): de a uno y despacito; si no existe todavía, es 0
+    for (let intento = 0; intento < 3; intento++) {
+      await espera(400 + intento * 1500); const r = await fetch(NS + k).catch(() => null);
+      if (r?.ok) return (CRUDOS[k] = (await r.json()).value || 0);
+      if (r?.status === 404) return 0;
+    }
+    fallas++; return CRUDOS[k] || 0;
+  };
+  const dia = d => new Date(Date.now() - 3 * 3600e3 - d * 864e5).toISOString().slice(0, 10).replace(/-/g, '');
+  const apps = F.viva?.apps || [{ clave: 'carrera', nombre: 'Carrera en Miniatura' }, { clave: 'truco', nombre: 'Anotador de Truco' }];
+  const canales = F.viva?.canales || ['organico', 'youtube', 'tiktok', 'directo', 'anotador_truco'];
+  const NOM = { ...NOMBRE_CANAL, organico: 'Play sin link' };
+  const items = []; let tot = 0;
+  for (const a of apps) {
+    const hoy = await leer(`${a.clave}-activo-${dia(0)}`), ayer = await leer(`${a.clave}-activo-${dia(1)}`);
+    const porCanal = [];
+    for (const c of canales) { const n = await leer(`${a.clave}-instalada-${c}`); if (n) porCanal.push([c, n]); }
+    const ins = porCanal.reduce((t, [, n]) => t + n, 0); tot += hoy;
+    items.push({ nombre: a.nombre, valor: fmt(hoy), num: hoy, unidad: 'celus hoy',
+      detalle: `Ayer ${fmt(ayer)} · ${fmt(ins)} instalaciones nuevas desde que salió el aviso` });
+    porCanal.sort((x, y) => y[1] - x[1]);
+    for (const [c, n] of porCanal) items.push({ nombre: '· ' + (NOM[c] || c), valor: fmt(n), unidad: 'instalaciones', detalle: Math.round(n / ins * 100) + '% de las nuevas', sub: true });
+  }
+  if (!tot && items.every(i => i.num === 0)) items.push({ nombre: 'Esperando las versiones nuevas', valor: '—', detalle: 'Cuenta desde que la Carrera y el Truco con el aviso "estoy viva" estén en Play', estado: 'espera', sub: true });
+  if (fallas) items.push({ nombre: 'Contador lento', valor: fallas + ' sin leer', detalle: 'Se muestra el último valor conocido', estado: 'espera', sub: true });
+  return { id: 'viva', titulo: 'Celus usando las apps (al instante)', icono: '💓', items, total: tot };
+}
+
 // De dónde llega la gente a la ficha de Play y cuántos instalan (informe de Play, con 1 o 2 días de atraso).
 // Agrupa por UTM (youtube, tiktok, anotador_truco...) o, si no tiene, por fuente de Play (búsqueda, explorar...).
 async function trafico(pkg, dias = 30) {
@@ -251,7 +284,7 @@ let previo = null; try { previo = await descifrar(K, JSON.parse(fs.readFileSync(
 const secciones = [], errores = [];
 const HIST = (previo && previo.historial) || {};
 const CRUDOS = { ...((previo && previo.clicsCrudos) || {}) };
-for (const [n, f] of [['AdMob', admob], ['Google Play', play], ['YouTube', youtube], ['Clics', clics], ['Portales', portales], ['Cults3D', cults]]) {
+for (const [n, f] of [['AdMob', admob], ['Google Play', play], ['YouTube', youtube], ['Clics', clics], ['Estoy viva', viva], ['Portales', portales], ['Cults3D', cults]]) {
   try { secciones.push(await f()); } catch (e) { errores.push(n + ': ' + e.message); const p = previo && previo.secciones.find(s => s.titulo.includes(n)); if (p) secciones.push({ ...p, viejo: true }); }
 }
 for (const [n, f] of [['Conversión', () => conversion(secciones)], ['Rentabilidad', rentabilidad]]) { try { secciones.splice(1, 0, await f()); } catch (e) { errores.push(n + ': ' + e.message); } }
