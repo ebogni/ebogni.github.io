@@ -1,0 +1,17 @@
+name: Borrar rama
+# Para que Claude pueda borrar ramas temporales (la API directa no se lo permite).
+on:
+  workflow_dispatch:
+    inputs:
+      rama:
+        description: "Rama a borrar"
+        required: true
+permissions:
+  contents: write
+jobs:
+  borrar:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          [ "${{ inputs.rama }}" = "main" ] && { echo "main no se borra"; exit 1; }
+          git init -q && git push -q "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" --delete "${{ inputs.rama }}"
