@@ -1,15 +1,23 @@
 {
- "actualizado": "2026-10-30T21:32:35.906Z",
- "informes": [
-  "CABECERA: Date,Package name,Traffic source,Search term,UTM source,UTM campaign,Store listing acquisitions,Store listing visitors,Store listing conversion rate",
-  "FILAS: 4",
-  "FUENTES: Other | Other | Other | Other"
- ],
+ "actualizado": "2026-10-30T21:33:52.639Z",
  "fuentes": [
   {
    "fuente": "Ganancias de AdMob",
    "estado": "ok",
    "notas": []
+  },
+  {
+   "fuente": "Rentabilidad por app",
+   "estado": "ok",
+   "notas": []
+  },
+  {
+   "fuente": "Conversión por canal (últimos 30 días)",
+   "estado": "ok",
+   "notas": [
+    "🔁 Promoción cruzada (Truco → Carrera): Todavía sin datos (sale cuando la versión nueva del Truco con la tarjeta esté en la calle)",
+    "Informe de Play: Play arma el informe de visitas por canal de la Carrera unos días después de publicada"
+   ]
   },
   {
    "fuente": "Google Play",
