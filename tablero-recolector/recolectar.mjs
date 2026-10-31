@@ -142,10 +142,18 @@ async function portales() {
 async function cults() {
   if (!E.CULTS_KEY || !F.cults3d.usuario) return pendiente('cults', 'Cults3D', '🧩', 'Falta tu usuario y la llave de la API de Cults3D (paso de permisos).');
   const q = `{ myself { user { nick creationsCount followersCount } salesBatch(limit: 5) { total results { createdAt income { cents currency } creation { name(locale: ES) } } } } }`;
-  const r = await fetch('https://cults3d.com/graphql', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Basic ' + Buffer.from(F.cults3d.usuario + ':' + E.CULTS_KEY).toString('base64') }, body: JSON.stringify({ query: q }) });
-  const j = await r.json();
+  const pedir = async query => {
+    const r = await fetch('https://cults3d.com/graphql', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 VikingZone-Tablero', Authorization: 'Basic ' + Buffer.from(F.cults3d.usuario + ':' + E.CULTS_KEY).toString('base64') }, body: JSON.stringify({ query }) });
+    const t = await r.text();
+    try { return JSON.parse(t); } catch (e) { // Contestó una página web: digo qué fue (código y título), sin datos privados
+      const titulo = (t.match(/<title[^>]*>([^<]*)/i) || [])[1] || '';
+      const porque = r.status === 401 || r.status === 403 ? (/just a moment|attention required|cloudflare/i.test(t) ? 'bloqueo anti robots de Cults3D (Cloudflare)' : 'la llave o el usuario no son válidos') : r.status >= 500 ? 'Cults3D está caído' : 'respuesta inesperada';
+      throw new Error(`respondió ${r.status} con una página web ("${titulo.trim().slice(0, 60)}"): ${porque}`);
+    }
+  };
+  const j = await pedir(q);
   if (j.errors) { // Si cambió la API, anoto qué campos tiene para corregir la consulta.
-    const ins = await (await fetch('https://cults3d.com/graphql', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Basic ' + Buffer.from(F.cults3d.usuario + ':' + E.CULTS_KEY).toString('base64') }, body: JSON.stringify({ query: '{ s: __type(name: "Sale") { fields { name } } u: __type(name: "User") { fields { name } } }' }) })).json().catch(() => ({}));
+    const ins = await pedir('{ s: __type(name: "Sale") { fields { name } } u: __type(name: "User") { fields { name } } }').catch(() => ({}));
     const camp = t => (ins.data?.[t]?.fields || []).map(f => f.name).join(',');
     throw new Error(j.errors.map(e => e.message).join('; ').slice(0, 150) + ' | Sale: ' + camp('s') + ' | User: ' + camp('u'));
   }
