@@ -1,0 +1,29 @@
+name: Ver qué ofrece la API de Cults3D
+# Diagnóstico: guarda en la rama "diagnostico" la lista de tipos y campos de la API (sin datos personales).
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  ver:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          CULTS_KEY: ${{ secrets.CULTS_KEY }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/o" && cat > "$RUNNER_TEMP/e.mjs" <<'JS'
+          import fs from 'node:fs';
+          const F = JSON.parse(fs.readFileSync('tablero-recolector/fuentes.json', 'utf8'));
+          const auth = 'Basic ' + Buffer.from(F.cults3d.usuario + ':' + process.env.CULTS_KEY).toString('base64');
+          const q = `{ __schema { queryType { name } mutationType { name } types { name kind fields { name args { name } type { name kind ofType { name kind ofType { name } } } } } } }`;
+          const r = await fetch('https://cults3d.com/graphql', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'User-Agent': 'Mozilla/5.0 VikingZone-Tablero', Authorization: auth }, body: JSON.stringify({ query: q }) });
+          const j = await r.json();
+          const t = j.data.__schema.types.filter(x => x.kind === 'OBJECT' && !x.name.startsWith('__'));
+          const tipo = f => { let x = f.type; let s = ''; while (x) { s += x.name ? x.name : (x.kind === 'LIST' ? '[]' : x.kind === 'NON_NULL' ? '!' : ''); x = x.ofType; } return s; };
+          let out = 'Query: ' + j.data.__schema.queryType.name + ' · Mutation: ' + (j.data.__schema.mutationType || {}).name + '\n';
+          for (const x of t) out += '\n' + x.name + ': ' + (x.fields || []).map(f => f.name + (f.args.length ? '(' + f.args.map(a => a.name).join(',') + ')' : '') + ':' + tipo(f)).join(', ') + '\n';
+          fs.writeFileSync(process.env.RUNNER_TEMP + '/o/cults-esquema.txt', out);
+          JS
+          node "$RUNNER_TEMP/e.mjs"
+          cd "$RUNNER_TEMP/o" && git init -q && git config user.name github-actions && git config user.email github-actions@users.noreply.github.com
+          git checkout -q -b diagnostico && git add -A && git commit -qm esquema && git push -q -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" diagnostico
