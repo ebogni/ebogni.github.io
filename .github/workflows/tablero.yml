@@ -3,6 +3,10 @@ on:
   schedule:
     - cron: "7,37 * * * *"
   workflow_dispatch:
+    inputs:
+      fuente:
+        description: "Solo esta tarjeta (admob, play, youtube, clics, viva, portales, cults, conversion, rentabilidad). Vacío = todas"
+        required: false
 permissions:
   contents: write
 concurrency: { group: tablero, cancel-in-progress: false }
@@ -22,6 +26,8 @@ jobs:
           ADMOB_REFRESH_TOKEN: ${{ secrets.ADMOB_REFRESH_TOKEN }}
           YOUTUBE_KEY: ${{ secrets.YOUTUBE_KEY }}
           CULTS_KEY: ${{ secrets.CULTS_KEY }}
+          TABLERO_DISPARAR: ${{ secrets.TABLERO_DISPARAR }}
+          FUENTE: ${{ inputs.fuente }}
         run: |
           npm install --silent --no-audit --no-fund
           node recolectar.mjs

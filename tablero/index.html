@@ -28,6 +28,8 @@ header{display:flex;align-items:center;gap:10px;margin:4px 0 4px}h1{font-size:cl
 .barra{height:8px;background:var(--card2);border-radius:99px;overflow:hidden;margin-top:6px}.barra i{display:block;height:100%;background:linear-gradient(90deg,var(--oro),#ff9f1c);border-radius:99px}
 .d{font-weight:650;font-size:.85em;white-space:nowrap}.d.sube{color:var(--sube)}.d.baja{color:var(--baja)}.d.igual{color:var(--mu)}
 /* Tarjetas */
+.cuando{color:var(--mu);font-size:.78em;margin:-6px 0 10px;line-height:1.35}.cuando.viejo{color:#ffb454}.cuando b{font-weight:600;color:var(--tx)}.cuando.viejo b{color:#ffb454}
+.rf{margin-left:6px;background:none;border:1px solid var(--bd);color:var(--mu);border-radius:8px;padding:1px 7px;font:inherit;font-size:.85em;cursor:pointer}.rf:hover{color:var(--tx)}.rf.gira{animation:gira 1s linear infinite}@keyframes gira{to{transform:rotate(360deg)}}
 .grilla{columns:360px;column-gap:12px}.grilla>.card{break-inside:avoid;margin:0 0 12px;display:block;width:100%}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px;min-width:0}
 .card h2{font-size:1.02em;margin:0 0 10px;display:flex;gap:8px;align-items:center}.card h2 small{color:var(--mu);font-weight:400;font-size:.78em;margin-left:auto}
@@ -69,8 +71,10 @@ label.rec{display:flex;gap:8px;justify-content:center;align-items:center;color:v
     <header><h1>📊 VikingZone</h1><button class="ctrl" id="btnAct" aria-label="Actualizar">↻</button><button class="ctrl" id="btnSalir">Salir</button></header>
     <p class="estado" id="estado"></p>
     <div id="avisos"></div>
+    <div class="cuando" id="cuandoKpis"></div>
     <div class="kpis" id="kpis"></div>
     <h2 class="titulo" id="tituloApps">📱 Tus apps, una por una</h2>
+    <div class="cuando" id="cuandoApps"></div>
     <div class="apps" id="apps"></div>
     <div class="grilla" id="grilla"></div>
   </section>
@@ -95,6 +99,24 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '
 const usd = n => n == null ? '—' : 'US$ ' + Number(n).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const num = n => n == null ? '—' : Number(n).toLocaleString('es-AR');
 const hace = iso => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? 'recién' : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m / 60)} h` : `hace ${Math.round(m / 1440)} días`; };
+// ---------- Fechas: hasta cuándo llegan los datos y cuándo se buscaron ----------
+const hhmm = iso => { const d = new Date(iso); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+const fh = iso => { const d = new Date(iso); return d.toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', '') + ' ' + String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + ' ' + hhmm(iso); };
+const diaCorto = d => { // 'AAAA-MM-DD' → hoy / ayer / dd/mm
+  if (!/^\d{4}-\d{2}-\d{2}/.test(d)) return d;
+  const hoy = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10), ayer = new Date(Date.now() - 27 * 3600e3).toISOString().slice(0, 10);
+  return d === hoy ? 'hoy' : d === ayer ? 'ayer' : d.slice(8, 10) + '/' + d.slice(5, 7);
+};
+function lineaCuando(s) {
+  if (!s) return '';
+  const c = s.cuando || {}, partes = [];
+  if (s.viejo) partes.push(`<b>⚠ No se pudo actualizar</b>: muestra el dato del ${s.buscado ? fh(s.buscado) : 'último intento bueno'}`);
+  partes.push(c.hasta === 'instante' || !c.hasta ? '<b>Al instante</b>' : `<b>Datos hasta ${diaCorto(c.hasta) === 'hoy' || diaCorto(c.hasta) === 'ayer' ? diaCorto(c.hasta) : 'el ' + diaCorto(c.hasta)}</b>`);
+  if (c.periodo) partes.push(c.periodo);
+  if (c.nota) partes.push(c.nota);
+  if (s.buscado && !s.viejo) partes.push('buscado ' + (new Date(s.buscado).toDateString() === new Date().toDateString() ? 'hoy ' + hhmm(s.buscado) : fh(s.buscado)));
+  return `<div class="cuando${s.viejo ? ' viejo' : ''}">${partes.join(' · ')}</div>`;
+}
 // Diferencia contra hace 7 días (o el dato más viejo que haya).
 function cambio(serie, dinero) {
   if (!serie) return '';
@@ -126,9 +148,16 @@ function barras(serie) {
 }
 const filaProp = (nombre, valor, extra, prop) => `<div class="fila"><span class="n">${esc(nombre)}</span><span class="v">${valor}</span>${extra ? `<span class="x">${extra}</span>` : ''}<span class="prop"><i style="width:${Math.max(2, prop * 100).toFixed(1)}%"></i></span></div>`;
 // ---------- Pintar ----------
+let ULT = null; // últimos datos (para el botón ↻)
+const rf = id => `<button class="rf" data-f="${id}" title="Volver a buscar ahora estos datos (tarda 1 o 2 minutos)">↻</button>`;
 function pintar(D) {
+  ULT = D;
   const H = D.historial || {}, P = D.plata;
-  $('estado').textContent = 'Actualizado ' + hace(D.actualizado) + ' · se renueva solo cada 30 min';
+  $('estado').textContent = 'Actualizado ' + fh(D.actualizado) + ' (' + hace(D.actualizado) + ') · se renueva solo cada 30 min';
+  const SEC = id => (D.secciones || []).find(x => x.id === id);
+  const lin = id => { const x = SEC(id); if (!x) return '—'; const c = x.cuando || {}; if (x.viejo) return `<b>⚠ sin actualizar desde ${fh(x.buscado)}</b>`; return (c.hasta === 'instante' || !c.hasta ? 'al instante' : 'hasta ' + (['hoy', 'ayer'].includes(diaCorto(c.hasta)) ? diaCorto(c.hasta) : 'el ' + diaCorto(c.hasta))) + (x.buscado ? ` (${hhmm(x.buscado)})` : ''); };
+  $('cuandoKpis').innerHTML = P ? 'Plata de AdMob: ' + lin('admob') + (SEC('play') ? ' · Descargas: ' + lin('play') : '') + ' ' + rf('admob') : '';
+  $('cuandoKpis').className = 'cuando' + (SEC('admob')?.viejo ? ' viejo' : '');
   $('avisos').innerHTML = (D.avisos || []).map(a => `<div class="aviso amarillo">🔔 <span>${esc(a)}</span></div>`).join('') + (D.errores || []).map(e => `<div class="aviso rojo">⚠️ <span>${esc(e)}</span></div>`).join('');
   // Números grandes
   let k = '';
@@ -142,6 +171,7 @@ function pintar(D) {
   // Una tarjeta por app: plata + descargas + instalaciones juntas.
   const A = D.apps || [];
   $('tituloApps').hidden = !A.length;
+  $('cuandoApps').innerHTML = A.length ? 'Plata: ' + lin('admob') + ' · Instalaciones: ' + lin('play') + ' ' + rf('play') : '';
   $('apps').innerHTML = A.map(a => {
     const dato = (v, t) => `<div class="dato"><div class="v">${v}</div><div class="t">${t}</div></div>`;
     const desc = a.instalaciones != null ? num(a.instalaciones) : a.descargasRango || (a.descargasMin != null ? num(a.descargasMin) + '+' : '—');
@@ -154,13 +184,13 @@ function pintar(D) {
   // Tarjetas
   let g = '';
   if (P) {
-    g += `<section class="card ancha"><h2>📈 Ganancia por día <small>últimos 14 días</small></h2>${barras(P.serie)}</section>`;
+    g += `<section class="card ancha"><h2>📈 Ganancia por día <small>últimos 14 días</small>${rf('admob')}</h2>${lineaCuando(SEC('admob'))}${barras(P.serie)}</section>`;
     const mxA = Math.max(0.0001, ...P.porApp.map(x => x.gan)), mxF = Math.max(0.0001, ...P.porFormato.map(x => x.gan));
-    g += `<section class="card"><h2>🎯 Qué tipo de anuncio rinde más <small>este mes</small></h2><h3>Por tipo de anuncio</h3>${P.porFormato.length ? P.porFormato.map(x => filaProp(x.nombre, usd(x.gan), `<span>${num(x.imp)} vistos</span><span>US$ ${x.ecpm.toFixed(2)} cada 1.000</span>`, x.gan / mxF)).join('') : '<p class="vacio">Todavía sin datos este mes.</p>'}</section>`;
+    g += `<section class="card"><h2>🎯 Qué tipo de anuncio rinde más <small>este mes</small>${rf('admob')}</h2>${lineaCuando(SEC('admob'))}<h3>Por tipo de anuncio</h3>${P.porFormato.length ? P.porFormato.map(x => filaProp(x.nombre, usd(x.gan), `<span>${num(x.imp)} vistos</span><span>US$ ${x.ecpm.toFixed(2)} cada 1.000</span>`, x.gan / mxF)).join('') : '<p class="vacio">Todavía sin datos este mes.</p>'}</section>`;
   }
   for (const s of D.secciones) {
     if (s.oculta || (s.id === 'play' && A.length)) continue;
-    g += `<section class="card"><h2>${s.icono} ${esc(s.titulo)}${s.viejo ? '<small>dato anterior</small>' : ''}</h2>${s.items.map(it => {
+    g += `<section class="card"><h2>${s.icono} ${esc(s.titulo)}${s.viejo ? '<small>dato anterior</small>' : ''}${rf(s.id)}</h2>${lineaCuando(s)}${s.items.map(it => {
       const nom = it.link ? `<a href="${esc(it.link)}" target="_blank" rel="noopener">${esc(it.nombre)} ↗</a>` : esc(it.nombre);
       const c = cambio(H[s.id + '|' + it.nombre]);
       const extra = [it.detalle ? `<span>${esc(it.detalle)}</span>` : '', c].filter(Boolean).join('');
@@ -184,6 +214,24 @@ $('fLogin').onsubmit = async e => {
   else $('msgLogin').textContent = 'Clave incorrecta (o todavía no hay datos).';
 };
 $('btnAct').onclick = cargar;
+// ↻ de cada tarjeta: le pide a GitHub que vuelva a buscar esa fuente y espera los datos nuevos.
+async function refrescar(fuente, boton) {
+  if (!ULT || !ULT.disparar) { $('estado').textContent = 'Para refrescar desde acá falta un permiso de GitHub (se carga una sola vez). Mientras tanto se actualiza solo cada 30 min.'; return; }
+  const antes = (ULT.secciones || []).find(x => x.id === fuente)?.buscado || ULT.actualizado;
+  document.querySelectorAll(`.rf[data-f="${fuente}"]`).forEach(b => b.classList.add('gira'));
+  $('estado').textContent = 'Pidiendo datos nuevos' + (fuente ? '' : ' de todo') + '… (tarda 1 o 2 minutos)';
+  try {
+    const r = await fetch('https://api.github.com/repos/ebogni/ebogni.github.io/actions/workflows/tablero.yml/dispatches', { method: 'POST', headers: { Authorization: 'Bearer ' + ULT.disparar, Accept: 'application/vnd.github+json' }, body: JSON.stringify({ ref: 'main', inputs: { fuente } }) });
+    if (!r.ok) throw new Error('GitHub dijo ' + r.status);
+  } catch (e) { $('estado').textContent = 'No pude pedir la actualización: ' + e.message; document.querySelectorAll('.rf.gira').forEach(b => b.classList.remove('gira')); return; }
+  for (let i = 0; i < 18; i++) { // hasta ~6 minutos
+    await new Promise(r => setTimeout(r, 20000));
+    try { const D = await bajar(); const ahora = (D.secciones || []).find(x => x.id === fuente)?.buscado || D.actualizado; if (ahora !== antes) { pintar(D); return; } } catch (e) { }
+  }
+  $('estado').textContent = 'Todavía no llegaron los datos nuevos: probá recargar en un rato.';
+  document.querySelectorAll('.rf.gira').forEach(b => b.classList.remove('gira'));
+}
+document.addEventListener('click', e => { const b = e.target.closest('.rf'); if (b) refrescar(b.dataset.f, b); });
 $('btnSalir').onclick = () => { LS.del('tablero-k'); K = null; $('tablero').classList.add('oculto'); $('login').classList.remove('oculto'); };
 document.addEventListener('visibilitychange', () => { if (!document.hidden && K) cargar(); });
 setInterval(() => { if (K && !document.hidden) cargar(); }, 5 * 60000);

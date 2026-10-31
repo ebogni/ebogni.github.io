@@ -65,8 +65,9 @@ async function play() {
     } catch (e) { app(a.nombre).noFigura = true; items.push({ nombre: a.nombre, valor: 'No figura', detalle: 'Google Play no la muestra (en revisión o sin publicar)', estado: 'alerta' }); }
   }
   TOKG = tok;
+  const fechas = Object.values(APPS).map(a => a.datoDel).filter(Boolean).sort();
   if (errIns) items.push({ nombre: 'Instalaciones exactas', valor: 'Sin permiso', detalle: errIns, estado: 'espera' });
-  return { id: 'play', titulo: 'Google Play', icono: '📱', items };
+  return { id: 'play', titulo: 'Google Play', icono: '📱', items, cuando: fechas.length ? { hasta: fechas[fechas.length - 1], nota: 'Play informa las instalaciones con 1 o 2 días de atraso' } : { hasta: 'instante' } };
 }
 
 let PLATA = null; // Resumen de plata para los números grandes y los gráficos del tablero.
@@ -99,7 +100,7 @@ async function admob() {
   for (const x of porApp) Object.assign(app(x.dims.APP), { ganMes: x.gan, impMes: x.imp, ecpm: ecpm(x) });
   for (const x of porAppHoy) Object.assign(app(x.dims.APP), { ganHoy: x.gan, impHoy: x.imp });
   const items = [{ nombre: 'Hoy', valor: usd(hoyD.gan), num: hoyD.gan }, { nombre: 'Este mes', valor: usd(mes), num: mes }];
-  return { id: 'admob', titulo: 'Ganancias de AdMob', icono: '💰', items, oculta: true };
+  return { id: 'admob', titulo: 'Ganancias de AdMob', icono: '💰', items, oculta: true, cuando: { hasta: 'instante', nota: 'el día de hoy todavía no cerró' } };
 }
 
 async function youtube() {
@@ -227,6 +228,7 @@ async function viva() {
 
 // De dónde llega la gente a la ficha de Play y cuántos instalan (informe de Play, con 1 o 2 días de atraso).
 // Agrupa por UTM (youtube, tiktok, anotador_truco...) o, si no tiene, por fuente de Play (búsqueda, explorar...).
+let TRAFICO_HASTA = null;
 async function trafico(pkg, dias = 30) {
   if (!TOKG) return null;
   const hoy = new Date(Date.now() - 3 * 3600e3), desde = new Date(hoy - dias * 864e5).toISOString().slice(0, 10), filas = [];
@@ -239,6 +241,7 @@ async function trafico(pkg, dias = 30) {
     const cab = csv(t[0]); for (const l of t.slice(1)) { const c = csv(l); filas.push(Object.fromEntries(cab.map((k, i) => [k, c[i]]))); }
   }
   if (!filas.length) return null;
+  TRAFICO_HASTA = filas.map(f => f.Date || '').filter(Boolean).sort().pop() || TRAFICO_HASTA;
   const canales = {};
   for (const f of filas) {
     if ((f.Date || '') < desde) continue;
@@ -270,7 +273,7 @@ async function conversion(secs) {
   const cruz = tr?.anotador_truco;
   items.push({ nombre: '🔁 Promoción cruzada (Truco → Carrera)', valor: cruz ? fmt(cruz.instalaciones) : '—', unidad: cruz ? 'instalaciones' : '', detalle: cruz ? `${fmt(cruz.visitas)} visitas a la ficha desde la tarjeta del Truco → instalaron ${fmt(cruz.instalaciones)}${pct(cruz.instalaciones, cruz.visitas)}` : 'Todavía sin datos (sale cuando la versión nueva del Truco con la tarjeta esté en la calle)', estado: cruz ? undefined : 'espera' });
   if (!tr) items.push({ nombre: 'Informe de Play', valor: 'Esperando', detalle: 'Play arma el informe de visitas por canal de la Carrera unos días después de publicada', estado: 'espera', sub: true });
-  return { id: 'conversion', titulo: 'Conversión por canal (últimos 30 días)', icono: '🎯', items };
+  return { id: 'conversion', titulo: 'Conversión por canal (últimos 30 días)', icono: '🎯', items, cuando: { hasta: TRAFICO_HASTA || 'instante', periodo: 'últimos 30 días', nota: TRAFICO_HASTA ? 'clics al instante; visitas e instalaciones del informe de Play' : 'clics al instante' } };
 }
 
 function rentabilidad() {
@@ -280,7 +283,7 @@ function rentabilidad() {
     items.push({ nombre: a.nombre, valor: a.ganMes != null ? usd(a.ganMes) : '—', unidad: 'este mes',
       detalle: `${usu != null ? fmt(usu) + ' usuarios activos' : 'usuarios activos: esperando informe'} · ${fmt(a.instalaciones ?? a.descargasMin)} descargas${porUsu != null ? ` · ${usd(porUsu)} por usuario` : ''}${a.ecpm != null ? ` · ${usd(a.ecpm)} cada 1000 anuncios` : ''}` });
   }
-  return { id: 'rentabilidad', titulo: 'Rentabilidad por app', icono: '💵', items };
+  return { id: 'rentabilidad', titulo: 'Rentabilidad por app', icono: '💵', items, cuando: { hasta: 'instante', periodo: 'este mes', nota: 'usuarios activos del informe de Play' } };
 }
 
 function pendiente(id, titulo, icono, txt) { return { id, titulo, icono, items: [{ nombre: 'Sin conectar', valor: '—', detalle: txt, estado: 'espera' }] }; }
@@ -292,10 +295,19 @@ let previo = null; try { previo = await descifrar(K, JSON.parse(fs.readFileSync(
 const secciones = [], errores = [];
 const HIST = (previo && previo.historial) || {};
 const CRUDOS = { ...((previo && previo.clicsCrudos) || {}) };
-for (const [n, f] of [['AdMob', admob], ['Google Play', play], ['YouTube', youtube], ['Clics', clics], ['Estoy viva', viva], ['Portales', portales], ['Cults3D', cults]]) {
-  try { secciones.push(await f()); } catch (e) { errores.push(n + ': ' + e.message); const p = previo && previo.secciones.find(s => s.titulo.includes(n)); if (p) secciones.push({ ...p, viejo: true }); }
+// Refrescar UNA tarjeta (botón ↻ del tablero): FUENTE=<id>. Las demás quedan con su dato anterior tal cual.
+const FUENTE = (E.FUENTE || '').trim();
+const IDS = { AdMob: 'admob', 'Google Play': 'play', YouTube: 'youtube', Clics: 'clics', 'Estoy viva': 'viva', Portales: 'portales', Cults3D: 'cults' };
+const corre = id => !FUENTE || FUENTE === id || (FUENTE === 'conversion' && (id === 'play' || id === 'clics')) || (FUENTE === 'rentabilidad' && (id === 'play' || id === 'admob'));
+if (FUENTE && previo) { // arranco desde lo anterior para no perder la plata ni las apps
+  for (const a of previo.apps || []) APPS[a.nombre] = { ...a };
+  PLATA = previo.plata || null;
 }
-for (const [n, f] of [['Conversión', () => conversion(secciones)], ['Rentabilidad', rentabilidad]]) { try { secciones.splice(1, 0, await f()); } catch (e) { errores.push(n + ': ' + e.message); } }
+for (const [n, f] of [['AdMob', admob], ['Google Play', play], ['YouTube', youtube], ['Clics', clics], ['Estoy viva', viva], ['Portales', portales], ['Cults3D', cults]]) {
+  if (!corre(IDS[n])) { const p = previo && previo.secciones.find(s => s.id === IDS[n]); if (p) { secciones.push(p); continue; } }
+  try { const sec = await f(); sec.buscado = new Date().toISOString(); sec.cuando ||= { hasta: 'instante' }; secciones.push(sec); } catch (e) { errores.push(n + ': ' + e.message); const p = previo && previo.secciones.find(s => s.titulo.includes(n)); if (p) secciones.push({ ...p, viejo: true, error: e.message }); }
+}
+for (const [n, f] of [['Conversión', () => conversion(secciones)], ['Rentabilidad', rentabilidad]]) { const id = n === 'Conversión' ? 'conversion' : 'rentabilidad'; if (FUENTE && !corre(id) && !['play', 'admob', 'clics'].includes(FUENTE)) { const p = previo && previo.secciones.find(s => s.id === id); if (p) { secciones.splice(1, 0, p); continue; } } try { const sec = await f(); sec.buscado = new Date().toISOString(); secciones.splice(1, 0, sec); } catch (e) { errores.push(n + ': ' + e.message); } }
 // Historial diario para ver cómo crece cada número (se guarda el último valor de cada día, 90 días).
 const hist = HIST, dia = hoyISO();
 for (const s of secciones) for (const it of s.items) if (it.num != null && !it.sub) { const k = s.id + '|' + it.nombre; (hist[k] ||= {})[dia] = it.num; const ks = Object.keys(hist[k]).sort(); while (ks.length > 90) delete hist[k][ks.shift()]; }
@@ -306,7 +318,7 @@ const descargas = secciones.find(s => s.id === 'play')?.items.reduce((t, it) => 
 if (descargas != null) (hist['total|descargas'] ||= {})[dia] = descargas;
 if (PLATA) (hist['total|mes'] ||= {})[dia] = PLATA.mes;
 for (const a of Object.values(APPS)) { if (a.instalaciones != null) (hist['app|' + a.nombre + '|ins'] ||= {})[dia] = a.instalaciones; if (a.ganMes != null) (hist['app|' + a.nombre + '|gan'] ||= {})[dia] = a.ganMes; }
-const datos = { v: 2, apps: Object.values(APPS).sort((a, b) => (b.ganMes || 0) - (a.ganMes || 0) || (b.instalaciones || b.descargasMin || 0) - (a.instalaciones || a.descargasMin || 0)), actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist, clicsCrudos: CRUDOS };
+const datos = { v: 2, apps: Object.values(APPS).sort((a, b) => (b.ganMes || 0) - (a.ganMes || 0) || (b.instalaciones || b.descargasMin || 0) - (a.instalaciones || a.descargasMin || 0)), actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist, clicsCrudos: CRUDOS, disparar: E.TABLERO_DISPARAR || null };
 fs.writeFileSync(SALIDA, JSON.stringify(await cifrar(K, datos)));
 // Estado público (sin números): qué fuentes andan, para revisar fallas sin abrir el tablero.
 fs.writeFileSync(DIR + '../tablero/estado.json', JSON.stringify({ actualizado: datos.actualizado, fuentes: secciones.map(s => ({ fuente: s.titulo, estado: s.viejo ? 'error (muestra el dato anterior)' : s.items[0]?.nombre === 'Sin conectar' ? 'sin conectar' : 'ok', notas: s.items.filter(i => i.estado === 'espera' && i.nombre !== 'Sin conectar').map(i => i.nombre + ': ' + (i.detalle || i.valor)).concat(s.id === 'play' ? [`${s.items.filter(i => i.unidad === 'instalaciones').length} apps con instalaciones exactas`] : []) })), errores }, null, 1));
