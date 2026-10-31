@@ -30,6 +30,12 @@ header{display:flex;align-items:center;gap:10px;margin:4px 0 4px}h1{font-size:cl
 /* Tarjetas */
 .cuando{color:var(--mu);font-size:.78em;margin:-6px 0 10px;line-height:1.35}.cuando.viejo{color:#ffb454}.cuando b{font-weight:600;color:var(--tx)}.cuando.viejo b{color:#ffb454}
 .rf{margin-left:6px;background:none;border:1px solid var(--bd);color:var(--mu);border-radius:8px;padding:1px 7px;font:inherit;font-size:.85em;cursor:pointer}.rf:hover{color:var(--tx)}.rf.gira{animation:gira 1s linear infinite}@keyframes gira{to{transform:rotate(360deg)}}
+.agr{background:var(--card2);border:1px solid var(--bd);color:var(--tx);border-radius:8px;padding:2px 9px;font:inherit;font-size:.85em;cursor:pointer;white-space:nowrap}
+#gracias{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}#gracias[hidden]{display:none}
+#gracias .caja{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:16px;max-width:520px;width:100%;display:flex;flex-direction:column;gap:10px}
+#gracias textarea{min-height:110px;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--card2);color:var(--tx)}
+#gracias select,#gracias button{font:inherit;padding:8px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--card2);color:var(--tx);cursor:pointer}#gracias .botones{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}#gracias .ok{background:var(--oro);color:#111;border:0;font-weight:650}
+#gracias .trad{white-space:pre-wrap;background:var(--card2);border-radius:10px;padding:10px;color:var(--mu);font-size:.92em}
 .grilla{columns:360px;column-gap:12px}.grilla>.card{break-inside:avoid;margin:0 0 12px;display:block;width:100%}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px;min-width:0}
 .card h2{font-size:1.02em;margin:0 0 10px;display:flex;gap:8px;align-items:center}.card h2 small{color:var(--mu);font-weight:400;font-size:.78em;margin-left:auto}
@@ -77,6 +83,13 @@ label.rec{display:flex;gap:8px;justify-content:center;align-items:center;color:v
     <div class="cuando" id="cuandoApps"></div>
     <div class="apps" id="apps"></div>
     <div class="grilla" id="grilla"></div>
+    <div id="gracias" hidden><div class="caja">
+      <b id="grQuien">Agradecer</b>
+      <textarea id="grTexto" placeholder="Escribí tu mensaje en castellano. Ej.: ¡Gracias por descargar mi modelo! Si lo imprimís, me encantaría ver una foto."></textarea>
+      <label>Traducir a <select id="grIdioma"><option value="en">Inglés</option><option value="es">Castellano (no traducir)</option><option value="pt">Portugués</option><option value="fr">Francés</option><option value="de">Alemán</option><option value="it">Italiano</option><option value="nl">Neerlandés</option><option value="pl">Polaco</option><option value="ja">Japonés</option><option value="zh">Chino</option><option value="ko">Coreano</option><option value="ru">Ruso</option><option value="cs">Checo</option><option value="sv">Sueco</option><option value="tr">Turco</option></select></label>
+      <div class="trad" id="grTrad" hidden></div>
+      <div class="botones"><button id="grCerrar">Cerrar</button><button class="ok" id="grOk">Traducir, copiar y abrir su perfil</button></div>
+    </div></div>
   </section>
 </main>
 <script>
@@ -194,7 +207,8 @@ function pintar(D) {
       const nom = it.link ? `<a href="${esc(it.link)}" target="_blank" rel="noopener">${esc(it.nombre)} ↗</a>` : esc(it.nombre);
       const c = cambio(H[s.id + '|' + it.nombre]);
       const extra = [it.detalle ? `<span>${esc(it.detalle)}</span>` : '', c].filter(Boolean).join('');
-      return `<div class="fila ${it.sub ? 'sub' : ''} ${it.estado || ''}"><span class="n">${nom}</span><span class="v">${esc(it.valor)}${it.unidad ? `<small>${esc(it.unidad)}</small>` : ''}</span>${extra ? `<span class="x">${extra}</span>` : ''}</div>`;
+      const ag = it.agradecer ? `<button class="agr" data-n="${esc(it.agradecer.nick)}" data-p="${esc(it.agradecer.perfil)}" data-i="${esc(it.agradecer.idioma)}">💌 Agradecer</button>` : '';
+      return `<div class="fila ${it.sub ? 'sub' : ''} ${it.estado || ''}"><span class="n">${nom} ${ag}</span><span class="v">${esc(it.valor)}${it.unidad ? `<small>${esc(it.unidad)}</small>` : ''}</span>${extra ? `<span class="x">${extra}</span>` : ''}</div>`;
     }).join('')}</section>`;
   }
   $('grilla').innerHTML = g;
@@ -232,6 +246,36 @@ async function refrescar(fuente, boton) {
   document.querySelectorAll('.rf.gira').forEach(b => b.classList.remove('gira'));
 }
 document.addEventListener('click', e => { const b = e.target.closest('.rf'); if (b) refrescar(b.dataset.f, b); });
+// 💌 Agradecer: escribís en castellano, se traduce (traductor gratuito, sin clave), se copia y se abre el perfil en Cults3D para pegarlo.
+let GR = null;
+document.addEventListener('click', e => {
+  const b = e.target.closest('.agr'); if (!b) return;
+  GR = { nick: b.dataset.n, perfil: b.dataset.p };
+  $('grQuien').textContent = '💌 Agradecer a ' + GR.nick; $('grIdioma').value = b.dataset.i || 'en'; $('grTrad').hidden = true;
+  $('grTexto').value = LS.get('gracias-texto') || ''; $('gracias').hidden = false; $('grTexto').focus();
+});
+$('grCerrar').onclick = () => { $('gracias').hidden = true; };
+$('grOk').onclick = async () => {
+  const txt = $('grTexto').value.trim(), id = $('grIdioma').value; if (!txt) return;
+  LS.set('gracias-texto', txt);
+  const ventana = window.open('about:blank', '_blank'); // se abre ya (si no, el navegador la bloquea) y después va al perfil
+  let fin = txt;
+  if (id !== 'es') {
+    $('grOk').textContent = 'Traduciendo…';
+    try {
+      const r = await (await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(txt) + '&langpair=es|' + id)).json();
+      if (r.responseStatus == 200 && r.responseData?.translatedText) fin = r.responseData.translatedText; else throw new Error(r.responseDetails || 'sin respuesta');
+    } catch (e) {
+      $('grTrad').hidden = false; $('grTrad').textContent = 'El traductor no contestó (' + e.message + '). Te abro Google Traductor con tu texto.';
+      if (ventana) ventana.location = 'https://translate.google.com/?sl=es&tl=' + id + '&text=' + encodeURIComponent(txt);
+      $('grOk').textContent = 'Traducir, copiar y abrir su perfil'; return;
+    }
+  }
+  try { await navigator.clipboard.writeText(fin); } catch (e) { }
+  $('grTrad').hidden = false; $('grTrad').textContent = '✅ Copiado. Pegalo en el mensaje a ' + GR.nick + ':\n\n' + fin;
+  $('grOk').textContent = 'Traducir, copiar y abrir su perfil';
+  if (ventana) ventana.location = GR.perfil; else window.open(GR.perfil, '_blank');
+};
 $('btnSalir').onclick = () => { LS.del('tablero-k'); K = null; $('tablero').classList.add('oculto'); $('login').classList.remove('oculto'); };
 document.addEventListener('visibilitychange', () => { if (!document.hidden && K) cargar(); });
 setInterval(() => { if (K && !document.hidden) cargar(); }, 5 * 60000);

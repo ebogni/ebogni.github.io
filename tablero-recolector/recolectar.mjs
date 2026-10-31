@@ -142,27 +142,55 @@ async function portales() {
 
 async function cults() {
   if (!E.CULTS_KEY || !F.cults3d.usuario) return pendiente('cults', 'Cults3D', '🧩', 'Falta tu usuario y la llave de la API de Cults3D (paso de permisos).');
-  const q = `{ myself { user { nick creationsCount followersCount } salesBatch(limit: 5) { total results { createdAt income { cents currency } creation { name(locale: ES) } } } } }`;
   const pedir = async query => {
     const r = await fetch('https://cults3d.com/graphql', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 VikingZone-Tablero', Authorization: 'Basic ' + Buffer.from(F.cults3d.usuario + ':' + E.CULTS_KEY).toString('base64') }, body: JSON.stringify({ query }) });
     const t = await r.text();
-    try { return JSON.parse(t); } catch (e) { // Contestó una página web: digo qué fue (código y título), sin datos privados
+    let j; try { j = JSON.parse(t); } catch (e) { // Contestó una página web: digo qué fue (código y título), sin datos privados
       const titulo = (t.match(/<title[^>]*>([^<]*)/i) || [])[1] || '';
       const porque = r.status === 401 || r.status === 403 ? (/just a moment|attention required|cloudflare/i.test(t) ? 'bloqueo anti robots de Cults3D (Cloudflare)' : 'la llave o el usuario no son válidos') : r.status >= 500 ? 'Cults3D está caído' : 'respuesta inesperada';
       throw new Error(`respondió ${r.status} con una página web ("${titulo.trim().slice(0, 60)}"): ${porque}`);
     }
+    if (j.errors) throw new Error(j.errors.map(e => e.message).join('; ').slice(0, 200));
+    return j.data.myself;
   };
-  const j = await pedir(q);
-  if (j.errors) { // Si cambió la API, anoto qué campos tiene para corregir la consulta.
-    const ins = await pedir('{ s: __type(name: "Sale") { fields { name } } u: __type(name: "User") { fields { name } } }').catch(() => ({}));
-    const camp = t => (ins.data?.[t]?.fields || []).map(f => f.name).join(',');
-    throw new Error(j.errors.map(e => e.message).join('; ').slice(0, 150) + ' | Sale: ' + camp('s') + ' | User: ' + camp('u'));
+  const yo = await pedir(`{ myself { user { nick creationsCount followersCount url } activityNotificationsBatch(limit: 60) { results { activity { verb createdAt actor { nick url } target { ... on Creation { name(locale: ES) url } } } } } } }`);
+  // Modelos (descargas, vistas, me gusta) y ventas, de a 100.
+  const modelos = [], ventas = [];
+  for (let off = 0; off < 3000; off += 100) {
+    const b = await pedir(`{ myself { creationsBatch(limit: 100, offset: ${off}) { results { downloadsCount viewsCount likesCount } } } }`);
+    const r = b.creationsBatch.results; modelos.push(...r); if (r.length < 100) break;
   }
-  const m = j.data.myself, u = m.user;
-  const items = [{ nombre: u.nick, valor: fmt(u.followersCount), unidad: 'seguidores', detalle: `${fmt(u.creationsCount)} modelos publicados` },
-    { nombre: 'Ventas', valor: fmt(m.salesBatch.total), unidad: 'en total' },
-    ...m.salesBatch.results.map(s => ({ nombre: '· ' + s.creation.name, valor: (s.income.cents / 100).toFixed(2) + ' ' + s.income.currency, detalle: new Date(s.createdAt).toLocaleDateString('es-AR'), sub: true }))];
-  return { id: 'cults', titulo: 'Cults3D', icono: '🧩', items };
+  for (let off = 0; off < 5000; off += 100) {
+    const b = await pedir(`{ myself { salesBatch(limit: 100, offset: ${off}) { results { createdAt payedOutAt income { cents currency } buyer { nick url } orderCountry { code } creation { name(locale: ES) url } } } } }`);
+    const r = b.salesBatch.results; ventas.push(...r); if (r.length < 100) break;
+  }
+  const u = yo.user, mon = ventas[0]?.income.currency || 'EUR';
+  const plata = n => (n / 100).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + mon;
+  const sum = (arr, k) => arr.reduce((t, x) => t + (x[k] || 0), 0);
+  // Plata: Cults3D retiene cada venta un mes antes de liberarla.
+  const hace1mes = new Date(); hace1mes.setMonth(hace1mes.getMonth() - 1);
+  const sinPagar = ventas.filter(v => !v.payedOutAt), pagadas = ventas.filter(v => v.payedOutAt);
+  const disponibles = sinPagar.filter(v => new Date(v.createdAt) <= hace1mes), retenidas = sinPagar.filter(v => new Date(v.createdAt) > hace1mes);
+  const cents = arr => arr.reduce((t, v) => t + v.income.cents, 0);
+  const ultPago = pagadas.map(v => v.payedOutAt).sort().pop();
+  const proxLibera = retenidas.map(v => v.createdAt).sort()[0];
+  const fecha = iso => new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  // Descargas recientes: gratis (de las notificaciones) y compras (de las ventas, con país).
+  const IDIOMA = { AR: 'es', ES: 'es', MX: 'es', CL: 'es', CO: 'es', PE: 'es', UY: 'es', VE: 'es', EC: 'es', BO: 'es', PY: 'es', CR: 'es', BR: 'pt', PT: 'pt', FR: 'fr', BE: 'fr', LU: 'fr', DE: 'de', AT: 'de', CH: 'de', IT: 'it', NL: 'nl', PL: 'pl', JP: 'ja', CN: 'zh', KR: 'ko', RU: 'ru', CZ: 'cs', SE: 'sv', DK: 'da', NO: 'no', FI: 'fi', TR: 'tr', GR: 'el', HU: 'hu', RO: 'ro', UA: 'uk' };
+  const recientes = [
+    ...yo.activityNotificationsBatch.results.map(n => n.activity).filter(a => a.verb === 'free_download' && a.actor).map(a => ({ cuando: a.createdAt, quien: a.actor.nick, perfil: a.actor.url, modelo: a.target?.name || '', tipo: 'gratis', idioma: 'en' })),
+    ...ventas.slice(0, 30).filter(v => v.buyer).map(v => ({ cuando: v.createdAt, quien: v.buyer.nick, perfil: v.buyer.url, modelo: v.creation?.name || '', tipo: plata(v.income.cents), pais: v.orderCountry?.code, idioma: IDIOMA[v.orderCountry?.code] || 'en' }))
+  ].sort((a, b) => b.cuando.localeCompare(a.cuando)).slice(0, 8);
+  const items = [
+    { nombre: u.nick, valor: fmt(u.followersCount), unidad: 'seguidores', detalle: `${fmt(u.creationsCount)} modelos publicados`, link: u.url },
+    { nombre: 'Descargas totales', valor: fmt(sum(modelos, 'downloadsCount')), num: sum(modelos, 'downloadsCount'), unidad: 'descargas', detalle: `${fmt(sum(modelos, 'viewsCount'))} vistas · ${fmt(sum(modelos, 'likesCount'))} me gusta · ${fmt(ventas.length)} ventas` },
+    { nombre: '💶 Disponible para cobrar', valor: plata(cents(disponibles)), detalle: `${fmt(disponibles.length)} ventas con más de un mes (Cults3D ya las liberó)`, estado: cents(disponibles) > 0 ? 'bien' : undefined },
+    { nombre: '⏳ Retenido (todavía no disponible)', valor: plata(cents(retenidas)), detalle: `${fmt(retenidas.length)} ventas del último mes${proxLibera ? ` · la próxima se libera el ${fecha(new Date(new Date(proxLibera).setMonth(new Date(proxLibera).getMonth() + 1)).toISOString())}` : ''}` },
+    { nombre: '✅ Ya cobrado', valor: plata(cents(pagadas)), detalle: `${fmt(pagadas.length)} ventas${ultPago ? ` · último pago el ${fecha(ultPago)}` : ''}` },
+  ];
+  items.push({ nombre: recientes.length ? 'Últimas descargas' : 'Sin descargas recientes', valor: '', titulo: true });
+  for (const r of recientes) items.push({ nombre: '· ' + r.quien + (r.pais ? ' ' + r.pais : ''), valor: r.tipo === 'gratis' ? 'gratis' : r.tipo, detalle: `${r.modelo} · ${fecha(r.cuando)}`, sub: true, agradecer: { nick: r.quien, perfil: r.perfil, idioma: r.idioma } });
+  return { id: 'cults', titulo: 'Cults3D', icono: '🧩', items, cuando: { hasta: 'instante', nota: 'plata: Cults3D libera cada venta al mes' } };
 }
 
 // Clics en el link de promoción (jugar.html): llegan al instante, mucho antes que las estadísticas de Google.
