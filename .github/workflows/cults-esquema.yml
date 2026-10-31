@@ -22,6 +22,13 @@ jobs:
           const tipo = f => { let x = f.type; let s = ''; while (x) { s += x.name ? x.name : (x.kind === 'LIST' ? '[]' : x.kind === 'NON_NULL' ? '!' : ''); x = x.ofType; } return s; };
           let out = 'Query: ' + j.data.__schema.queryType.name + ' · Mutation: ' + (j.data.__schema.mutationType || {}).name + '\n';
           for (const x of t) out += '\n' + x.name + ': ' + (x.fields || []).map(f => f.name + (f.args.length ? '(' + f.args.map(a => a.name).join(',') + ')' : '') + ':' + tipo(f)).join(', ') + '\n';
+          const pedir = async query => (await (await fetch('https://cults3d.com/graphql', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'User-Agent': 'Mozilla/5.0 VikingZone-Tablero', Authorization: auth }, body: JSON.stringify({ query }) })).json());
+          const a = await pedir('{ myself { activityNotificationsBatch(limit: 100) { total results { important activity { verb createdAt target { __typename } } } } salesBatch(limit: 100) { total results { payedOutAt createdAt } } creationsBatch(limit: 100) { total } } }');
+          const cuenta = {}; for (const n of a.data?.myself?.activityNotificationsBatch?.results || []) { const k = n.activity.verb + ' -> ' + (n.activity.target?.__typename || '?'); cuenta[k] = (cuenta[k] || 0) + 1; }
+          out += '\n\nNOTIFICACIONES (tipo -> cantidad): total ' + (a.data?.myself?.activityNotificationsBatch?.total) + '\n' + JSON.stringify(cuenta, null, 1) + (a.errors ? '\nERRORES: ' + JSON.stringify(a.errors).slice(0, 500) : '');
+          const ventas = a.data?.myself?.salesBatch?.results || [];
+          out += '\nVENTAS: total ' + a.data?.myself?.salesBatch?.total + ', pagadas ' + ventas.filter(v => v.payedOutAt).length + ', sin pagar ' + ventas.filter(v => !v.payedOutAt).length + '\nMODELOS: ' + a.data?.myself?.creationsBatch?.total;
+          const t2 = await pedir('{ __type(name: "ActivityTarget") { kind possibleTypes { name } } }'); out += '\nActivityTarget: ' + JSON.stringify(t2.data);
           fs.writeFileSync(process.env.RUNNER_TEMP + '/o/cults-esquema.txt', out);
           JS
           node "$RUNNER_TEMP/e.mjs"
