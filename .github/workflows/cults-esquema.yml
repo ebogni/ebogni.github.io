@@ -29,6 +29,9 @@ jobs:
           const ventas = a.data?.myself?.salesBatch?.results || [];
           out += '\nVENTAS: total ' + a.data?.myself?.salesBatch?.total + ', pagadas ' + ventas.filter(v => v.payedOutAt).length + ', sin pagar ' + ventas.filter(v => !v.payedOutAt).length + '\nMODELOS: ' + a.data?.myself?.creationsBatch?.total;
           const t2 = await pedir('{ __type(name: "ActivityTarget") { kind possibleTypes { name } } }'); out += '\nActivityTarget: ' + JSON.stringify(t2.data);
+          let todas = []; for (let off = 0; off < 2000; off += 100) { const b = await pedir(`{ myself { salesBatch(limit: 100, offset: ${off}) { results { payedOutAt createdAt income(currency: USD) { cents } } } } }`); const r = b.data?.myself?.salesBatch?.results || []; todas.push(...r); if (r.length < 100) break; }
+          const porPago = {}; for (const v of todas) { const k = v.payedOutAt ? 'pagado ' + v.payedOutAt.slice(0, 7) : 'sin pagar'; porPago[k] ||= { ventas: 0, usd: 0 }; porPago[k].ventas++; porPago[k].usd += v.income.cents / 100; }
+          out += '\nPAGOS (por mes de pago): ' + JSON.stringify(porPago) + '\nVenta más vieja sin pagar: ' + (todas.filter(v => !v.payedOutAt).map(v => v.createdAt).sort()[0] || '-') + ' · más nueva pagada: ' + (todas.filter(v => v.payedOutAt).map(v => v.createdAt).sort().pop() || '-');
           fs.writeFileSync(process.env.RUNNER_TEMP + '/o/cults-esquema.txt', out);
           JS
           node "$RUNNER_TEMP/e.mjs"
