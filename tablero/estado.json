@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-10-31T08:47:46.251Z",
+ "actualizado": "2026-10-31T11:34:08.080Z",
  "fuentes": [
   {
    "fuente": "Ganancias de AdMob",
@@ -51,11 +51,9 @@
   },
   {
    "fuente": "Cults3D",
-   "estado": "error (muestra el dato anterior)",
+   "estado": "ok",
    "notas": []
   }
  ],
- "errores": [
-  "Cults3D: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON"
- ]
+ "errores": []
 }
