@@ -30,6 +30,9 @@ button:disabled{opacity:.5;cursor:default}
 .grilla{columns:280px;column-gap:12px}
 .idea{break-inside:avoid;background:var(--card);border:1px solid var(--bd);border-top:5px solid var(--bd);border-radius:var(--r);padding:12px 14px;margin:0 0 12px;display:block;width:100%}
 .idea h3{margin:0 0 4px;font-size:1.03em}
+.cat{display:inline-block;font-size:.75em;font-weight:700;color:#1b1500;background:var(--oro);border-radius:999px;padding:2px 9px;margin-bottom:6px}
+.chip{padding:7px 12px;font-size:.88em;border:1px solid var(--bd);background:transparent;color:var(--mu)}.chip.on{background:var(--card2);color:var(--tx);border-color:#454b5e}
+.nueva select{background:var(--card2);color:var(--tx);border:0;border-radius:999px;padding:8px 12px;font:inherit;flex:1 1 auto;min-width:0;max-width:60%;margin-right:auto}
 .idea .txt{white-space:pre-wrap;overflow-wrap:anywhere;color:#d9dce6;font-size:.95em}
 .idea .fecha{color:var(--mu);font-size:.78em;margin-top:6px}
 .viable .acc{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
@@ -47,20 +50,26 @@ dialog::backdrop{background:#000a}
 <form class="nueva" id="fNueva">
   <input id="titulo" placeholder="Título (opcional)" maxlength="120" autocomplete="off">
   <textarea id="texto" placeholder="Anotá la idea…" maxlength="4000"></textarea>
-  <div class="pie"><button type="button" id="btnLimpiar">Borrar</button><button class="pri" id="btnGuardar">Guardar</button></div>
+  <div class="pie"><select id="categoria" aria-label="Categoría"></select><button type="button" id="btnLimpiar">Borrar</button><button class="pri" id="btnGuardar">Guardar</button></div>
 </form>
 
 <div class="barra">
   <input class="buscar" id="buscar" placeholder="🔎 Buscar…" autocomplete="off">
 </div>
+<div class="barra" id="cats">
+</div>
 <div class="grilla" id="grilla"></div>
 
+<dialog id="dlgCat"><form><p>Nombre de la categoría nueva</p><input id="dlgCatNombre" maxlength="40" autocomplete="off" style="width:100%;background:var(--card2);color:var(--tx);border:0;border-radius:10px;padding:10px;font:inherit"><div class="acc" style="justify-content:flex-end"><button type="button" id="dlgCatNo">Cancelar</button><button class="pri" id="dlgCatSi">Crear</button></div></form></dialog>
 <dialog id="dlg"><p id="dlgTxt"></p><div class="acc" style="justify-content:flex-end"><button id="dlgNo">Cancelar</button><button class="pri" id="dlgSi">Borrar</button></div></dialog>
 
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-let IDEAS = [], texto = '';
+let IDEAS = [], texto = '', filtroCat = '';
+const LSC = 'almacen-ideas-categorias';
+let CATS = (() => { try { return JSON.parse(localStorage.getItem(LSC)) || null; } catch (e) { return null; } })() || ['Apps', 'Juegos', 'Diseños 3D', 'MundoLEDs', 'Casa y domótica', 'Otras'];
+const guardarCats = () => { try { localStorage.setItem(LSC, JSON.stringify(CATS)); } catch (e) { } };
 let col = null, local = false;
 
 // ---------- Guardado: en tu cuenta (privado) o, si no se puede, en este navegador ----------
@@ -80,10 +89,21 @@ async function borrar(id) {
 // ---------- Pantalla ----------
 function avisar(t) { $('aviso').textContent = t; $('aviso').hidden = !t; }
 const fecha = iso => new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+function pintarCats() {
+  const usadas = [...new Set(IDEAS.map(x => x.categoria).filter(Boolean))];
+  for (const c of usadas) if (!CATS.includes(c)) CATS.push(c);
+  const sel = $('categoria'), elegida = sel.value || CATS[0];
+  sel.innerHTML = CATS.map(c => `<option${c === elegida ? ' selected' : ''}>${esc(c)}</option>`).join('') + '<option value="__nueva">➕ Nueva categoría…</option>';
+  const cuenta = c => IDEAS.filter(x => (x.categoria || 'Otras') === c).length;
+  $('cats').innerHTML = `<button class="chip${filtroCat ? '' : ' on'}" data-c="">Todas (${IDEAS.length})</button>` + CATS.filter(c => cuenta(c)).map(c => `<button class="chip${filtroCat === c ? ' on' : ''}" data-c="${esc(c)}">${esc(c)} (${cuenta(c)})</button>`).join('');
+}
 function pintar() {
+  pintarCats();
   let L = IDEAS.slice().sort((a, b) => b.creada.localeCompare(a.creada));
-  if (texto) { const q = texto.toLowerCase(); L = L.filter(x => (x.titulo + ' ' + x.texto).toLowerCase().includes(q)); }
+  if (filtroCat) L = L.filter(x => (x.categoria || 'Otras') === filtroCat);
+  if (texto) { const q = texto.toLowerCase(); L = L.filter(x => (x.titulo + ' ' + x.texto + ' ' + (x.categoria || '')).toLowerCase().includes(q)); }
   $('grilla').innerHTML = L.length ? L.map(x => `<article class="idea">
+      <span class="cat">${esc(x.categoria || 'Otras')}</span>
       ${x.titulo ? `<h3>${esc(x.titulo)}</h3>` : ''}<div class="txt">${esc(x.texto)}</div>
       <div class="fecha">Anotada el ${fecha(x.creada)}</div>
       <div class="acc"><button data-ed="${x.id}">✏️ Editar</button><button data-bo="${x.id}">🗑️</button></div>
@@ -96,7 +116,8 @@ $('fNueva').addEventListener('submit', async e => {
   const t = $('texto').value.trim(), ti = $('titulo').value.trim();
   if (!t && !ti) { $('texto').focus(); return; }
   const base = editando ? IDEAS.find(x => x.id === editando) : null;
-  const idea = base ? { ...base, titulo: ti, texto: t || ti } : { id: 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), titulo: ti, texto: t || ti, creada: new Date().toISOString() };
+  const cat = $('categoria').value === '__nueva' ? 'Otras' : $('categoria').value;
+  const idea = base ? { ...base, titulo: ti, texto: t || ti, categoria: cat } : { categoria: cat, id: 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), titulo: ti, texto: t || ti, creada: new Date().toISOString() };
   $('btnGuardar').disabled = true;
   try { await guardar(idea); $('titulo').value = ''; $('texto').value = ''; editando = null; $('btnGuardar').textContent = 'Guardar'; avisar(''); }
   catch (err) { avisar(err && err.code === 'quota_exceeded' ? 'Se llenó el almacén: borrá algunas ideas viejas.' : 'No se pudo guardar. Probá de nuevo.'); }
@@ -108,13 +129,27 @@ let aBorrar = null;
 $('grilla').onclick = e => {
   const b = e.target.closest('button'); if (!b) return;
   const idea = IDEAS.find(x => x.id === (b.dataset.ed || b.dataset.bo)); if (!idea) return;
-  if (b.dataset.ed) { editando = idea.id; $('titulo').value = idea.titulo; $('texto').value = idea.texto; $('btnGuardar').textContent = 'Guardar cambios'; window.scrollTo({ top: 0, behavior: 'smooth' }); $('texto').focus(); }
+  if (b.dataset.ed) { editando = idea.id; $('titulo').value = idea.titulo; $('categoria').value = idea.categoria || 'Otras'; $('texto').value = idea.texto; $('btnGuardar').textContent = 'Guardar cambios'; window.scrollTo({ top: 0, behavior: 'smooth' }); $('texto').focus(); }
   if (b.dataset.bo) { aBorrar = idea.id; $('dlgTxt').textContent = '¿Borrar "' + (idea.titulo || idea.texto.slice(0, 60)) + '"? No se puede deshacer.'; $('dlg').showModal(); }
 };
 $('dlgNo').onclick = () => $('dlg').close();
 $('dlgSi').onclick = async () => { $('dlg').close(); try { await borrar(aBorrar); } catch (e) { avisar('No se pudo borrar. Probá de nuevo.'); } };
 
 // ---------- Arranque ----------
+// Categorías: filtrar tocando un botón, crear una nueva desde la lista
+$('cats').onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return; filtroCat = b.dataset.c; pintar(); };
+$('categoria').onchange = () => {
+  if ($('categoria').value !== '__nueva') return;
+  $('dlgCatNombre').value = ''; $('dlgCat').showModal(); $('dlgCatNombre').focus();
+};
+$('dlgCatNo').onclick = () => { $('dlgCat').close(); $('categoria').value = CATS[0]; };
+$('dlgCatSi').onclick = e => {
+  e.preventDefault();
+  let n = $('dlgCatNombre').value.trim(); if (!n) return;
+  n = n[0].toUpperCase() + n.slice(1);
+  if (!CATS.includes(n)) { CATS.push(n); guardarCats(); }
+  $('dlgCat').close(); pintarCats(); $('categoria').value = n;
+};
 function modoLocal(motivo) {
   local = true; IDEAS = leerLocal();
   $('estado').textContent = 'Guardando solo en este navegador.';
