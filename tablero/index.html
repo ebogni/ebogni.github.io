@@ -45,7 +45,9 @@ header{display:flex;align-items:center;gap:10px;margin:4px 0 4px}h1{font-size:cl
 .fila .v{font-weight:700;font-size:1.08em;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.fila .v small{font-weight:400;color:var(--mu);font-size:.72em;margin-left:4px}
 .fila .x{grid-column:1/-1;color:var(--mu);font-size:.84em;display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between}
 .fila.sub .n{font-weight:400;font-size:.93em;padding-left:10px}.fila.sub .v{font-size:.98em}
-.fila.alerta .v{color:var(--baja)}.fila.espera .v{color:var(--azul)}
+.fila.alerta .v{color:var(--baja)}.fila.espera .v{color:var(--azul)}.fila.bien .v{color:var(--sube)}
+.ingresos{margin-bottom:14px}.ingresos .tot{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;margin-bottom:6px}.ingresos .tot .v{font-size:clamp(1.7em,5vw,2.6em);font-weight:800;color:var(--oro);font-variant-numeric:tabular-nums}.ingresos .tot .s{color:var(--mu);font-size:.9em}
+.portales{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px;margin-bottom:14px}.portal{background:var(--card);border:1px solid var(--bd);border-left:5px solid var(--azul);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:3px;color:inherit;text-decoration:none;min-width:0}.portal.bien{border-left-color:var(--sube)}.portal.alerta{border-left-color:var(--baja)}.portal .t{color:var(--mu);font-size:.82em}.portal .e{font-weight:750;font-size:1.1em}.portal .s{color:var(--mu);font-size:.8em;overflow-wrap:anywhere}
 .prop{grid-column:1/-1;height:6px;background:var(--card2);border-radius:99px;overflow:hidden}.prop i{display:block;height:100%;background:var(--oro);border-radius:99px}
 .apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;margin-bottom:14px}
 .app{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px;min-width:0}
@@ -77,6 +79,8 @@ label.rec{display:flex;gap:8px;justify-content:center;align-items:center;color:v
     <header><h1>📊 VikingZone</h1><button class="ctrl" id="btnAct" aria-label="Actualizar">↻</button><button class="ctrl" id="btnSalir">Salir</button></header>
     <p class="estado" id="estado"></p>
     <div id="avisos"></div>
+    <section class="card ingresos" id="ingresos" hidden></section>
+    <div class="portales" id="portales"></div>
     <div class="cuando" id="cuandoKpis"></div>
     <div class="kpis" id="kpis"></div>
     <h2 class="titulo" id="tituloApps">📱 Tus apps, una por una</h2>
@@ -172,6 +176,19 @@ function pintar(D) {
   $('cuandoKpis').innerHTML = P ? 'Plata de AdMob: ' + lin('admob') + (SEC('play') ? ' · Descargas: ' + lin('play') : '') + ' ' + rf('admob') : '';
   $('cuandoKpis').className = 'cuando' + (SEC('admob')?.viejo ? ' viejo' : '');
   $('avisos').innerHTML = (D.avisos || []).map(a => `<div class="aviso amarillo">🔔 <span>${esc(a)}</span></div>`).join('') + (D.errores || []).map(e => `<div class="aviso rojo">⚠️ <span>${esc(e)}</span></div>`).join('');
+  // Todos los ingresos juntos (arriba de todo)
+  const I = D.ingresos;
+  $('ingresos').hidden = !I;
+  if (I) {
+    const cot = I.cotizacion ? ` · 1 EUR = US$ ${I.cotizacion.EUR.toFixed(2)}` : '';
+    $('ingresos').innerHTML = `<h2>💰 Todos tus ingresos <small>este mes, en dólares</small></h2>
+      <div class="tot"><span class="v">${usd(I.mesUSD)}</span><span class="s">${cambio(H['total|ingresos'], true) || ''}</span><span class="s">🏦 Para cobrar en total ~${usd(I.cobrarUSD)}</span></div>
+      ${I.fuentes.map(f => `<div class="fila ${f.mesUSD > 0 ? 'bien' : ''}"><span class="n">${f.icono} ${esc(f.nombre)}</span><span class="v">${usd(f.mesUSD)}${f.mon && f.mon !== 'USD' ? `<small>${Number(f.mes).toFixed(2)} ${esc(f.mon)}</small>` : ''}</span><span class="x"><span>${esc(f.nota || '')}</span>${f.cobrarUSD ? `<span>para cobrar ~${usd(f.cobrarUSD)}</span>` : ''}</span></div>`).join('')}
+      <div class="cuando">AdMob y Cults3D se leen solos; los portales se cargan cuando empiecen a pagar${cot}</div>`;
+  }
+  // Estado de los portales web (uno al lado del otro)
+  const PW = (SEC('portales')?.items || []).filter(it => it.portal);
+  $('portales').innerHTML = PW.map(it => `<a class="portal ${it.estado || ''}" ${it.link ? `href="${esc(it.link)}" target="_blank" rel="noopener"` : ''}><span class="t">🌐 ${esc(it.portal)}</span><span class="e">${esc(it.valor)}</span><span class="s">${esc(it.detalle || it.nombre.split(' · ')[1] || '')}</span></a>`).join('');
   // Números grandes
   let k = '';
   if (P) {

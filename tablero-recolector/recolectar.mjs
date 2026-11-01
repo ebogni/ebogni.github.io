@@ -71,6 +71,7 @@ async function play() {
 }
 
 let PLATA = null; // Resumen de plata para los números grandes y los gráficos del tablero.
+let CULTS = null; // Plata de Cults3D (en su moneda) para el resumen de ingresos.
 async function admob() {
   if (!E.ADMOB_REFRESH_TOKEN) return pendiente('admob', 'Ganancias de AdMob', '💰', 'Falta conectar AdMob (paso de permisos).');
   const tok = await tokenGoogle(E.GOOGLE_CLIENT_ID || F.admob.clientId, E.GOOGLE_CLIENT_SECRET, E.ADMOB_REFRESH_TOKEN);
@@ -129,15 +130,20 @@ async function youtube() {
 }
 
 async function portales() {
-  const items = [];
-  for (const g of F.y8) {
-    const r = await fetch(g.url, { redirect: 'follow', headers: { 'User-Agent': 'Mozilla/5.0' } });
-    const html = r.ok ? await r.text() : '';
+  // Estado de cada portal. Y8 se lee de su página; CrazyGames y Playgama no tienen API pública:
+  // su estado lo carga Claude en fuentes.json (con la fecha en que lo miró).
+  const items = [], dd = f => f ? ' · visto el ' + f.slice(8, 10) + '/' + f.slice(5, 7) : '';
+  const tipo = e => /rechaz|bloque|error/i.test(e) ? 'alerta' : /publicad|en vivo|live|aprobad/i.test(e) ? 'bien' : 'espera';
+  for (const g of F.playgama || []) items.push({ nombre: 'Playgama · ' + g.nombre, valor: g.estado, estado: tipo(g.estado), detalle: (g.detalle || '') + dd(g.visto), link: g.link, portal: 'Playgama' });
+  for (const g of F.crazygames || []) items.push({ nombre: 'CrazyGames · ' + g.nombre, valor: g.estado, estado: tipo(g.estado), detalle: (g.detalle || '') + dd(g.visto), link: g.link, portal: 'CrazyGames' });
+  for (const g of F.y8 || []) {
+    let ok = false, html = '';
+    try { const r = await fetch(g.url, { redirect: 'follow', headers: { 'User-Agent': 'Mozilla/5.0' } }); ok = r.ok; html = ok ? await r.text() : ''; } catch (e) { }
     const jugadas = (html.match(/([\d.,]+)\s*(plays|partidas|jugadas)/i) || [])[1];
-    items.push(r.ok ? { nombre: 'Y8 · ' + g.nombre, valor: jugadas || 'Publicado', unidad: jugadas ? 'partidas' : '', link: g.url } : { nombre: 'Y8 · ' + g.nombre, valor: 'En revisión', detalle: 'Todavía no está publicada', estado: 'espera' });
+    items.push(ok ? { nombre: 'Y8 · ' + g.nombre, valor: jugadas ? jugadas + ' partidas' : 'Publicado', estado: 'bien', link: g.url, portal: 'Y8' }
+      : { nombre: 'Y8 · ' + g.nombre, valor: g.estado || 'En revisión', estado: 'espera', detalle: (g.detalle || 'Todavía no está publicada') + dd(g.visto), portal: 'Y8' });
   }
-  for (const g of F.crazygames) items.push({ nombre: 'CrazyGames · ' + g.nombre, valor: g.estado, estado: /rechaz/i.test(g.estado) ? 'alerta' : 'espera' });
-  return { id: 'portales', titulo: 'Portales web', icono: '🌐', items };
+  return { id: 'portales', titulo: 'Portales web', icono: '🌐', items, oculta: true }; // se muestra arriba, en fila
 }
 
 async function cults() {
@@ -173,6 +179,8 @@ async function cults() {
   const disponibles = sinPagar.filter(v => new Date(v.createdAt) <= hace1mes), retenidas = sinPagar.filter(v => new Date(v.createdAt) > hace1mes);
   const cents = arr => arr.reduce((t, v) => t + v.income.cents, 0);
   const ultPago = pagadas.map(v => v.payedOutAt).sort().pop();
+  const iniMes = hoyISO().slice(0, 8) + '01';
+  CULTS = { mon, mes: cents(ventas.filter(v => new Date(new Date(v.createdAt) - 3 * 3600e3).toISOString().slice(0, 10) >= iniMes)) / 100, disponible: cents(disponibles) / 100, retenido: cents(retenidas) / 100, cobrado: cents(pagadas) / 100 };
   const proxLibera = retenidas.map(v => v.createdAt).sort()[0];
   const fecha = iso => new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
   // Descargas recientes: gratis (de las notificaciones) y compras (de las ventas, con país).
@@ -331,6 +339,7 @@ if (FUENTE && previo) { // arranco desde lo anterior para no perder la plata ni 
   for (const a of previo.apps || []) APPS[a.nombre] = { ...a };
   PLATA = previo.plata || null;
 }
+if (previo && previo.cults) CULTS = CULTS || previo.cults;
 for (const [n, f] of [['AdMob', admob], ['Google Play', play], ['YouTube', youtube], ['Clics', clics], ['Estoy viva', viva], ['Portales', portales], ['Cults3D', cults]]) {
   if (!corre(IDS[n])) { const p = previo && previo.secciones.find(s => s.id === IDS[n]); if (p) { secciones.push(p); continue; } }
   try { const sec = await f(); sec.buscado = new Date().toISOString(); sec.cuando ||= { hasta: 'instante' }; secciones.push(sec); } catch (e) { errores.push(n + ': ' + e.message); const p = previo && previo.secciones.find(s => s.titulo.includes(n)); if (p) secciones.push({ ...p, viejo: true, error: e.message }); }
@@ -349,7 +358,21 @@ for (const a of Object.values(APPS)) { if (a.instalaciones != null) (hist['app|'
 // ¿Anda el permiso del botón ↻? (solo se prueba, nunca se muestra)
 let botonRefrescar = 'sin permiso cargado';
 if (E.TABLERO_DISPARAR) { try { const r = await fetch('https://api.github.com/repos/ebogni/ebogni.github.io/actions/workflows/tablero.yml', { headers: { Authorization: 'Bearer ' + E.TABLERO_DISPARAR, Accept: 'application/vnd.github+json', 'User-Agent': 'tablero' } }); botonRefrescar = r.ok ? 'listo' : 'el permiso no sirve (' + r.status + ')'; } catch (e) { botonRefrescar = 'no se pudo probar'; } }
-const datos = { v: 2, apps: Object.values(APPS).sort((a, b) => (b.ganMes || 0) - (a.ganMes || 0) || (b.instalaciones || b.descargasMin || 0) - (a.instalaciones || a.descargasMin || 0)), actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist, clicsCrudos: CRUDOS, disparar: E.TABLERO_DISPARAR || null };
+// ---------- Resumen de TODOS los ingresos (arriba de todo en el tablero), en dólares ----------
+let cot = (previo && previo.ingresos && previo.ingresos.cotizacion) || null;
+try { const r = await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD'); const j = await r.json(); if (j.rates && j.rates.USD) cot = { EUR: j.rates.USD, fecha: j.date }; } catch (e) { }
+const aUSD = (n, mon) => n == null ? null : mon === 'USD' ? n : cot && cot[mon] ? n * cot[mon] : null;
+const fuentesPlata = [];
+if (PLATA) fuentesPlata.push({ nombre: 'AdMob (apps)', icono: '📱', mesUSD: PLATA.mes, hoyUSD: PLATA.hoy, cobrarUSD: PLATA.saldo, nota: PLATA.saldo != null ? `mínimo de cobro US$ ${PLATA.umbral}` : '' });
+if (CULTS) fuentesPlata.push({ nombre: 'Cults3D (modelos 3D)', icono: '🧩', mes: CULTS.mes, mon: CULTS.mon, mesUSD: aUSD(CULTS.mes, CULTS.mon), cobrarUSD: aUSD(CULTS.disponible + CULTS.retenido, CULTS.mon), nota: `${CULTS.disponible.toFixed(2)} ${CULTS.mon} disponibles · ${CULTS.retenido.toFixed(2)} retenidos` });
+for (const [k, n] of [['playgama', 'Playgama'], ['crazygames', 'CrazyGames'], ['y8', 'Y8']]) {
+  const g = (F[k] || []).reduce((t, x) => t + (x.gananciaMesUSD || 0), 0), c = (F[k] || []).reduce((t, x) => t + (x.paraCobrarUSD || 0), 0);
+  fuentesPlata.push({ nombre: n + ' (web)', icono: '🌐', mesUSD: g, cobrarUSD: c, nota: (F[k] || []).some(x => x.gananciaMesUSD != null) ? 'cargado a mano' : 'todavía sin ingresos' });
+}
+const sumar = k => fuentesPlata.reduce((t, x) => t + (x[k] || 0), 0);
+const INGRESOS = { mesUSD: sumar('mesUSD'), cobrarUSD: sumar('cobrarUSD'), fuentes: fuentesPlata, cotizacion: cot };
+(hist['total|ingresos'] ||= {})[dia] = INGRESOS.mesUSD;
+const datos = { v: 2, ingresos: INGRESOS, cults: CULTS, apps: Object.values(APPS).sort((a, b) => (b.ganMes || 0) - (a.ganMes || 0) || (b.instalaciones || b.descargasMin || 0) - (a.instalaciones || a.descargasMin || 0)), actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist, clicsCrudos: CRUDOS, disparar: E.TABLERO_DISPARAR || null };
 fs.writeFileSync(SALIDA, JSON.stringify(await cifrar(K, datos)));
 // Estado público (sin números): qué fuentes andan, para revisar fallas sin abrir el tablero.
 fs.writeFileSync(DIR + '../tablero/estado.json', JSON.stringify({ actualizado: datos.actualizado, botonRefrescar, fuentes: secciones.map(s => ({ fuente: s.titulo, estado: s.viejo ? 'error (muestra el dato anterior)' : s.items[0]?.nombre === 'Sin conectar' ? 'sin conectar' : 'ok', notas: s.items.filter(i => i.estado === 'espera' && i.nombre !== 'Sin conectar').map(i => i.nombre + ': ' + (i.detalle || i.valor)).concat(s.id === 'play' ? [`${s.items.filter(i => i.unidad === 'instalaciones').length} apps con instalaciones exactas`] : []) })), errores }, null, 1));

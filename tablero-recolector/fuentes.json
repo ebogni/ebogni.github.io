@@ -28,16 +28,31 @@
       "fecha": "2026-10-24"
     }
   },
-  "y8": [
+  "playgama": [
     {
       "nombre": "Carrera en Miniatura",
-      "url": "https://www.y8.com/games/carrera_en_miniatura"
+      "estado": "Sandbox publicado",
+      "detalle": "juntando partidas para habilitar la moderación",
+      "visto": "2026-11-01",
+      "link": "https://playgama.ai/play/2nt6xkyob2uu6s"
     }
   ],
   "crazygames": [
     {
       "nombre": "Carrera en Miniatura",
-      "estado": "Esperando respuesta (mail enviado el 27/10)"
+      "estado": "En revisión",
+      "detalle": "reenviada el 01/11 con la versión 43",
+      "visto": "2026-11-01",
+      "link": "https://developer.crazygames.com/games/790c2891-6abf-4897-9d34-e6cad152aef5"
+    }
+  ],
+  "y8": [
+    {
+      "nombre": "Carrera en Miniatura",
+      "url": "https://www.y8.com/games/carrera_en_miniatura",
+      "estado": "En revisión",
+      "detalle": "enviada el 24/10, Y8 no avisa cuánto tarda",
+      "visto": "2026-11-01"
     }
   ],
   "cults3d": {
@@ -51,10 +66,22 @@
   },
   "viva": {
     "apps": [
-      { "clave": "carrera", "nombre": "Carrera en Miniatura" },
-      { "clave": "truco", "nombre": "Anotador de Truco" }
+      {
+        "clave": "carrera",
+        "nombre": "Carrera en Miniatura"
+      },
+      {
+        "clave": "truco",
+        "nombre": "Anotador de Truco"
+      }
     ],
-    "canales": ["organico", "youtube", "tiktok", "directo", "anotador_truco"]
+    "canales": [
+      "organico",
+      "youtube",
+      "tiktok",
+      "directo",
+      "anotador_truco"
+    ]
   },
   "clics": {
     "fuentes": [
