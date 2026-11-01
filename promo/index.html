@@ -34,7 +34,6 @@ progress{width:100%;height:14px;margin-top:12px}a{color:var(--ac)}footer{color:v
 </div>
 <footer><a href="privacidad.html">Política de privacidad / Privacy policy</a> · Usa los Servicios de la API de YouTube · <a href="https://www.youtube.com/t/terms">YouTube Terms of Service</a></footer>
 </main>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 const CLIENT_ID = '740201206532-r2hqgh3qt95medvlnlhf3f52612idck0.apps.googleusercontent.com';
 const SCOPE = 'https://www.googleapis.com/auth/youtube.upload';
@@ -53,8 +52,12 @@ function llenar(){ const v=D.variantes[+$('texto').value]; $('titulo').value=v.t
 $('texto').onchange=llenar;
 function listo(){ const ok=!!token; $('btnDesconectar').hidden=!ok; $('btnConectar').hidden=ok; $('estadoCuenta').textContent=ok?T.si:T.no; $('btnSubir').disabled=!ok||!$('video').files[0]; }
 $('video').onchange=listo;
-$('btnConectar').onclick=()=>{ if(!cliente) cliente=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:SCOPE,callback:r=>{ if(r.access_token){token=r.access_token;} listo(); }}); cliente.requestAccessToken({prompt:'select_account consent'}); };  // siempre muestra la cuenta y el permiso que se pide
-$('btnDesconectar').onclick=()=>{ if(token) google.accounts.oauth2.revoke(token,()=>{}); token=null; listo(); };
+listo();
+// Conectar: la página de Google se abre en esta misma pestaña (sin ventanas emergentes) y vuelve acá con el permiso.
+const VUELTA = location.origin + location.pathname;
+$('btnConectar').onclick=()=>{ const q=new URLSearchParams({client_id:CLIENT_ID,redirect_uri:VUELTA,response_type:'token',scope:SCOPE,prompt:'select_account consent',include_granted_scopes:'true'}); location.href='https://accounts.google.com/o/oauth2/v2/auth?'+q; };
+{ const h=new URLSearchParams(location.hash.slice(1)); if(h.get('access_token')){ token=h.get('access_token'); history.replaceState(null,'',VUELTA); } }
+$('btnDesconectar').onclick=()=>{ if(token) fetch('https://oauth2.googleapis.com/revoke?token='+encodeURIComponent(token),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'}}).catch(()=>{}); token=null; listo(); };
 $('btnSubir').onclick=async()=>{
   const f=$('video').files[0]; if(!f||!token) return; $('btnSubir').disabled=true; $('barra').hidden=false; $('estadoSubida').textContent='';
   const meta={snippet:{title:$('titulo').value.slice(0,100),description:$('descripcion').value,tags:$('etiquetas').value.split(',').map(s=>s.trim()).filter(Boolean),categoryId:'20'},status:{privacyStatus:$('privacidad').value,selfDeclaredMadeForKids:false}};
