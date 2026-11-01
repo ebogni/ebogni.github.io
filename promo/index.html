@@ -52,11 +52,11 @@ function llenar(){ const v=D.variantes[+$('texto').value]; $('titulo').value=v.t
 $('texto').onchange=llenar;
 function listo(){ const ok=!!token; $('btnDesconectar').hidden=!ok; $('btnConectar').hidden=ok; $('estadoCuenta').textContent=ok?T.si:T.no; $('btnSubir').disabled=!ok||!$('video').files[0]; }
 $('video').onchange=listo;
-listo();
 // Conectar: la página de Google se abre en esta misma pestaña (sin ventanas emergentes) y vuelve acá con el permiso.
 const VUELTA = location.origin + location.pathname;
 $('btnConectar').onclick=()=>{ const q=new URLSearchParams({client_id:CLIENT_ID,redirect_uri:VUELTA,response_type:'token',scope:SCOPE,prompt:'select_account consent',include_granted_scopes:'true'}); location.href='https://accounts.google.com/o/oauth2/v2/auth?'+q; };
 { const h=new URLSearchParams(location.hash.slice(1)); if(h.get('access_token')){ token=h.get('access_token'); history.replaceState(null,'',VUELTA); } }
+listo();
 $('btnDesconectar').onclick=()=>{ if(token) fetch('https://oauth2.googleapis.com/revoke?token='+encodeURIComponent(token),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'}}).catch(()=>{}); token=null; listo(); };
 $('btnSubir').onclick=async()=>{
   const f=$('video').files[0]; if(!f||!token) return; $('btnSubir').disabled=true; $('barra').hidden=false; $('estadoSubida').textContent='';
