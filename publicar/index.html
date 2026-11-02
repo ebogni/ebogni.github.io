@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Publicar en grupos</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icono-192.png">
+<meta name="theme-color" content="#1b2433">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;background:#10161f;color:#e8edf3}
+header{position:sticky;top:0;background:#1b2433;padding:10px 12px;z-index:2}
+h1{font-size:18px;margin:0 0 8px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{flex:1;padding:9px;border:0;border-radius:8px;background:#2a3547;color:#e8edf3;font-size:15px}
+.tabs button.on{background:#3d7cff}
+main{padding:10px 12px 80px}
+.grupo{background:#1b2433;border-radius:12px;padding:12px;margin:0 0 10px}
+.grupo.hecho{opacity:.55}
+.fila{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.nom{font-weight:700;font-size:16px}
+.chip{font-size:12px;background:#2a3547;border-radius:6px;padding:2px 6px;white-space:nowrap}
+.regla{font-size:13px;color:#aab6c5;margin:6px 0}
+.estado{font-size:13px;margin:4px 0 8px}
+.ok{color:#5fd38d}.espera{color:#ffb74d}
+.bot{display:flex;gap:6px;flex-wrap:wrap}
+.bot button,.bot a{flex:1 1 30%;text-align:center;padding:10px 6px;border:0;border-radius:8px;background:#2a3547;color:#e8edf3;font-size:14px;text-decoration:none}
+.bot .pri{background:#3d7cff}
+.bot .ver{background:#2e7d4f}
+textarea{width:100%;min-height:120px;background:#10161f;color:#e8edf3;border:1px solid #2a3547;border-radius:8px;padding:8px;font-size:14px;margin:6px 0}
+select,input{width:100%;padding:9px;border-radius:8px;border:1px solid #2a3547;background:#10161f;color:#e8edf3;font-size:15px;margin:4px 0}
+.aviso{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#3d7cff;padding:10px 16px;border-radius:20px;display:none}
+details{background:#1b2433;border-radius:12px;padding:10px 12px;margin:0 0 10px}
+summary{font-weight:700}
+.borrar{background:none!important;color:#ff7b7b!important;flex:0 0 auto!important}
+</style>
+</head>
+<body>
+<header>
+<h1>📣 Publicar en grupos</h1>
+<div class="tabs" id="tabs"></div>
+</header>
+<main id="lista"></main>
+<div class="aviso" id="aviso"></div>
+<script>
+// Links con seguimiento: así el tablero cuenta lo que vino de grupos.
+const APPS={
+ carrera:{nombre:"🏎️ Carrera",link:"https://playgama.ai/play/2nt6xkyob2uu6s",
+  titulo:{es:"Hice un jueguito de carreras de autitos que se juega en el navegador, ¿lo prueban?",
+          en:"I made a tiny top-down racing game you can play in your browser – feedback welcome!"},
+  texto:{es:"Hola! Hice solo un juego de carreras de autitos en miniatura: corrés contra 3 autos, esquivás obstáculos y si chocás explotás 😅. Se juega en el navegador del celu o la compu, sin instalar nada.\n\n¿Me dicen qué les parece y en qué nivel quedaron? Cualquier crítica me sirve.\n\n👉 {link}",
+         en:"Hi! I'm a solo dev and made a small top-down racing game: race 3 cars, dodge obstacles, and if you crash you explode 😅. Plays in the browser on phone or PC, no install.\n\nI'd love honest feedback – what felt good, what felt bad, how far you got.\n\n👉 {link}"}},
+ truco:{nombre:"🃏 Truco",link:"https://play.google.com/store/apps/details?id=com.ebogni.puntosdetruco&utm_source=grupos&utm_medium=grupos",
+  titulo:{es:"Hice un anotador de truco gratis con fotos de los equipos y voces que te gastan"},
+  texto:{es:"Buenas! Para los que juegan al truco con amigos: hice un anotador gratis para Android 🃏\n\n✅ Anota con fósforos como en papel\n📸 Foto de cada equipo (cara de ganador y de perdedor)\n🎙️ Voces que cantan los puntos y te gastan (hay un pack bien picante 😂)\n🏆 Al final compartís la chapa de los campeones\n\nSi lo prueban, me cuentan qué le agregarían.\n\n👉 {link}"}}
+};
+// Grupos investigados. dias = cada cuánto conviene volver a publicar.
+const GRUPOS={
+ carrera:[
+  {n:"r/WebGames",t:"reddit",m:"~124 mil",sub:"WebGames",dias:30,idi:"en",r:"Juegos de navegador: el que mejor encaja. Publicá como link. Comentá en otros posts antes, valoran que participes."},
+  {n:"r/playmygame",t:"reddit",m:"~110 mil",sub:"playmygame",dias:14,idi:"en",r:"Hecho para compartir juegos jugables. Poné flair 'Web' y un texto explicando el juego."},
+  {n:"r/MobileGaming",t:"reddit",m:"~76 mil",sub:"MobileGaming",dias:30,idi:"en",r:"Permiten que los devs anuncien juegos de celular. Aclarás que sos el dev."},
+  {n:"r/IndieGaming",t:"reddit",m:"~450 mil",sub:"IndieGaming",dias:30,idi:"en",r:"Grande. Autopromo permitida con poca frecuencia. Mejor con un video o gif."},
+  {n:"r/IndieDev",t:"reddit",m:"~350 mil",sub:"IndieDev",dias:14,idi:"en",r:"Devs. Les gusta el 'cómo lo hice'; contá algo del proceso además del link."},
+  {n:"Indie Game Promo (IGD)",t:"facebook",m:"~56 mil",u:"https://www.facebook.com/search/groups/?q=Indie%20Game%20Promo",dias:7,idi:"en",r:"Grupo de Facebook para promocionar juegos indie. Pedí unirte primero."},
+  {n:"Promote your Games Android & iOS",t:"facebook",m:"?",u:"https://www.facebook.com/search/groups/?q=Promote%20your%20Games%20Android%20iOS",dias:7,idi:"en",r:"Grupo de intercambio y promo de juegos de celular."},
+  {n:"Grupos de juegos de autos (ES)",t:"facebook",m:"buscar",u:"https://www.facebook.com/search/groups/?q=juegos%20de%20autos",dias:14,idi:"es",r:"Búsqueda de grupos de jugadores en español. Los grupos de jugadores convierten mejor que los de devs. Elegí los más grandes y activos y guardalos con ➕."},
+  {n:"Grupos de juegos de celular (ES)",t:"facebook",m:"buscar",u:"https://www.facebook.com/search/groups/?q=juegos%20para%20celular",dias:14,idi:"es",r:"Igual que arriba: jugadores casuales hispanohablantes."}
+ ],
+ truco:[
+  {n:"Grupos de truco (FB)",t:"facebook",m:"buscar",u:"https://www.facebook.com/search/groups/?q=truco%20argentino",dias:14,idi:"es",r:"Los que más llegada tienen para el anotador: gente que juega truco. Hay páginas de 41 mil y 15 mil seguidores. Guardá los grupos buenos con ➕."},
+  {n:"Grupos de truco uruguayo (FB)",t:"facebook",m:"buscar",u:"https://www.facebook.com/search/groups/?q=truco%20uruguayo",dias:14,idi:"es",r:"En Uruguay también se juega mucho."},
+  {n:"Grupos de juegos de cartas (FB)",t:"facebook",m:"buscar",u:"https://www.facebook.com/search/groups/?q=juegos%20de%20cartas%20espa%C3%B1olas",dias:14,idi:"es",r:"Truco, chinchón, escoba: mismo público."},
+  {n:"Tu barrio / tu ciudad (FB)",t:"facebook",m:"varía",u:"https://www.facebook.com/groups/",dias:30,idi:"es",r:"Grupos locales de tu zona: suelen aceptar 'lo hizo un vecino'. Muy buena respuesta."},
+  {n:"WhatsApp: amigos y familia",t:"whatsapp",m:"tus contactos",dias:30,idi:"es",r:"Lo más efectivo: mandalo a los grupos donde se arma el truco. Usá Compartir."},
+  {n:"r/AndroidGaming",t:"reddit",m:"~330 mil",sub:"AndroidGaming",dias:30,idi:"es",r:"Público en inglés: solo si querés probar, poco público de truco."}
+ ]
+};
+const CL="publicar-grupos-v1";
+let est={};try{est=JSON.parse(localStorage.getItem(CL))||{}}catch(e){}
+est.hechos=est.hechos||{};est.propios=est.propios||{carrera:[],truco:[]};est.textos=est.textos||{};
+const guardar=()=>{try{localStorage.setItem(CL,JSON.stringify(est))}catch(e){}};
+let app=est.app||"carrera";
+
+function aviso(t){const a=document.getElementById("aviso");a.textContent=t;a.style.display="block";clearTimeout(aviso.t);aviso.t=setTimeout(()=>a.style.display="none",1800)}
+function textoDe(g){const A=APPS[app],i=A.texto[g.idi]?g.idi:"es";const k=app+"|"+i;return (est.textos[k]||A.texto[i]).replace("{link}",A.link)}
+function tituloDe(g){const A=APPS[app];return A.titulo[g.idi]||A.titulo.es}
+async function copiar(t){try{await navigator.clipboard.writeText(t)}catch(e){const x=document.createElement("textarea");x.value=t;document.body.appendChild(x);x.select();document.execCommand("copy");x.remove()}aviso("Texto copiado ✅")}
+function linkAbrir(g){
+ if(g.t==="reddit"){const A=APPS[app];return "https://www.reddit.com/r/"+g.sub+"/submit?type=link&url="+encodeURIComponent(A.link)+"&title="+encodeURIComponent(tituloDe(g))}
+ if(g.t==="whatsapp")return "https://wa.me/?text="+encodeURIComponent(textoDe(g));
+ return g.u||"#";
+}
+function estado(g){
+ const f=est.hechos[app+"|"+g.n];if(!f)return '<div class="estado ok">Sin publicar todavía</div>';
+ const dias=Math.floor((Date.now()-f)/864e5),falta=g.dias-dias;
+ const fecha=new Date(f).toLocaleDateString("es-AR");
+ return falta>0?`<div class="estado espera">Publicado el ${fecha} · volvé en ${falta} día${falta>1?"s":""}</div>`:`<div class="estado ok">Publicado el ${fecha} · ya podés repetir</div>`;
+}
+function tarjeta(g,idx,propio){
+ const f=est.hechos[app+"|"+g.n],espera=f&&(Date.now()-f)/864e5<g.dias;
+ const nomAbrir=g.t==="reddit"?"Abrir con todo cargado":g.t==="whatsapp"?"Enviar por WhatsApp":"Abrir grupo";
+ return `<div class="grupo ${espera?"hecho":""}">
+ <div class="fila"><span class="nom">${g.n}</span><span class="chip">${g.t} · ${g.m}</span></div>
+ <div class="regla">${g.r}</div>${estado(g)}
+ <div class="bot">
+  <button class="pri" onclick="paso(${idx},${propio})">1. Copiar texto</button>
+  <a class="pri" href="${linkAbrir(g)}" target="_blank" rel="noopener" onclick="${g.t==="reddit"?"copiarCuerpo("+idx+","+propio+")":""}">2. ${nomAbrir}</a>
+  <button class="ver" onclick="hecho(${idx},${propio})">3. Ya publiqué</button>
+  <button onclick="compartir(${idx},${propio})">📤 Compartir</button>
+  ${propio?`<button class="borrar" onclick="borrar(${idx})">🗑️</button>`:""}
+ </div></div>`;
+}
+function lista(){return GRUPOS[app]}
+function g_(i,p){return p?est.propios[app][i]:GRUPOS[app][i]}
+function paso(i,p){copiar(textoDe(g_(i,p)))}
+function copiarCuerpo(i,p){copiar(textoDe(g_(i,p)))}
+function hecho(i,p){est.hechos[app+"|"+g_(i,p).n]=Date.now();guardar();pintar();aviso("Anotado 👍")}
+async function compartir(i,p){const t=textoDe(g_(i,p));if(navigator.share){try{await navigator.share({text:t})}catch(e){}}else copiar(t)}
+function borrar(i){if(confirm("¿Sacar este grupo de tu lista?")){est.propios[app].splice(i,1);guardar();pintar()}}
+function agregar(){
+ const n=document.getElementById("nN").value.trim(),u=document.getElementById("nU").value.trim();
+ if(!n||!u){aviso("Poné nombre y link");return}
+ const t=/reddit/.test(u)?"reddit":/wa\.me|whatsapp/.test(u)?"whatsapp":"facebook";
+ const sub=(u.match(/\/r\/([^\/?]+)/)||[])[1];
+ est.propios[app].push({n,u,t,sub,m:document.getElementById("nM").value.trim()||"?",dias:+document.getElementById("nD").value||7,idi:"es",r:document.getElementById("nR").value.trim()||"Grupo guardado por vos."});
+ guardar();pintar();aviso("Grupo guardado ✅");
+}
+function guardarTexto(i){const k=app+"|"+i;est.textos[k]=document.getElementById("tx"+i).value;guardar();aviso("Texto guardado ✅")}
+function restaurar(i){delete est.textos[app+"|"+i];guardar();pintar()}
+function pintar(){
+ est.app=app;guardar();
+ document.getElementById("tabs").innerHTML=Object.keys(APPS).map(k=>`<button class="${k===app?"on":""}" onclick="app='${k}';pintar()">${APPS[k].nombre}</button>`).join("");
+ const A=APPS[app];
+ const pend=[...lista(),...est.propios[app]].filter(g=>{const f=est.hechos[app+"|"+g.n];return !f||(Date.now()-f)/864e5>=g.dias}).length;
+ let h=`<div class="regla">Para hoy: <b>${pend}</b> lugares disponibles. Paso a paso: copiar → abrir → pegar → publicar → marcar. Máximo 2 o 3 por día para que no te marquen como spam.</div>`;
+ h+=est.propios[app].map((g,i)=>tarjeta(g,i,true)).join("");
+ h+=lista().map((g,i)=>tarjeta(g,i,false)).join("");
+ h+=`<details><summary>➕ Guardar un grupo que encontré</summary>
+ <input id="nN" placeholder="Nombre del grupo">
+ <input id="nU" placeholder="Link del grupo (copialo de Facebook o Reddit)">
+ <input id="nM" placeholder="Miembros (opcional)">
+ <input id="nD" type="number" placeholder="Cada cuántos días publicar (7)">
+ <input id="nR" placeholder="Nota / reglas (opcional)">
+ <div class="bot"><button class="pri" onclick="agregar()">Guardar</button></div></details>`;
+ h+=`<details><summary>✏️ Editar los textos</summary>`+Object.keys(A.texto).map(i=>`<div class="regla">${i==="es"?"Español":"Inglés"} ({link} se reemplaza solo)</div>
+ <textarea id="tx${i}">${(est.textos[app+"|"+i]||A.texto[i]).replace(/</g,"&lt;")}</textarea>
+ <div class="bot"><button class="pri" onclick="guardarTexto('${i}')">Guardar</button><button onclick="restaurar('${i}')">Volver al original</button></div>`).join("")+`</details>`;
+ document.getElementById("lista").innerHTML=h;
+}
+pintar();
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
