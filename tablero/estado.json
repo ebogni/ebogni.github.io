@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-04T01:14:29.376Z",
+ "actualizado": "2026-11-04T07:57:31.022Z",
  "botonRefrescar": "listo",
  "fuentes": [
   {
@@ -52,11 +52,9 @@
   },
   {
    "fuente": "Cults3D",
-   "estado": "error (muestra el dato anterior)",
+   "estado": "ok",
    "notas": []
   }
  ],
- "errores": [
-  "Cults3D: respondió 403 con una página web (\"Access Denied — Cults\"): Cults3D bloqueó un rato la conexión desde GitHub (pasa a veces; la próxima vuelta se reintenta sola y se muestra el dato anterior)"
- ]
+ "errores": []
 }
