@@ -93,11 +93,11 @@
  },
  "enCamino": [
   {
-   "nombre": "Herramientas Maker 3D",
+   "nombre": "FilaKot 3D",
    "que": "Presupuestador para quienes imprimen en 3D, con PDF y logo propio",
    "etapa": "Etapa 2 · Prototipo y filtro",
-   "paso": "Nombre de tienda y paquete",
-   "hecho": "Etapa 1 completa: decidido seguir",
+   "paso": "Paso 7: Maqueta en HTML",
+   "hecho": "Etapa 1 completa; nombre y paquete (com.ebogni.filakot) definidos",
    "visto": "2026-11-07"
   }
  ]
