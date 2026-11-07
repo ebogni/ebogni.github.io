@@ -95,9 +95,9 @@
   {
    "nombre": "FilaKot 3D",
    "que": "Presupuestador para quienes imprimen en 3D, con PDF y logo propio",
-   "etapa": "Etapa 2 · Prototipo y filtro",
-   "paso": "Paso 7: Maqueta lista para probar y ajustar",
-   "hecho": "Maqueta 1 publicada y traducida (es, en, pt-BR)",
+   "etapa": "Etapa 2b · Diseño antes de programar",
+   "paso": "D1: Ícono y estilo final",
+   "hecho": "Maqueta 13 aprobada (sugerencias, clientes, PDF). Se salta la prueba con makers: se prueba en producción",
    "visto": "2026-11-07",
    "link": "https://claude.ai/artifact/HbyXLEyDrajfwfgDWaRaiw"
   }
