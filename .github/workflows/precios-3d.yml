@@ -1,0 +1,24 @@
+name: Precios de filamento (FilaKot 3D)
+on:
+  schedule:
+    - cron: "23 9 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: { group: precios-3d, cancel-in-progress: false }
+jobs:
+  precios:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Buscar precios en Mercado Libre
+        env:
+          ML_TOKEN: ${{ secrets.ML_TOKEN }}
+        run: node precios-3d/precios.mjs
+      - name: Guardar
+        run: |
+          git config user.name "precios-bot"; git config user.email "precios-bot@users.noreply.github.com"
+          git add filakot/precios.json 2>/dev/null || true
+          git diff --cached --quiet || (git commit -m "Precios de filamento actualizados [skip ci]" && git pull --rebase && git push)
