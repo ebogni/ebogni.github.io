@@ -63,12 +63,22 @@ const GRUPOS={
   {n:"r/MobileGaming",t:"reddit",m:"~76 mil",sub:"MobileGaming",dias:30,idi:"en",r:"Permiten que los devs anuncien juegos de celular. Aclarás que sos el dev."},
   {n:"r/IndieGaming",t:"reddit",m:"~450 mil",sub:"IndieGaming",dias:30,idi:"en",r:"Grande. Autopromo permitida con poca frecuencia. Mejor con un video o gif."},
   {n:"r/IndieDev",t:"reddit",m:"~350 mil",sub:"IndieDev",dias:14,idi:"en",r:"Devs. Les gusta el 'cómo lo hice'; contá algo del proceso además del link."},
+  {n:"Discord: SOCIAL GAMING",t:"discord",m:"~83 mil",u:"https://discord.com/servers/social-gaming-or-752153427307528253",dias:30,idi:"es",r:"Latinoamericano. Buscá un canal de promo o preguntale a un admin antes."},
+  {n:"Discord: El Sótano Social",t:"discord",m:"~33 mil",u:"https://discord.com/servers/el-sotano-social--1277841018825478164",dias:30,idi:"es",r:"Hispano, con gaming y eventos. Leé las reglas antes."},
+  {n:"Discord: Amigos de los Gatos",t:"discord",m:"~10 mil",u:"https://discord.com/servers/568661189840863233",dias:30,idi:"es",r:"Tiene minijuegos y concursos. Proponé un desafío de mejor tiempo."},
+  {n:"Telegram: Juegos de Móvil",t:"telegram",m:"~108",u:"https://t.me/JuegosMoviles",dias:30,idi:"es",r:"Entrada directa. Consultá a los admins antes de promocionar."},
+  {n:"FB: gamers juegos casuales gratis",t:"facebook",m:"buscar",u:"https://www.facebook.com/search/groups/?q=gamers%20juegos%20casuales%20gratis",dias:14,idi:"es",r:"Jugadores casuales. Mirá la fecha de las últimas publicaciones."},
+  {n:"Directorio: Discord en español",t:"directorio",m:"directorio",u:"https://disboard.org/es/servers/tag/espa%C3%B1ol",dias:30,idi:"es",r:"Para encontrar más servidores. Los que sirvan, guardalos con ➕."},
+  {n:"Directorio: Telegram gaming",t:"directorio",m:"directorio",u:"https://grupostelegramlatam.com/categoria/gaming",dias:30,idi:"es",r:"Verificá cada grupo antes de entrar."},
   {n:"Indie Game Promo (IGD)",t:"facebook",m:"~56 mil",u:"https://www.facebook.com/search/groups/?q=Indie%20Game%20Promo",dias:7,idi:"en",r:"Grupo de Facebook para promocionar juegos indie. Pedí unirte primero."},
   {n:"Promote your Games Android & iOS",t:"facebook",m:"?",u:"https://www.facebook.com/search/groups/?q=Promote%20your%20Games%20Android%20iOS",dias:7,idi:"en",r:"Grupo de intercambio y promo de juegos de celular."},
   {n:"Grupos de juegos de autos (ES)",t:"facebook",m:"buscar",u:"https://www.facebook.com/search/groups/?q=juegos%20de%20autos",dias:14,idi:"es",r:"Búsqueda de grupos de jugadores en español. Los grupos de jugadores convierten mejor que los de devs. Elegí los más grandes y activos y guardalos con ➕."},
   {n:"Grupos de juegos de celular (ES)",t:"facebook",m:"buscar",u:"https://www.facebook.com/search/groups/?q=juegos%20para%20celular",dias:14,idi:"es",r:"Igual que arriba: jugadores casuales hispanohablantes."}
  ],
  truco:[
+  {n:"r/ArgenTruco",t:"reddit",m:"~30",sub:"ArgenTruco",dias:60,idi:"es",r:"Chico pero justo el público. Es restringido: primero pedí permiso a los moderadores para publicar."},
+  {n:"FB: truco argentino jugadores",t:"facebook",m:"buscar",u:"https://www.facebook.com/search/groups/?q=truco%20argentino%20jugadores",dias:14,idi:"es",r:"Filtrá por Grupos y mirá que tengan publicaciones recientes."},
+  {n:"FB: amantes del truco",t:"facebook",m:"buscar",u:"https://www.facebook.com/search/groups/?q=amantes%20del%20truco",dias:14,idi:"es",r:"Argentina y Uruguay. Evitá los grupos de apuestas."},
   {n:"Grupos de truco (FB)",t:"facebook",m:"buscar",u:"https://www.facebook.com/search/groups/?q=truco%20argentino",dias:14,idi:"es",r:"Los que más llegada tienen para el anotador: gente que juega truco. Hay páginas de 41 mil y 15 mil seguidores. Guardá los grupos buenos con ➕."},
   {n:"Grupos de truco uruguayo (FB)",t:"facebook",m:"buscar",u:"https://www.facebook.com/search/groups/?q=truco%20uruguayo",dias:14,idi:"es",r:"En Uruguay también se juega mucho."},
   {n:"Grupos de juegos de cartas (FB)",t:"facebook",m:"buscar",u:"https://www.facebook.com/search/groups/?q=juegos%20de%20cartas%20espa%C3%B1olas",dias:14,idi:"es",r:"Truco, chinchón, escoba: mismo público."},
@@ -100,7 +110,7 @@ function estado(g){
 }
 function tarjeta(g,idx,propio){
  const f=est.hechos[app+"|"+g.n],espera=f&&(Date.now()-f)/864e5<g.dias;
- const nomAbrir=g.t==="reddit"?"Abrir con todo cargado":g.t==="whatsapp"?"Enviar por WhatsApp":"Abrir grupo";
+ const nomAbrir=g.t==="reddit"?"Abrir con todo cargado":g.t==="whatsapp"?"Enviar por WhatsApp":g.t==="discord"?"Abrir Discord":g.t==="telegram"?"Abrir Telegram":g.t==="directorio"?"Abrir directorio":"Abrir grupo";
  return `<div class="grupo ${espera?"hecho":""}">
  <div class="fila"><span class="nom">${g.n}</span><span class="chip">${g.t} · ${g.m}</span></div>
  <div class="regla">${g.r}</div>${estado(g)}
@@ -122,7 +132,7 @@ function borrar(i){if(confirm("¿Sacar este grupo de tu lista?")){est.propios[ap
 function agregar(){
  const n=document.getElementById("nN").value.trim(),u=document.getElementById("nU").value.trim();
  if(!n||!u){aviso("Poné nombre y link");return}
- const t=/reddit/.test(u)?"reddit":/wa\.me|whatsapp/.test(u)?"whatsapp":"facebook";
+ const t=/reddit/.test(u)?"reddit":/wa\.me|whatsapp/.test(u)?"whatsapp":/discord/.test(u)?"discord":/t\.me|telegram/.test(u)?"telegram":"facebook";
  const sub=(u.match(/\/r\/([^\/?]+)/)||[])[1];
  est.propios[app].push({n,u,t,sub,m:document.getElementById("nM").value.trim()||"?",dias:+document.getElementById("nD").value||7,idi:"es",r:document.getElementById("nR").value.trim()||"Grupo guardado por vos."});
  guardar();pintar();aviso("Grupo guardado ✅");
