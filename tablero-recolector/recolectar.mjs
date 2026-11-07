@@ -327,6 +327,18 @@ function rentabilidad() {
   return { id: 'rentabilidad', titulo: 'Rentabilidad por app', icono: '💵', items, cuando: { hasta: 'instante', periodo: 'este mes', nota: 'usuarios activos del informe de Play' } };
 }
 
+function enCamino() {
+  // Apps nuevas que van por el protocolo (01 - Apps). No hay API: Claude actualiza fuentes.json > enCamino al cerrar cada paso.
+  const dd = f => f ? ' · actualizado el ' + f.slice(8, 10) + '/' + f.slice(5, 7) : '';
+  const items = [];
+  for (const a of F.enCamino || []) {
+    items.push({ nombre: a.nombre, valor: a.etapa, estado: /publicad/i.test(a.etapa) ? 'bien' : 'espera', detalle: a.que });
+    items.push({ nombre: 'Ahora', valor: a.paso, sub: true, detalle: (a.hecho ? 'Hecho: ' + a.hecho : '') + dd(a.visto) });
+  }
+  if (!items.length) items.push({ nombre: 'Ninguna por ahora', valor: '—', estado: 'espera' });
+  return { id: 'camino', titulo: 'Apps en camino', icono: '🛠️', items };
+}
+
 function pendiente(id, titulo, icono, txt) { return { id, titulo, icono, items: [{ nombre: 'Sin conectar', valor: '—', detalle: txt, estado: 'espera' }] }; }
 
 // ---------- Armado ----------
@@ -338,14 +350,14 @@ const HIST = (previo && previo.historial) || {};
 const CRUDOS = { ...((previo && previo.clicsCrudos) || {}) };
 // Refrescar UNA tarjeta (botón ↻ del tablero): FUENTE=<id>. Las demás quedan con su dato anterior tal cual.
 const FUENTE = (E.FUENTE || '').trim();
-const IDS = { AdMob: 'admob', 'Google Play': 'play', YouTube: 'youtube', Clics: 'clics', 'Estoy viva': 'viva', Portales: 'portales', Cults3D: 'cults' };
+const IDS = { AdMob: 'admob', 'Google Play': 'play', YouTube: 'youtube', Clics: 'clics', 'Estoy viva': 'viva', Portales: 'portales', Cults3D: 'cults', 'Apps en camino': 'camino' };
 const corre = id => !FUENTE || FUENTE === id || (FUENTE === 'conversion' && (id === 'play' || id === 'clics')) || (FUENTE === 'rentabilidad' && (id === 'play' || id === 'admob'));
 if (FUENTE && previo) { // arranco desde lo anterior para no perder la plata ni las apps
   for (const a of previo.apps || []) APPS[a.nombre] = { ...a };
   PLATA = previo.plata || null;
 }
 if (previo && previo.cults) CULTS = CULTS || previo.cults;
-for (const [n, f] of [['AdMob', admob], ['Google Play', play], ['YouTube', youtube], ['Clics', clics], ['Estoy viva', viva], ['Portales', portales], ['Cults3D', cults]]) {
+for (const [n, f] of [['AdMob', admob], ['Google Play', play], ['YouTube', youtube], ['Clics', clics], ['Estoy viva', viva], ['Portales', portales], ['Cults3D', cults], ['Apps en camino', enCamino]]) {
   if (!corre(IDS[n])) { const p = previo && previo.secciones.find(s => s.id === IDS[n]); if (p) { secciones.push(p); continue; } }
   try { const sec = await f(); sec.buscado = new Date().toISOString(); sec.cuando ||= { hasta: 'instante' }; secciones.push(sec); } catch (e) { errores.push(n + ': ' + e.message); const p = previo && previo.secciones.find(s => s.titulo.includes(n)); if (p) secciones.push({ ...p, viejo: true, error: e.message }); }
 }

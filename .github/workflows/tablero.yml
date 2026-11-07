@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       fuente:
-        description: "Solo esta tarjeta (admob, play, youtube, clics, viva, portales, cults, conversion, rentabilidad). Vacío = todas"
+        description: "Solo esta tarjeta (admob, play, youtube, clics, viva, portales, cults, conversion, rentabilidad, camino). Vacío = todas"
         required: false
 permissions:
   contents: write
