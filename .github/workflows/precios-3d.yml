@@ -15,7 +15,8 @@ jobs:
         with: { node-version: "22" }
       - name: Buscar precios en Mercado Libre
         env:
-          ML_TOKEN: ${{ secrets.ML_TOKEN }}
+          ML_CLIENT_ID: ${{ secrets.ML_CLIENT_ID }}
+          ML_CLIENT_SECRET: ${{ secrets.ML_CLIENT_SECRET }}
         run: node precios-3d/precios.mjs
       - name: Guardar
         run: |

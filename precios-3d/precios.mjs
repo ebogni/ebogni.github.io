@@ -8,7 +8,16 @@ const PAISES = { ARS: "MLA", BRL: "MLB", MXN: "MLM", CLP: "MLC", COP: "MCO", PEN
 const MATERIALES = { pla: "PLA", petg: "PETG", abs: "ABS", asa: "ASA", tpu: "TPU" };
 const SALIDA = new URL("../filakot/precios.json", import.meta.url);
 const espera = ms => new Promise(r => setTimeout(r, ms));
-const TOKEN = process.env.ML_TOKEN || "";
+// Autorización: desde 2025 Mercado Libre exige un token para buscar. Se saca con la app de desarrollador de Emanuel
+// (secretos ML_CLIENT_ID y ML_CLIENT_SECRET en GitHub). Sin esos secretos, el trabajo no hace nada y queda el archivo anterior.
+let TOKEN = process.env.ML_TOKEN || "";
+if (!TOKEN && process.env.ML_CLIENT_ID && process.env.ML_CLIENT_SECRET) {
+  const r = await fetch("https://api.mercadolibre.com/oauth/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+    body: new URLSearchParams({ grant_type: "client_credentials", client_id: process.env.ML_CLIENT_ID, client_secret: process.env.ML_CLIENT_SECRET }) });
+  const j = await r.json().catch(() => ({}));
+  if (j.access_token) TOKEN = j.access_token; else console.log("No se pudo sacar el token de Mercado Libre:", r.status, JSON.stringify(j).slice(0, 200));
+}
+if (!TOKEN) { console.log("Falta la autorización de Mercado Libre (secretos ML_CLIENT_ID y ML_CLIENT_SECRET): no se actualiza nada."); process.exit(0); }
 
 async function buscar(sitio, q) {
   const url = `https://api.mercadolibre.com/sites/${sitio}/search?q=${encodeURIComponent(q)}&limit=50`;
