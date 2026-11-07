@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-07T12:52:04.496Z",
+ "actualizado": "2026-11-07T17:15:12.003Z",
  "botonRefrescar": "listo",
  "fuentes": [
   {
@@ -51,6 +51,13 @@
    "fuente": "Cults3D",
    "estado": "ok",
    "notas": []
+  },
+  {
+   "fuente": "Apps en camino",
+   "estado": "ok",
+   "notas": [
+    "Herramientas Maker 3D: Presupuestador para quienes imprimen en 3D, con PDF y logo propio"
+   ]
   }
  ],
  "errores": []
