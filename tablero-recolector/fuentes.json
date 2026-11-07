@@ -96,9 +96,10 @@
    "nombre": "FilaKot 3D",
    "que": "Presupuestador para quienes imprimen en 3D, con PDF y logo propio",
    "etapa": "Etapa 2 · Prototipo y filtro",
-   "paso": "Paso 7: Maqueta en HTML",
-   "hecho": "Etapa 1 completa; nombre y paquete (com.ebogni.filakot) definidos",
-   "visto": "2026-11-07"
+   "paso": "Paso 7: Maqueta lista para probar y ajustar",
+   "hecho": "Maqueta 1 publicada y traducida (es, en, pt-BR)",
+   "visto": "2026-11-07",
+   "link": "https://claude.ai/artifact/HbyXLEyDrajfwfgDWaRaiw"
   }
  ]
 }

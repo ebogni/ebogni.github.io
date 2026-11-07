@@ -332,7 +332,7 @@ function enCamino() {
   const dd = f => f ? ' · actualizado el ' + f.slice(8, 10) + '/' + f.slice(5, 7) : '';
   const items = [];
   for (const a of F.enCamino || []) {
-    items.push({ nombre: a.nombre, valor: a.etapa, estado: /publicad/i.test(a.etapa) ? 'bien' : 'espera', detalle: a.que });
+    items.push({ nombre: a.nombre, valor: a.etapa, estado: /publicad/i.test(a.etapa) ? 'bien' : 'espera', detalle: a.que, link: a.link });
     items.push({ nombre: 'Ahora', valor: a.paso, sub: true, detalle: (a.hecho ? 'Hecho: ' + a.hecho : '') + dd(a.visto) });
   }
   if (!items.length) items.push({ nombre: 'Ninguna por ahora', valor: '—', estado: 'espera' });
