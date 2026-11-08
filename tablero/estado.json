@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-08T14:49:29.917Z",
+ "actualizado": "2026-11-08T14:52:15.960Z",
  "botonRefrescar": "listo",
  "fuentes": [
   {
@@ -64,7 +64,10 @@
   {
    "fuente": "Salud de las apps",
    "estado": "ok",
-   "notas": []
+   "notas": [
+    "Anotador de Truco: AdMob la está revisando; mientras tanto puede no mostrar anuncios",
+    "FilaKot 3D: AdMob la aprueba cuando la app esté publicada en Play"
+   ]
   }
  ],
  "errores": []
