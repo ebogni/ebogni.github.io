@@ -65,6 +65,24 @@ svg.graf{width:100%;height:auto;display:block}
 #login button{width:100%;padding:13px;border:0;border-radius:12px;background:var(--oro);color:#151515;font:inherit;font-weight:750;cursor:pointer}
 label.rec{display:flex;gap:8px;justify-content:center;align-items:center;color:var(--mu);font-size:.9em;margin-top:12px}
 .oculto{display:none!important}
+/* Más compacto */
+.card,.app,.kpi{padding:11px 13px}.kpis,.apps,.portales{gap:9px;margin-bottom:10px}.grilla>.card{margin-bottom:9px}.grilla{column-gap:9px}
+.kpi .v{font-size:clamp(1.3em,3.6vw,1.9em)}.app .plata .v{font-size:1.4em}.app .plata{margin-bottom:7px}
+.datos{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.dato{padding:6px 8px}.dato .v{font-size:1em}
+.fila{padding:7px 0}.card h2{margin-bottom:6px}
+/* Período */
+.rango{display:flex;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:3px;gap:2px}
+.rango button{background:none;border:0;color:var(--mu);font:inherit;font-size:.88em;padding:5px 10px;border-radius:9px;cursor:pointer}
+.rango button.on{background:var(--oro);color:#111;font-weight:700}
+/* Reordenar arrastrando */
+.bloque,.grilla>.card{position:relative}
+.asa{position:absolute;top:6px;right:8px;z-index:2;cursor:grab;color:var(--mu);font-size:1.05em;line-height:1;padding:4px 5px;border-radius:7px;touch-action:none;user-select:none;-webkit-user-select:none}
+.asa:hover{color:var(--tx);background:var(--card2)}
+.card h2 .rf{margin-right:26px}.bloque>.card h2{padding-right:26px}
+.arrastrando{opacity:.45;outline:2px dashed var(--oro);outline-offset:2px}
+body.moviendo{cursor:grabbing;user-select:none;-webkit-user-select:none}
+.ayuda{color:var(--mu);font-size:.75em;margin:0 0 8px}.bloque:has(>.portales:empty),.bloque:has(>.ingresos[hidden]){display:none}
+@media (max-width:560px){header{flex-wrap:wrap}.rango{order:3;width:100%;justify-content:space-between}.rango button{flex:1}}
 </style>
 </head>
 <body>
@@ -76,16 +94,16 @@ label.rec{display:flex;gap:8px;justify-content:center;align-items:center;color:v
     <p id="msgLogin" class="estado"></p>
   </section>
   <section id="tablero" class="oculto">
-    <header><h1>📊 VikingZone</h1><button class="ctrl" id="btnAct" aria-label="Actualizar">↻</button><button class="ctrl" id="btnSalir">Salir</button></header>
+    <header><h1>📊 VikingZone</h1><div class="rango" id="rango" role="group" aria-label="Período"><button data-r="hoy">Hoy</button><button data-r="sem">7 días</button><button data-r="mes">Mes</button></div><button class="ctrl" id="btnAct" aria-label="Actualizar">↻</button><button class="ctrl" id="btnSalir">Salir</button></header>
     <p class="estado" id="estado"></p>
     <div id="avisos"></div>
-    <section class="card ingresos" id="ingresos" hidden></section>
-    <div class="portales" id="portales"></div>
-    <div class="cuando" id="cuandoKpis"></div>
-    <div class="kpis" id="kpis"></div>
-    <h2 class="titulo" id="tituloApps">📱 Tus apps, una por una</h2>
-    <div class="cuando" id="cuandoApps"></div>
-    <div class="apps" id="apps"></div>
+    <div id="arriba">
+      <div class="bloque" data-k="kpis"><div class="cuando" id="cuandoKpis"></div><div class="kpis" id="kpis"></div></div>
+      <div class="bloque" data-k="ingresos"><section class="card ingresos" id="ingresos" hidden></section></div>
+      <div class="bloque" data-k="apps"><h2 class="titulo" id="tituloApps">📱 Tus apps</h2><div class="cuando" id="cuandoApps"></div><div class="apps" id="apps"></div></div>
+      <div class="bloque" data-k="portales"><div class="portales" id="portales"></div></div>
+    </div>
+    <p class="ayuda">Arrastrá cualquier panel desde <b>⠿</b> para cambiarlo de lugar (queda guardado en este dispositivo).</p>
     <div class="grilla" id="grilla"></div>
     <div id="gracias" hidden><div class="caja">
       <b id="grQuien">Agradecer</b>
@@ -166,6 +184,50 @@ function barras(serie) {
 const filaProp = (nombre, valor, extra, prop) => `<div class="fila"><span class="n">${esc(nombre)}</span><span class="v">${valor}</span>${extra ? `<span class="x">${extra}</span>` : ''}<span class="prop"><i style="width:${Math.max(2, prop * 100).toFixed(1)}%"></i></span></div>`;
 // ---------- Pintar ----------
 let ULT = null; // últimos datos (para el botón ↻)
+// Período elegido arriba (Hoy / 7 días / Mes); queda guardado en el dispositivo.
+let R = LS.get('tablero-rango') || 'mes';
+const NOM_R = { hoy: 'hoy', sem: 'últimos 7 días', mes: 'este mes' };
+function marcarRango() { document.querySelectorAll('#rango button').forEach(b => b.classList.toggle('on', b.dataset.r === R)); }
+document.addEventListener('click', e => { const b = e.target.closest('#rango button'); if (!b) return; R = b.dataset.r; LS.set('tablero-rango', R); marcarRango(); if (ULT) pintar(ULT); });
+marcarRango();
+// Junta la misma app con dos nombres (AdMob: "Carrera en Miniatura: Autos", Play: "Carrera en Miniatura").
+function unirApps(A) {
+  const base = n => String(n).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const out = [];
+  for (const a of [...A].sort((x, y) => String(x.nombre).length - String(y.nombre).length)) {
+    const o = out.find(b => { const x = base(a.nombre), y = base(b.nombre); return x === y || x.startsWith(y + ':') || x.startsWith(y + ' '); });
+    if (!o) { out.push({ ...a }); continue; }
+    for (const [k, v] of Object.entries(a)) if (k !== 'nombre' && v != null && (o[k] == null || o[k] === 0)) o[k] = v;
+  }
+  return out.sort((x, y) => (y.ganMes || 0) - (x.ganMes || 0) || (y.activas || y.instalaciones || y.descargasMin || 0) - (x.activas || x.instalaciones || x.descargasMin || 0));
+}
+// ---------- Reordenar paneles arrastrando (mouse o dedo) ----------
+function ordenable(cont, clave) {
+  const hijos = () => [...cont.children].filter(x => x.dataset.k);
+  const guardado = (() => { try { return JSON.parse(LS.get(clave) || '[]'); } catch (e) { return []; } })();
+  hijos().sort((a, b) => { const i = guardado.indexOf(a.dataset.k), j = guardado.indexOf(b.dataset.k); return (i < 0 ? 999 : i) - (j < 0 ? 999 : j); }).forEach(x => cont.appendChild(x));
+  for (const el of hijos()) {
+    if (el.querySelector(':scope>.asa')) continue;
+    const asa = document.createElement('span'); asa.className = 'asa'; asa.textContent = '⠿'; asa.title = 'Arrastrar para cambiar de lugar'; el.prepend(asa);
+    asa.addEventListener('pointerdown', ev => {
+      ev.preventDefault(); asa.setPointerCapture(ev.pointerId); el.classList.add('arrastrando'); document.body.classList.add('moviendo');
+      const mover = e => {
+        el.style.pointerEvents = 'none';
+        const otro = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-k]');
+        el.style.pointerEvents = '';
+        if (!otro || otro === el || otro.parentElement !== cont) return;
+        const r = otro.getBoundingClientRect(), antes = e.clientY < r.top + r.height / 2;
+        cont.insertBefore(el, antes ? otro : otro.nextSibling);
+      };
+      const soltar = () => {
+        asa.removeEventListener('pointermove', mover); asa.removeEventListener('pointerup', soltar); asa.removeEventListener('pointercancel', soltar);
+        el.classList.remove('arrastrando'); document.body.classList.remove('moviendo');
+        LS.set(clave, JSON.stringify(hijos().map(x => x.dataset.k)));
+      };
+      asa.addEventListener('pointermove', mover); asa.addEventListener('pointerup', soltar); asa.addEventListener('pointercancel', soltar);
+    });
+  }
+}
 const rf = id => `<button class="rf" data-f="${id}" title="Volver a buscar ahora estos datos (tarda 1 o 2 minutos)">↻</button>`;
 function pintar(D) {
   ULT = D;
@@ -183,8 +245,9 @@ function pintar(D) {
     const cot = I.cotizacion ? ` · 1 EUR = US$ ${I.cotizacion.EUR.toFixed(2)}` : '';
     $('ingresos').innerHTML = `<h2>💰 Todos tus ingresos <small>este mes, en dólares</small></h2>
       <div class="tot"><span class="v">${usd(I.mesUSD)}</span><span class="s">${cambio(H['total|ingresos'], true) || ''}</span><span class="s">🏦 Para cobrar en total ~${usd(I.cobrarUSD)}</span></div>
-      ${I.fuentes.map(f => `<div class="fila ${f.mesUSD > 0 ? 'bien' : ''}"><span class="n">${f.icono} ${esc(f.nombre)}</span><span class="v">${usd(f.mesUSD)}${f.mon && f.mon !== 'USD' ? `<small>${Number(f.mes).toFixed(2)} ${esc(f.mon)}</small>` : ''}</span><span class="x"><span>${esc(f.nota || '')}</span>${f.cobrarUSD ? `<span>para cobrar ~${usd(f.cobrarUSD)}</span>` : ''}</span></div>`).join('')}
-      <div class="cuando">AdMob y Cults3D se leen solos; los portales se cargan cuando empiecen a pagar${cot}</div>`;
+      ${I.fuentes.filter(f => f.mesUSD > 0 || f.cobrarUSD).map(f => `<div class="fila ${f.mesUSD > 0 ? 'bien' : ''}"><span class="n">${f.icono} ${esc(f.nombre)}</span><span class="v">${usd(f.mesUSD)}${f.mon && f.mon !== 'USD' ? `<small>${Number(f.mes).toFixed(2)} ${esc(f.mon)}</small>` : ''}</span><span class="x"><span>${esc(f.nota || '')}</span>${f.cobrarUSD ? `<span>para cobrar ~${usd(f.cobrarUSD)}</span>` : ''}</span></div>`).join('')}
+      ${(() => { const z = I.fuentes.filter(f => !(f.mesUSD > 0 || f.cobrarUSD)); return z.length ? `<div class="fila sub"><span class="n">${z.map(f => f.icono + ' ' + esc(f.nombre.replace(/ \(.*\)/, ''))).join(' · ')}</span><span class="v">US$ 0,00</span><span class="x"><span>todavía sin ingresos</span></span></div>` : ''; })()}
+      <div class="cuando">AdMob y Cults3D se leen solos${cot}</div>`;
   }
   // Estado de los portales web (uno al lado del otro)
   const PW = (SEC('portales')?.items || []).filter(it => it.portal);
@@ -192,14 +255,16 @@ function pintar(D) {
   // Números grandes
   let k = '';
   if (P) {
-    k += `<div class="kpi"><span class="t">💵 Ganancia de hoy</span><span class="v">${usd(P.hoy)}</span><span class="s">Ayer ${usd(P.ayer)} · ${num(P.impHoy)} anuncios hoy</span></div>`;
-    k += `<div class="kpi"><span class="t">📅 Este mes</span><span class="v">${usd(P.mes)}</span><span class="s">Al ritmo actual cierra en ~${usd(P.proy)}</span><span class="s">Mes pasado ${usd(P.mesAnterior)}</span></div>`;
-    if (P.saldo != null) { const f = Math.min(1, P.saldo / P.umbral); k += `<div class="kpi"><span class="t">🏦 Para cobrar (aprox.)</span><span class="v">${usd(P.saldo)}</span><div class="barra"><i style="width:${(f * 100).toFixed(1)}%"></i></div><span class="s">${f >= 1 ? '¡Ya llegaste al mínimo de cobro!' : `Faltan ${usd(P.umbral - P.saldo)} para el cobro de US$ ${P.umbral}`}</span></div>`; }
+    const s7 = (P.serie || []).slice(-7), sem = P.semana ?? s7.reduce((t, x) => t + x.gan, 0), impSem = P.impSemana ?? s7.reduce((t, x) => t + x.imp, 0);
+    const G = { hoy: [P.hoy, `Ayer ${usd(P.ayer)}`, P.impHoy], sem: [sem, `Promedio ${usd(sem / 7)} por día`, impSem], mes: [P.mes, `Cierra en ~${usd(P.proy)} · mes pasado ${usd(P.mesAnterior)}`, (P.porFormato || []).reduce((t, x) => t + x.imp, 0)] }[R];
+    k += `<div class="kpi"><span class="t">💵 Ganancia AdMob · ${NOM_R[R]}</span><span class="v">${usd(G[0])}</span><span class="s">${G[1]}</span></div>`;
+    k += `<div class="kpi"><span class="t">👀 Anuncios vistos · ${NOM_R[R]}</span><span class="v">${num(G[2])}</span><span class="s">${G[2] ? `US$ ${(G[0] / G[2] * 1000).toFixed(2)} cada 1.000` : 'sin anuncios en el período'}</span></div>`;
+    if (P.saldo != null) { const f = Math.min(1, P.saldo / P.umbral); k += `<div class="kpi"><span class="t">🏦 AdMob para cobrar</span><span class="v">${usd(P.saldo)}</span><div class="barra"><i style="width:${(f * 100).toFixed(1)}%"></i></div><span class="s">${f >= 1 ? '¡Llegaste al mínimo!' : `Faltan ${usd(P.umbral - P.saldo)} para los US$ ${P.umbral}`}</span></div>`; }
   } else k += `<div class="kpi"><span class="t">💵 Ganancias</span><span class="v">—</span><span class="s">AdMob sin conectar</span></div>`;
   if (D.descargas != null) k += `<div class="kpi"><span class="t">📲 Descargas en Play</span><span class="v">${num(D.descargas)}+</span><span class="s">${cambio(H['total|descargas']) || 'Todas tus apps juntas'}</span></div>`;
   $('kpis').innerHTML = k;
   // Una tarjeta por app: plata + descargas + instalaciones juntas.
-  const A = D.apps || [];
+  const A = unirApps(D.apps || []).filter(a => a.play || a.noFigura || a.ganMes > 0);
   $('tituloApps').hidden = !A.length;
   $('cuandoApps').innerHTML = A.length ? 'Plata: ' + lin('admob') + ' · Instalaciones: ' + lin('play') + ' ' + rf('play') : '';
   $('apps').innerHTML = A.map(a => {
@@ -207,20 +272,22 @@ function pintar(D) {
     const desc = a.instalaciones != null ? num(a.instalaciones) : a.descargasRango || (a.descargasMin != null ? num(a.descargasMin) + '+' : '—');
     const cI = cambio(H['app|' + a.nombre + '|ins']);
     return `<section class="app"><div class="cab"><b>${a.play ? `<a href="${esc(a.play)}" target="_blank" rel="noopener">${esc(a.nombre)} ↗</a>` : esc(a.nombre)}</b>${a.puntaje ? `<span>★ ${a.puntaje.toFixed(1)} <small>(${num(a.votos)})</small></span>` : ''}</div>
-      <div class="plata"><span class="v">${usd(a.ganMes || 0)}</span><span class="s">este mes · hoy ${usd(a.ganHoy || 0)}</span></div>
-      <div class="datos">${dato(desc, a.instalaciones != null ? 'Instalaciones' : 'Descargas (Play)')}${dato(a.activas != null ? num(a.activas) : '—', 'La tienen hoy')}${dato(a.nuevas7 != null ? '+' + num(a.nuevas7) : '—', 'Nuevas en 7 días')}${dato(a.bajas7 != null ? '−' + num(a.bajas7) : '—', 'Bajas en 7 días')}${dato(a.impMes != null ? num(a.impMes) : '—', 'Anuncios vistos este mes')}${dato(a.ecpm != null ? 'US$ ' + a.ecpm.toFixed(2) : '—', 'Pago cada 1.000 anuncios')}</div>
+      <div class="plata"><span class="v">${usd({ hoy: a.ganHoy, sem: a.ganSem, mes: a.ganMes }[R] || 0)}</span><span class="s">${NOM_R[R]}${a.ecpm ? ` · US$ ${a.ecpm.toFixed(2)} cada 1.000` : ''}</span></div>
+      <div class="datos">${dato(desc, a.instalaciones != null ? 'Instalaciones' : 'Descargas')}${dato(a.activas != null ? num(a.activas) : '—', 'La tienen hoy')}${dato(a.nuevas7 != null ? `+${num(a.nuevas7)}${a.bajas7 ? ' −' + num(a.bajas7) : ''}` : '—', 'Altas y bajas 7 días')}${dato(num({ hoy: a.impHoy, sem: a.impSem, mes: a.impMes }[R] ?? null), 'Anuncios ' + NOM_R[R])}</div>
       <div class="pie">${[cI, a.noFigura ? 'No aparece en Play' : '', a.datoDel ? `Instalaciones al ${a.datoDel} (Play las informa con 1 o 2 días de atraso)` : a.play ? 'Instalaciones exactas: Play todavía no mandó el informe' : ''].filter(Boolean).join(' · ')}</div></section>`;
   }).join('');
   // Tarjetas
   let g = '';
   if (P) {
-    g += `<section class="card ancha"><h2>📈 Ganancia por día <small>últimos 14 días</small>${rf('admob')}</h2>${lineaCuando(SEC('admob'))}${barras(P.serie)}</section>`;
+    const dias = R === 'mes' ? P.serie : P.serie.slice(-7);
+    g += `<section class="card ancha" data-k="diario"><h2>📈 Ganancia por día <small>últimos ${dias.length} días</small>${rf('admob')}</h2>${lineaCuando(SEC('admob'))}${barras(dias)}</section>`;
     const mxA = Math.max(0.0001, ...P.porApp.map(x => x.gan)), mxF = Math.max(0.0001, ...P.porFormato.map(x => x.gan));
-    g += `<section class="card"><h2>🎯 Qué tipo de anuncio rinde más <small>este mes</small>${rf('admob')}</h2>${lineaCuando(SEC('admob'))}<h3>Por tipo de anuncio</h3>${P.porFormato.length ? P.porFormato.map(x => filaProp(x.nombre, usd(x.gan), `<span>${num(x.imp)} vistos</span><span>US$ ${x.ecpm.toFixed(2)} cada 1.000</span>`, x.gan / mxF)).join('') : '<p class="vacio">Todavía sin datos este mes.</p>'}</section>`;
+    const PF = (P.porFormatoRango && P.porFormatoRango[R]) || P.porFormato, mxR = Math.max(0.0001, ...PF.map(x => x.gan));
+    g += `<section class="card" data-k="formatos"><h2>🎯 Qué anuncio rinde más <small>${NOM_R[R]}</small>${rf('admob')}</h2>${PF.length ? PF.map(x => filaProp(x.nombre, usd(x.gan), `<span>${num(x.imp)} vistos</span><span>US$ ${x.ecpm.toFixed(2)} cada 1.000</span>`, x.gan / mxR)).join('') : '<p class="vacio">Sin anuncios en el período.</p>'}</section>`;
   }
   for (const s of D.secciones) {
-    if (s.oculta || (s.id === 'play' && A.length)) continue;
-    g += `<section class="card"><h2>${s.icono} ${esc(s.titulo)}${s.viejo ? '<small>dato anterior</small>' : ''}${rf(s.id)}</h2>${lineaCuando(s)}${s.items.map(it => {
+    if (s.oculta || s.id === 'rentabilidad' || (s.id === 'play' && A.length)) continue;
+    g += `<section class="card" data-k="${s.id}"><h2>${s.icono} ${esc(s.titulo)}${s.viejo ? '<small>dato anterior</small>' : ''}${rf(s.id)}</h2>${lineaCuando(s)}${s.items.map(it => {
       const nom = it.link ? `<a href="${esc(it.link)}" target="_blank" rel="noopener">${esc(it.nombre)} ↗</a>` : esc(it.nombre);
       const c = cambio(H[s.id + '|' + it.nombre]);
       const extra = [it.detalle ? `<span>${esc(it.detalle)}</span>` : '', c].filter(Boolean).join('');
@@ -229,6 +296,7 @@ function pintar(D) {
     }).join('')}</section>`;
   }
   $('grilla').innerHTML = g;
+  ordenable($('grilla'), 'tablero-orden-grilla'); ordenable($('arriba'), 'tablero-orden-arriba');
 }
 async function cargar() {
   $('estado').textContent = 'Cargando…';

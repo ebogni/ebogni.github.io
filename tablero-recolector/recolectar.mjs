@@ -51,7 +51,10 @@ async function instalaciones(tok, pkg) {
 
 let TOKG = null; // token de Google para leer los informes de Play
 const APPS = {}; // Todo lo de cada app junto: descargas, instalaciones, puntaje y plata.
-const app = n => (APPS[n] ||= { nombre: n });
+// Un solo nombre por app: AdMob usa el nombre largo de la ficha ("Carrera en Miniatura: Autos") y Play el corto.
+const sinTildes = t => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const canon = n => { const x = sinTildes(n); const a = (F.play || []).find(p => { const y = sinTildes(p.nombre); return x === y || x.startsWith(y + ':') || x.startsWith(y + ' '); }); return a ? a.nombre : n; };
+const app = n => { n = canon(n); return (APPS[n] ||= { nombre: n }); };
 async function play() {
   const items = [];
   let tok = null, errIns = null; if (E.ADMOB_REFRESH_TOKEN) { try { tok = await tokenGoogle(E.GOOGLE_CLIENT_ID || F.admob.clientId, E.GOOGLE_CLIENT_SECRET, E.ADMOB_REFRESH_TOKEN); } catch (e) { } }
@@ -84,6 +87,7 @@ async function admob() {
     const j = await r.json(); if (!Array.isArray(j)) throw new Error(JSON.stringify(j).slice(0, 200));
     return j.filter(x => x.row).map(x => ({ dims: Object.fromEntries(Object.entries(x.row.dimensionValues || {}).map(([k, v]) => [k, v.displayLabel || v.value])), gan: +(x.row.metricValues.ESTIMATED_EARNINGS?.microsValue || 0) / 1e6, imp: +(x.row.metricValues.IMPRESSIONS?.integerValue || 0) }));
   };
+  const hace6 = new Date(hoy - 6 * 864e5), porAppSem = await pedir(hace6, hoy, ['APP']), porFormatoHoy = await pedir(hoy, hoy, ['FORMAT']), porFormatoSem = await pedir(hace6, hoy, ['FORMAT']);
   const porAppHoy = await pedir(hoy, hoy, ['APP']), porDia = await pedir(hace13, hoy, ['DATE']), porApp = await pedir(ini, hoy, ['APP']), porFormato = await pedir(ini, hoy, ['FORMAT']), antes = await pedir(iniAnt, finAnt, []);
   const iso = x => x.slice(0, 4) + '-' + x.slice(4, 6) + '-' + x.slice(6, 8);
   const serie = []; for (let k = 13; k >= 0; k--) { const f = new Date(hoy - k * 864e5).toISOString().slice(0, 10); const r = porDia.find(x => iso(x.dims.DATE) === f); serie.push({ fecha: f, gan: r ? r.gan : 0, imp: r ? r.imp : 0 }); }
@@ -97,9 +101,13 @@ async function admob() {
   const ecpm = x => x.imp ? x.gan / x.imp * 1000 : 0;
   PLATA = { hoy: hoyD.gan, ayer: ayerD.gan, impHoy: hoyD.imp, mes, proy, mesAnterior: antes.reduce((s, x) => s + x.gan, 0), saldo, umbral: F.admob.umbralUSD, serie,
     porApp: porApp.sort((a, b) => b.gan - a.gan).map(x => ({ nombre: x.dims.APP, gan: x.gan, imp: x.imp, ecpm: ecpm(x) })),
-    porFormato: porFormato.sort((a, b) => b.gan - a.gan).map(x => ({ nombre: NOMBRES[x.dims.FORMAT] || x.dims.FORMAT, gan: x.gan, imp: x.imp, ecpm: ecpm(x) })) };
+    porFormato: porFormato.sort((a, b) => b.gan - a.gan).map(x => ({ nombre: NOMBRES[String(x.dims.FORMAT).toUpperCase()] || x.dims.FORMAT, gan: x.gan, imp: x.imp, ecpm: ecpm(x) })) };
+  const fmtF = arr => arr.sort((a, b) => b.gan - a.gan).map(x => ({ nombre: NOMBRES[String(x.dims.FORMAT).toUpperCase()] || x.dims.FORMAT, gan: x.gan, imp: x.imp, ecpm: ecpm(x) }));
+  PLATA.porFormatoRango = { hoy: fmtF(porFormatoHoy), sem: fmtF(porFormatoSem), mes: PLATA.porFormato };
+  PLATA.semana = porAppSem.reduce((s, x) => s + x.gan, 0); PLATA.impSemana = porAppSem.reduce((s, x) => s + x.imp, 0);
   for (const x of porApp) Object.assign(app(x.dims.APP), { ganMes: x.gan, impMes: x.imp, ecpm: ecpm(x) });
   for (const x of porAppHoy) Object.assign(app(x.dims.APP), { ganHoy: x.gan, impHoy: x.imp });
+  for (const x of porAppSem) Object.assign(app(x.dims.APP), { ganSem: x.gan, impSem: x.imp });
   const items = [{ nombre: 'Hoy', valor: usd(hoyD.gan), num: hoyD.gan }, { nombre: 'Este mes', valor: usd(mes), num: mes }];
   return { id: 'admob', titulo: 'Ganancias de AdMob', icono: '💰', items, oculta: true, cuando: { hasta: 'instante', nota: 'el día de hoy todavía no cerró' } };
 }
@@ -353,7 +361,7 @@ const FUENTE = (E.FUENTE || '').trim();
 const IDS = { AdMob: 'admob', 'Google Play': 'play', YouTube: 'youtube', Clics: 'clics', 'Estoy viva': 'viva', Portales: 'portales', Cults3D: 'cults', 'Apps en camino': 'camino' };
 const corre = id => !FUENTE || FUENTE === id || (FUENTE === 'conversion' && (id === 'play' || id === 'clics')) || (FUENTE === 'rentabilidad' && (id === 'play' || id === 'admob'));
 if (FUENTE && previo) { // arranco desde lo anterior para no perder la plata ni las apps
-  for (const a of previo.apps || []) APPS[a.nombre] = { ...a };
+  for (const a of previo.apps || []) Object.assign(app(a.nombre), a, { nombre: canon(a.nombre) });
   PLATA = previo.plata || null;
 }
 if (previo && previo.cults) CULTS = CULTS || previo.cults;
