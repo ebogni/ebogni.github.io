@@ -91,7 +91,7 @@ async function admob() {
   const hace6 = new Date(hoy - 6 * 864e5), porAppSem = await pedir(hace6, hoy, ['APP']), porFormatoHoy = await pedir(hoy, hoy, ['FORMAT']), porFormatoSem = await pedir(hace6, hoy, ['FORMAT']);
   try {
     const r = await (await fetch(`https://admob.googleapis.com/v1beta/accounts/${F.admob.cuenta}/apps?pageSize=100`, { headers: { Authorization: 'Bearer ' + tok } })).json();
-    SALUD_ADMOB = (r.apps || []).map(x => ({ nombre: canon(x.manualAppInfo?.displayName || x.linkedAppInfo?.displayName || x.appId), estado: x.appApprovalState || 'DESCONOCIDO', play: x.linkedAppInfo?.appStoreId || '' }));
+    SALUD_ADMOB = (r.apps || []).map(x => { const pkg = x.linkedAppInfo?.appStoreId || '', p = (F.play || []).find(a => a.id === pkg); return { nombre: p ? p.nombre : canon(x.linkedAppInfo?.displayName || x.manualAppInfo?.displayName || x.appId), estado: x.appApprovalState || 'DESCONOCIDO', play: pkg }; });
   } catch (e) { SALUD_ADMOB = null; }
   const porAppHoy = await pedir(hoy, hoy, ['APP']), porDia = await pedir(hace13, hoy, ['DATE']), porApp = await pedir(ini, hoy, ['APP']), porFormato = await pedir(ini, hoy, ['FORMAT']), antes = await pedir(iniAnt, finAnt, []);
   const iso = x => x.slice(0, 4) + '-' + x.slice(4, 6) + '-' + x.slice(6, 8);
@@ -391,7 +391,7 @@ for (const s of secciones) for (const it of s.items) if (it.num != null && !it.s
   const EST = { APPROVED: ['Anuncios OK', 'bien', 'AdMob la aprobó y muestra anuncios'], IN_REVIEW: ['En revisión', 'espera', 'AdMob la está revisando; mientras tanto puede no mostrar anuncios'], ACTION_REQUIRED: ['Sin anuncios', 'alerta', 'AdMob la rechazó: entrá al Centro de políticas de AdMob y pedí otra revisión'] };
   const enPlay = n => (F.play || []).some(p => p.nombre === n);
   if (SALUD_ADMOB) {
-    const items = SALUD_ADMOB.filter(x => enPlay(x.nombre)).map(x => { const e = EST[x.estado] || [x.estado, 'espera', '']; return { nombre: x.nombre, valor: e[0], estado: e[1], detalle: e[2], link: 'https://admob.google.com/v2/policycenter' }; });
+    const items = SALUD_ADMOB.filter(x => enPlay(x.nombre)).map(x => { let e = EST[x.estado] || [x.estado, 'espera', '']; if (APPS[x.nombre]?.noFigura && x.estado !== 'APPROVED') e = ['Sin anuncios todavía', 'espera', 'AdMob la aprueba cuando la app esté publicada en Play']; return { nombre: x.nombre, valor: e[0], estado: e[1], detalle: e[2], link: 'https://admob.google.com/v2/policycenter' }; });
     secciones.push({ id: 'salud', titulo: 'Salud de las apps', icono: '🩺', items, buscado: new Date().toISOString(), cuando: { hasta: 'instante', nota: 'aprobación de anuncios en AdMob' } });
   } else { const p = previo && previo.secciones.find(x => x.id === 'salud'); if (p) secciones.push(p); }
 }
