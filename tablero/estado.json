@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-08T01:18:42.390Z",
+ "actualizado": "2026-11-08T06:17:13.233Z",
  "botonRefrescar": "listo",
  "fuentes": [
   {
@@ -40,7 +40,9 @@
   {
    "fuente": "Celus usando las apps (al instante)",
    "estado": "ok",
-   "notas": []
+   "notas": [
+    "Contador lento: Se muestra el último valor conocido"
+   ]
   },
   {
    "fuente": "Portales web",
@@ -49,7 +51,7 @@
   },
   {
    "fuente": "Cults3D",
-   "estado": "error (muestra el dato anterior)",
+   "estado": "ok",
    "notas": []
   },
   {
@@ -60,7 +62,5 @@
    ]
   }
  ],
- "errores": [
-  "Cults3D: respondió 403 con una página web (\"Access Denied — Cults\"): Cults3D bloqueó un rato la conexión desde GitHub (pasa a veces; la próxima vuelta se reintenta sola y se muestra el dato anterior)"
- ]
+ "errores": []
 }
