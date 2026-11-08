@@ -9,7 +9,7 @@ const SAL = new TextEncoder().encode('vikingzone-tablero-v1');
 const codigo = decodeURIComponent((E.CODIGO || '').trim().replace(/^.*[?&]code=/, '').replace(/&.*$/, ''));
 if (!codigo) { console.error('Falta el código.'); process.exit(1); }
 const r = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  body: new URLSearchParams({ code: codigo, client_id: E.GOOGLE_CLIENT_ID, client_secret: E.GOOGLE_CLIENT_SECRET, redirect_uri: E.REDIRECCION || 'https://developers.google.com/oauthplayground', grant_type: 'authorization_code' }) });
+  body: new URLSearchParams({ code: codigo, client_id: E.GOOGLE_CLIENT_ID || JSON.parse(fs.readFileSync(DIR + 'fuentes.json', 'utf8')).admob.clientId, client_secret: E.GOOGLE_CLIENT_SECRET, redirect_uri: E.REDIRECCION || 'https://developers.google.com/oauthplayground', grant_type: 'authorization_code' }) });
 const j = await r.json();
 if (!j.refresh_token) { console.error('Google no dio el permiso: ' + (j.error_description || j.error || JSON.stringify(j).slice(0, 200)) + '\nSi dice "invalid_grant", el código ya se usó o venció (dura unos minutos): pedí uno nuevo.'); process.exit(1); }
 const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(E.TABLERO_CLAVE), 'PBKDF2', false, ['deriveKey']);
