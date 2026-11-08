@@ -84,6 +84,10 @@ label.rec{display:flex;gap:8px;justify-content:center;align-items:center;color:v
 body.moviendo{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .ayuda{color:var(--mu);font-size:.75em;margin:0 0 8px}.bloque:has(>.portales:empty),.bloque:has(>.ingresos[hidden]){display:none}
 @media (max-width:560px){header{flex-wrap:wrap}.rango{order:3;width:100%;justify-content:space-between}.rango button{flex:1}}
+.vista{margin-left:auto;background:none;border:1px solid var(--bd);color:var(--mu);border-radius:8px;padding:1px 7px;font:inherit;font-size:.85em;cursor:pointer}.vista:hover{color:var(--tx)}.vista+.rf{margin-left:6px}.card h2 small+.vista{margin-left:6px}
+.leyenda{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82em;color:var(--mu);margin-top:4px}.leyenda i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.hb{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;padding:6px 0}.hb .hn{font-weight:600;overflow-wrap:anywhere}.hb .hv{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}.hb .hp{grid-column:1/-1;height:9px;background:var(--card2);border-radius:99px;overflow:hidden}.hb .hp i{display:block;height:100%;background:linear-gradient(90deg,var(--azul),#9fc4ff);border-radius:99px}
+.tabla{max-height:340px;overflow:auto}.tabla table{width:100%;border-collapse:collapse;font-size:.88em;font-variant-numeric:tabular-nums}.tabla th,.tabla td{padding:5px 8px;border-top:1px solid var(--bd);text-align:right}.tabla th:first-child,.tabla td:first-child{text-align:left}.tabla th{color:var(--mu);font-weight:600;position:sticky;top:0;background:var(--card)}
 </style>
 </head>
 <body>
@@ -182,6 +186,33 @@ function barras(serie) {
   });
   return g + '</svg>';
 }
+// Gráfico de líneas (una por app) con leyenda.
+const COLORES = ['#ffc53d', '#6ea8ff', '#3ecf7a', '#ff6257', '#c78bff', '#4dd4e0'];
+function lineas(series, unidad) {
+  const ns = Object.keys(series).filter(k => series[k] && series[k].length); if (!ns.length) return '<p class="vacio">Todavía sin datos.</p>';
+  const W = 700, H = 220, pi = 34, pb = 26, n = series[ns[0]].length, mx = Math.max(1, ...ns.flatMap(k => series[k].map(x => x.n)));
+  const tope = Math.ceil(mx / (mx > 20 ? 10 : 1)) * (mx > 20 ? 10 : 1), alto = H - pb - 14, paso = (W - pi - 8) / Math.max(1, n - 1);
+  let g = `<svg class="graf" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(unidad)} por día">`;
+  for (const f of [0, 0.5, 1]) { const y = 6 + alto * (1 - f); g += `<line x1="${pi}" x2="${W}" y1="${y}" y2="${y}" stroke="#2a2e3b"/><text x="${pi - 6}" y="${y + 4}" fill="#9299ab" font-size="12" text-anchor="end">${Math.round(tope * f)}</text>`; }
+  series[ns[0]].forEach((x, i) => { if (i % 5 === (n - 1) % 5) g += `<text x="${pi + i * paso}" y="${H - 8}" fill="#9299ab" font-size="12" text-anchor="middle">${i === n - 1 ? 'hoy' : x.fecha.slice(8) + '/' + x.fecha.slice(5, 7)}</text>`; });
+  ns.forEach((k, j) => {
+    const pts = series[k].map((x, i) => `${(pi + i * paso).toFixed(1)},${(6 + alto - x.n / tope * alto).toFixed(1)}`);
+    g += `<polyline points="${pts.join(' ')}" fill="none" stroke="${COLORES[j % 6]}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+    series[k].forEach((x, i) => { g += `<circle cx="${pts[i].split(',')[0]}" cy="${pts[i].split(',')[1]}" r="6" fill="transparent"><title>${esc(k)} · ${x.fecha}: ${num(x.n)} ${esc(unidad)}</title></circle>`; });
+  });
+  return g + `</svg><div class="leyenda">${ns.map((k, j) => `<span><i style="background:${COLORES[j % 6]}"></i>${esc(k)}</span>`).join('')}</div>`;
+}
+// Barras horizontales para cualquier lista de números.
+const nro = v => { if (typeof v === 'number') return v; const t = String(v ?? '').replace(/[^\d.,-]/g, ''); if (!t) return null; const x = parseFloat(t.replace(/\./g, '').replace(',', '.')); return isNaN(x) ? null : x; };
+function hbarras(filas) {
+  const mx = Math.max(0.0001, ...filas.map(f => f.v));
+  return filas.map(f => `<div class="hb"><span class="hn">${esc(f.n)}</span><span class="hv">${esc(f.t)}</span><span class="hp"><i style="width:${Math.max(1.5, f.v / mx * 100).toFixed(1)}%"></i></span></div>`).join('');
+}
+// Cada tarjeta recuerda si la querés ver como lista o como gráfico.
+let VISTAS = (() => { try { return JSON.parse(LS.get('tablero-vistas') || '{}'); } catch (e) { return {}; } })();
+const vistaDe = (k, def) => VISTAS[k] || def;
+const btnVista = (k, actual) => `<button class="vista" data-v="${k}" data-a="${actual}" title="${actual === 'graf' ? 'Ver como lista' : 'Ver como gráfico'}">${actual === 'graf' ? '☰' : '📊'}</button>`;
+document.addEventListener('click', e => { const b = e.target.closest('.vista'); if (!b) return; VISTAS[b.dataset.v] = b.dataset.a === 'graf' ? 'lista' : 'graf'; LS.set('tablero-vistas', JSON.stringify(VISTAS)); if (ULT) pintar(ULT); });
 const filaProp = (nombre, valor, extra, prop) => `<div class="fila"><span class="n">${esc(nombre)}</span><span class="v">${valor}</span>${extra ? `<span class="x">${extra}</span>` : ''}<span class="prop"><i style="width:${Math.max(2, prop * 100).toFixed(1)}%"></i></span></div>`;
 // ---------- Pintar ----------
 let ULT = null; // últimos datos (para el botón ↻)
@@ -206,7 +237,7 @@ function unirApps(A) {
 function ordenable(cont, clave) {
   const hijos = () => [...cont.children].filter(x => x.dataset.k);
   const guardado = (() => { try { return JSON.parse(LS.get(clave) || '[]'); } catch (e) { return []; } })();
-  hijos().sort((a, b) => { const i = guardado.indexOf(a.dataset.k), j = guardado.indexOf(b.dataset.k); return (i < 0 ? 999 : i) - (j < 0 ? 999 : j); }).forEach(x => cont.appendChild(x));
+  hijos().sort((a, b) => { const i = guardado.indexOf(a.dataset.k), j = guardado.indexOf(b.dataset.k); return (i < 0 ? -1 : i) - (j < 0 ? -1 : j); }).forEach(x => cont.appendChild(x));
   for (const el of hijos()) {
     if (el.querySelector(':scope>.asa')) continue;
     const asa = document.createElement('span'); asa.className = 'asa'; asa.textContent = '⠿'; asa.title = 'Arrastrar para cambiar de lugar'; el.prepend(asa);
@@ -294,14 +325,24 @@ function pintar(D) {
   let g = '';
   if (P) {
     const dias = R === 'mes' ? P.serie : P.serie.slice(-7);
-    g += `<section class="card ancha" data-k="diario"><h2>📈 Ganancia por día <small>últimos ${dias.length} días</small>${rf('admob')}</h2>${lineaCuando(SEC('admob'))}${barras(dias)}</section>`;
+    const vD = vistaDe('diario', 'graf');
+    g += `<section class="card ancha" data-k="diario"><h2>📈 Ganancia por día <small>últimos ${dias.length} días</small>${btnVista('diario', vD)}${rf('admob')}</h2>${lineaCuando(SEC('admob'))}${vD === 'graf' ? barras(dias) : [...dias].reverse().map(x => `<div class="fila"><span class="n">${diaCorto(x.fecha)}</span><span class="v">${usd(x.gan)}</span><span class="x"><span>${num(x.imp)} anuncios</span></span></div>`).join('')}</section>`;
     const mxA = Math.max(0.0001, ...P.porApp.map(x => x.gan)), mxF = Math.max(0.0001, ...P.porFormato.map(x => x.gan));
     const PF = (P.porFormatoRango && P.porFormatoRango[R]) || P.porFormato, mxR = Math.max(0.0001, ...PF.map(x => x.gan));
     g += `<section class="card" data-k="formatos"><h2>🎯 Qué anuncio rinde más <small>${NOM_R[R]}</small>${rf('admob')}</h2>${PF.length ? PF.map(x => filaProp(x.nombre, usd(x.gan), `<span>${num(x.imp)} vistos</span><span>US$ ${x.ecpm.toFixed(2)} cada 1.000</span>`, x.gan / mxR)).join('') : '<p class="vacio">Sin anuncios en el período.</p>'}</section>`;
   }
+  const SV = SEC('viva')?.series;
+  if (SV && Object.keys(SV).length) {
+    const vV = vistaDe('celus', 'graf'), ns = Object.keys(SV);
+    g += `<section class="card ancha" data-k="celus"><h2>📊 Celus que abren cada app <small>últimos 30 días</small>${btnVista('celus', vV)}${rf('viva')}</h2>${lineaCuando(SEC('viva'))}${vV === 'graf' ? lineas(SV, 'celus') :
+      `<div class="tabla"><table><tr><th>Día</th>${ns.map(k => `<th>${esc(k.split(' ')[0])}</th>`).join('')}</tr>${SV[ns[0]].map((_, i) => SV[ns[0]].length - 1 - i).map(i => `<tr><td>${diaCorto(SV[ns[0]][i].fecha)}</td>${ns.map(k => `<td>${num(SV[k][i]?.n)}</td>`).join('')}</tr>`).join('')}</table></div>`}</section>`;
+  }
   for (const s of D.secciones) {
     if (s.oculta || s.id === 'rentabilidad' || (s.id === 'play' && A.length)) continue;
-    g += `<section class="card" data-k="${s.id}"><h2>${s.icono} ${esc(s.titulo)}${s.viejo ? '<small>dato anterior</small>' : ''}${rf(s.id)}</h2>${lineaCuando(s)}${s.items.map(it => {
+    const nums = s.items.filter(it => !it.sub && nro(it.num ?? it.valor) != null).map(it => ({ n: it.nombre.replace(/^· /, ''), v: nro(it.num ?? it.valor), t: it.valor + (it.unidad ? ' ' + it.unidad : '') }));
+    const puedeG = nums.length >= 2, vS = puedeG ? vistaDe(s.id, 'lista') : 'lista';
+    if (vS === 'graf') { g += `<section class="card" data-k="${s.id}"><h2>${s.icono} ${esc(s.titulo)}${btnVista(s.id, vS)}${rf(s.id)}</h2>${lineaCuando(s)}${hbarras(nums)}</section>`; continue; }
+    g += `<section class="card" data-k="${s.id}"><h2>${s.icono} ${esc(s.titulo)}${s.viejo ? '<small>dato anterior</small>' : ''}${puedeG ? btnVista(s.id, vS) : ''}${rf(s.id)}</h2>${lineaCuando(s)}${s.items.map(it => {
       const nom = it.link ? `<a href="${esc(it.link)}" target="_blank" rel="noopener">${esc(it.nombre)} ↗</a>` : esc(it.nombre);
       const c = cambio(H[s.id + '|' + it.nombre]);
       const extra = [it.detalle ? `<span>${esc(it.detalle)}</span>` : '', c].filter(Boolean).join('');
@@ -309,6 +350,7 @@ function pintar(D) {
       return `<div class="fila ${it.sub ? 'sub' : ''} ${it.estado || ''}"><span class="n">${nom} ${ag}</span><span class="v">${esc(it.valor)}${it.unidad ? `<small>${esc(it.unidad)}</small>` : ''}</span>${extra ? `<span class="x">${extra}</span>` : ''}</div>`;
     }).join('')}</section>`;
   }
+  { const m = g.match(/<section class="card" data-k="salud">[\s\S]*?<\/section>/); if (m) g = m[0] + g.replace(m[0], ''); } // salud primero
   $('grilla').innerHTML = g;
   ordenable($('grilla'), 'tablero-orden-grilla'); ordenable($('arriba'), 'tablero-orden-arriba');
 }

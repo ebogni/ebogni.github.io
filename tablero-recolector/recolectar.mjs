@@ -73,6 +73,7 @@ async function play() {
   return { id: 'play', titulo: 'Google Play', icono: '📱', items, cuando: fechas.length ? { hasta: fechas[fechas.length - 1], nota: 'Play informa las instalaciones con 1 o 2 días de atraso' } : { hasta: 'instante' } };
 }
 
+let SALUD_ADMOB = null; // estado de aprobación de cada app en AdMob
 let PLATA = null; // Resumen de plata para los números grandes y los gráficos del tablero.
 let CULTS = null; // Plata de Cults3D (en su moneda) para el resumen de ingresos.
 async function admob() {
@@ -88,6 +89,10 @@ async function admob() {
     return j.filter(x => x.row).map(x => ({ dims: Object.fromEntries(Object.entries(x.row.dimensionValues || {}).map(([k, v]) => [k, v.displayLabel || v.value])), gan: +(x.row.metricValues.ESTIMATED_EARNINGS?.microsValue || 0) / 1e6, imp: +(x.row.metricValues.IMPRESSIONS?.integerValue || 0) }));
   };
   const hace6 = new Date(hoy - 6 * 864e5), porAppSem = await pedir(hace6, hoy, ['APP']), porFormatoHoy = await pedir(hoy, hoy, ['FORMAT']), porFormatoSem = await pedir(hace6, hoy, ['FORMAT']);
+  try {
+    const r = await (await fetch(`https://admob.googleapis.com/v1beta/accounts/${F.admob.cuenta}/apps?pageSize=100`, { headers: { Authorization: 'Bearer ' + tok } })).json();
+    SALUD_ADMOB = (r.apps || []).map(x => ({ nombre: canon(x.manualAppInfo?.displayName || x.linkedAppInfo?.displayName || x.appId), estado: x.appApprovalState || 'DESCONOCIDO', play: x.linkedAppInfo?.appStoreId || '' }));
+  } catch (e) { SALUD_ADMOB = null; }
   const porAppHoy = await pedir(hoy, hoy, ['APP']), porDia = await pedir(hace13, hoy, ['DATE']), porApp = await pedir(ini, hoy, ['APP']), porFormato = await pedir(ini, hoy, ['FORMAT']), antes = await pedir(iniAnt, finAnt, []);
   const iso = x => x.slice(0, 4) + '-' + x.slice(4, 6) + '-' + x.slice(6, 8);
   const serie = []; for (let k = 13; k >= 0; k--) { const f = new Date(hoy - k * 864e5).toISOString().slice(0, 10); const r = porDia.find(x => iso(x.dims.DATE) === f); serie.push({ fecha: f, gan: r ? r.gan : 0, imp: r ? r.imp : 0 }); }
@@ -244,6 +249,7 @@ async function clics() {
 
 // "Estoy viva": lo que avisan las apps desde el celu (sale en las versiones nuevas de la Carrera y el Truco).
 // Instalaciones nuevas por canal (utm_source de Play) y celus que la abrieron hoy. Llega al instante.
+const SERIES_VIVA = {};
 async function viva() {
   const NS = 'https://abacus.jasoncameron.dev/get/vikingzone-clics/', espera = ms => new Promise(r => setTimeout(r, ms));
   let fallas = 0;
@@ -262,6 +268,13 @@ async function viva() {
   const items = []; let tot = 0;
   for (const a of apps) {
     const hoy = await leer(`${a.clave}-activo-${dia(0)}`), ayer = await leer(`${a.clave}-activo-${dia(1)}`);
+    const serie = [];
+    for (let d = 29; d >= 0; d--) {
+      const k = `${a.clave}-activo-${dia(d)}`;
+      const n = d === 0 ? hoy : d === 1 ? ayer : (k in CRUDOS ? CRUDOS[k] : await leer(k));
+      serie.push({ fecha: dia(d).replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'), n });
+    }
+    SERIES_VIVA[a.nombre] = serie;
     const porCanal = [];
     for (const c of canales) { const n = await leer(`${a.clave}-instalada-${c}`); if (n) porCanal.push([c, n]); }
     const ins = porCanal.reduce((t, [, n]) => t + n, 0); tot += hoy;
@@ -272,7 +285,7 @@ async function viva() {
   }
   if (!tot && items.every(i => i.num === 0)) items.push({ nombre: 'Esperando las versiones nuevas', valor: '—', detalle: 'Cuenta desde que la Carrera y el Truco con el aviso "estoy viva" estén en Play', estado: 'espera', sub: true });
   if (fallas) items.push({ nombre: 'Contador lento', valor: fallas + ' sin leer', detalle: 'Se muestra el último valor conocido', estado: 'espera', sub: true });
-  return { id: 'viva', titulo: 'Celus usando las apps (al instante)', icono: '💓', items, total: tot };
+  return { id: 'viva', titulo: 'Celus usando las apps (al instante)', icono: '💓', items, total: tot, series: SERIES_VIVA };
 }
 
 // De dónde llega la gente a la ficha de Play y cuántos instalan (informe de Play, con 1 o 2 días de atraso).
@@ -373,6 +386,15 @@ for (const [n, f] of [['Conversión', () => conversion(secciones)], ['Rentabilid
 // Historial diario para ver cómo crece cada número (se guarda el último valor de cada día, 90 días).
 const hist = HIST, dia = hoyISO();
 for (const s of secciones) for (const it of s.items) if (it.num != null && !it.sub) { const k = s.id + '|' + it.nombre; (hist[k] ||= {})[dia] = it.num; const ks = Object.keys(hist[k]).sort(); while (ks.length > 90) delete hist[k][ks.shift()]; }
+// 🩺 Salud: lo que puede dejar una app sin plata sin que te enteres (hoy: aprobación de AdMob).
+{
+  const EST = { APPROVED: ['Anuncios OK', 'bien', 'AdMob la aprobó y muestra anuncios'], IN_REVIEW: ['En revisión', 'espera', 'AdMob la está revisando; mientras tanto puede no mostrar anuncios'], ACTION_REQUIRED: ['Sin anuncios', 'alerta', 'AdMob la rechazó: entrá al Centro de políticas de AdMob y pedí otra revisión'] };
+  const enPlay = n => (F.play || []).some(p => p.nombre === n);
+  if (SALUD_ADMOB) {
+    const items = SALUD_ADMOB.filter(x => enPlay(x.nombre)).map(x => { const e = EST[x.estado] || [x.estado, 'espera', '']; return { nombre: x.nombre, valor: e[0], estado: e[1], detalle: e[2], link: 'https://admob.google.com/v2/policycenter' }; });
+    secciones.push({ id: 'salud', titulo: 'Salud de las apps', icono: '🩺', items, buscado: new Date().toISOString(), cuando: { hasta: 'instante', nota: 'aprobación de anuncios en AdMob' } });
+  } else { const p = previo && previo.secciones.find(x => x.id === 'salud'); if (p) secciones.push(p); }
+}
 const avisos = [];
 for (const s of secciones) for (const it of s.items) if (it.estado === 'alerta') avisos.push(`${s.titulo}: ${it.nombre} — ${it.valor}`);
 if (PLATA) { const prom = PLATA.serie.slice(6, 13).reduce((t, x) => t + x.gan, 0) / 7; if (prom > 0.05 && PLATA.ayer < prom * 0.5) avisos.push(`Ayer ganaste ${usd(PLATA.ayer)}, menos de la mitad de lo normal (${usd(prom)} por día).`); }
