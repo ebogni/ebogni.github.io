@@ -95,9 +95,9 @@
   {
    "nombre": "FilaKot 3D",
    "que": "Presupuestador para quienes imprimen en 3D, con PDF y logo propio",
-   "etapa": "Etapa 2b · Diseño antes de programar",
-   "paso": "D1: Ícono y estilo final",
-   "hecho": "Maqueta 13 aprobada (sugerencias, clientes, PDF). Se salta la prueba con makers: se prueba en producción",
+   "etapa": "Etapa 3 · Versión 1",
+   "paso": "Paso 15: Probar el APK en el celular",
+   "hecho": "2b lista (ícono, gráfico, 18 capturas). APK de prueba y AAB firmada compilando solos",
    "visto": "2026-11-07",
    "link": "https://claude.ai/artifact/HbyXLEyDrajfwfgDWaRaiw"
   }
