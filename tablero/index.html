@@ -79,7 +79,8 @@ label.rec{display:flex;gap:8px;justify-content:center;align-items:center;color:v
 .asa{position:absolute;top:6px;right:8px;z-index:2;cursor:grab;color:var(--mu);font-size:1.05em;line-height:1;padding:4px 5px;border-radius:7px;touch-action:none;user-select:none;-webkit-user-select:none}
 .asa:hover{color:var(--tx);background:var(--card2)}
 .card h2 .rf{margin-right:26px}.bloque>.card h2{padding-right:26px}
-.arrastrando{opacity:.45;outline:2px dashed var(--oro);outline-offset:2px}
+.arrastrando{opacity:.92;box-shadow:0 18px 40px #000a;transform:rotate(.6deg);cursor:grabbing}
+.hueco{border:2px dashed var(--oro);border-radius:var(--r);background:#ffc53d10;margin:0 0 10px;break-inside:avoid}.grilla>.hueco{margin-bottom:9px}
 body.moviendo{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .ayuda{color:var(--mu);font-size:.75em;margin:0 0 8px}.bloque:has(>.portales:empty),.bloque:has(>.ingresos[hidden]){display:none}
 @media (max-width:560px){header{flex-wrap:wrap}.rango{order:3;width:100%;justify-content:space-between}.rango button{flex:1}}
@@ -210,21 +211,34 @@ function ordenable(cont, clave) {
     if (el.querySelector(':scope>.asa')) continue;
     const asa = document.createElement('span'); asa.className = 'asa'; asa.textContent = '⠿'; asa.title = 'Arrastrar para cambiar de lugar'; el.prepend(asa);
     asa.addEventListener('pointerdown', ev => {
-      ev.preventDefault(); asa.setPointerCapture(ev.pointerId); el.classList.add('arrastrando'); document.body.classList.add('moviendo');
-      const mover = e => {
-        el.style.pointerEvents = 'none';
-        const otro = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-k]');
-        el.style.pointerEvents = '';
+      if (ev.button > 0) return; ev.preventDefault();
+      // El panel se despega y sigue al dedo/mouse; en su lugar queda un hueco que se va corriendo adonde lo querés poner.
+      const r = el.getBoundingClientRect(), dx = ev.clientX - r.left, dy = ev.clientY - r.top;
+      const hueco = document.createElement('div'); hueco.className = 'hueco'; hueco.style.height = r.height + 'px';
+      cont.insertBefore(hueco, el);
+      Object.assign(el.style, { position: 'fixed', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', zIndex: 50, pointerEvents: 'none', margin: 0 });
+      el.classList.add('arrastrando'); document.body.classList.add('moviendo');
+      let px = ev.clientX, py = ev.clientY, rueda = 0;
+      const ubicar = () => {
+        el.style.left = (px - dx) + 'px'; el.style.top = (py - dy) + 'px';
+        const otro = document.elementFromPoint(px, py)?.closest('[data-k]');
         if (!otro || otro === el || otro.parentElement !== cont) return;
-        const r = otro.getBoundingClientRect(), antes = e.clientY < r.top + r.height / 2;
-        cont.insertBefore(el, antes ? otro : otro.nextSibling);
+        const ro = otro.getBoundingClientRect(), antes = py < ro.top + ro.height / 2;
+        const ref = antes ? otro : otro.nextElementSibling;
+        if (ref !== hueco && hueco.nextElementSibling !== (antes ? otro : ref)) cont.insertBefore(hueco, ref);
       };
+      const mover = e => { px = e.clientX; py = e.clientY; ubicar(); };
+      // Si llegás al borde de la pantalla, se desplaza sola.
+      const bordes = () => { const v = py < 70 ? -14 : py > innerHeight - 70 ? 14 : 0; if (v) { scrollBy(0, v); ubicar(); } rueda = requestAnimationFrame(bordes); };
+      rueda = requestAnimationFrame(bordes);
       const soltar = () => {
-        asa.removeEventListener('pointermove', mover); asa.removeEventListener('pointerup', soltar); asa.removeEventListener('pointercancel', soltar);
+        removeEventListener('pointermove', mover); removeEventListener('pointerup', soltar); removeEventListener('pointercancel', soltar); cancelAnimationFrame(rueda);
+        cont.insertBefore(el, hueco); hueco.remove();
+        for (const k of ['position', 'left', 'top', 'width', 'zIndex', 'pointerEvents', 'margin']) el.style[k] = '';
         el.classList.remove('arrastrando'); document.body.classList.remove('moviendo');
         LS.set(clave, JSON.stringify(hijos().map(x => x.dataset.k)));
       };
-      asa.addEventListener('pointermove', mover); asa.addEventListener('pointerup', soltar); asa.addEventListener('pointercancel', soltar);
+      addEventListener('pointermove', mover); addEventListener('pointerup', soltar); addEventListener('pointercancel', soltar);
     });
   }
 }
