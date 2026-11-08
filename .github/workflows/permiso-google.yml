@@ -1,0 +1,37 @@
+# Renovar el permiso de Google del tablero (por ejemplo, para sumar "leer planillas").
+# 1) Abrís el link de permisos que te pasa Claude y aceptás.  2) Corrés este trabajo pegando la dirección o el código que te quedó.
+name: "Tablero: renovar permiso de Google"
+on:
+  workflow_dispatch:
+    inputs:
+      codigo: { description: "El código que te dio Google (o la dirección completa de la página donde quedaste)", required: true }
+permissions:
+  contents: write
+  actions: write
+concurrency: { group: tablero, cancel-in-progress: false }
+jobs:
+  renovar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ocultar el código en el registro
+        env: { C: "${{ inputs.codigo }}" }
+        run: echo "::add-mask::$C"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Canjear el código y guardar el permiso cifrado
+        working-directory: tablero-recolector
+        env:
+          CODIGO: ${{ inputs.codigo }}
+          TABLERO_CLAVE: ${{ secrets.TABLERO_CLAVE }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        run: node renovar-permiso.mjs
+      - name: Guardar
+        run: |
+          git config user.name "Tablero VikingZone"; git config user.email "ebogni@users.noreply.github.com"
+          git add tablero-recolector/permiso-google.json && git commit -qm "Tablero: permiso de Google renovado"
+          for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 5; done
+      - name: Actualizar el tablero con el permiso nuevo
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: gh workflow run tablero.yml -R ${{ github.repository }} || true

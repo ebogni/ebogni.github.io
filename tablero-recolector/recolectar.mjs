@@ -391,6 +391,8 @@ function pendiente(id, titulo, icono, txt) { return { id, titulo, icono, items: 
 const clv = E.TABLERO_CLAVE; if (!clv) { console.error('Falta el secreto TABLERO_CLAVE.'); process.exit(1); }
 const K = await clave(clv);
 let previo = null; try { previo = await descifrar(K, JSON.parse(fs.readFileSync(SALIDA, 'utf8'))); } catch (e) { }
+// Permiso de Google renovado desde GitHub (trabajo "Tablero: renovar permiso de Google"): reemplaza a ADMOB_REFRESH_TOKEN.
+try { const pg = await descifrar(K, JSON.parse(fs.readFileSync(DIR + 'permiso-google.json', 'utf8'))); if (pg.refresh) E.ADMOB_REFRESH_TOKEN = pg.refresh; } catch (e) { }
 const secciones = [], errores = [];
 const HIST = (previo && previo.historial) || {};
 const CRUDOS = { ...((previo && previo.clicsCrudos) || {}) };
