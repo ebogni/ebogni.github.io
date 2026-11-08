@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-08T14:28:49.623Z",
+ "actualizado": "2026-11-08T14:49:29.917Z",
  "botonRefrescar": "listo",
  "fuentes": [
   {
@@ -60,6 +60,11 @@
    "notas": [
     "FilaKot 3D: Presupuestador para quienes imprimen en 3D, con PDF y logo propio"
    ]
+  },
+  {
+   "fuente": "Salud de las apps",
+   "estado": "ok",
+   "notas": []
   }
  ],
  "errores": []
