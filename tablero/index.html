@@ -203,7 +203,7 @@ function lineas(series, unidad) {
   return g + `</svg><div class="leyenda">${ns.map((k, j) => `<span><i style="background:${COLORES[j % 6]}"></i>${esc(k)}</span>`).join('')}</div>`;
 }
 // Barras horizontales para cualquier lista de números.
-const nro = v => { if (typeof v === 'number') return v; const t = String(v ?? '').replace(/[^\d.,-]/g, ''); if (!t) return null; const x = parseFloat(t.replace(/\./g, '').replace(',', '.')); return isNaN(x) ? null : x; };
+const nro = v => { if (typeof v === 'number') return v; if (/^\s*\d{1,4}[-\/]\d{1,2}[-\/]\d/.test(String(v ?? ''))) return null; const t = String(v ?? '').replace(/[^\d.,-]/g, ''); if (!t) return null; const x = parseFloat(t.replace(/\./g, '').replace(',', '.')); return isNaN(x) ? null : x; };
 function hbarras(filas) {
   const mx = Math.max(0.0001, ...filas.map(f => f.v));
   return filas.map(f => `<div class="hb"><span class="hn">${esc(f.n)}</span><span class="hv">${esc(f.t)}</span><span class="hp"><i style="width:${Math.max(1.5, f.v / mx * 100).toFixed(1)}%"></i></span></div>`).join('');
