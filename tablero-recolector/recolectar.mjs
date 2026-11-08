@@ -31,6 +31,31 @@ async function tokenGoogle(id, secreto, refresh) {
 }
 
 // ---------- Fuentes ----------
+// 💡 Sugerencias que mandan desde las apps (Formulario "Sugerencias de las apps" → su planilla).
+const PLANILLA_SUG = '1ElzizW4FdtKyqQKsm9eJA540b9wtlzik1B1Xxp-fkoU';
+async function sugerencias() {
+  if (!E.ADMOB_REFRESH_TOKEN) return pendiente('sugerencias', 'Sugerencias de las apps', '💡', 'Falta conectar la cuenta de Google.');
+  const tok = TOKG || await tokenGoogle(E.GOOGLE_CLIENT_ID || F.admob.clientId, E.GOOGLE_CLIENT_SECRET, E.ADMOB_REFRESH_TOKEN);
+  const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${PLANILLA_SUG}/values/A1:Z1000`, { headers: { Authorization: 'Bearer ' + tok } });
+  const j = await r.json();
+  if (!r.ok) {
+    let alcance = ''; try { alcance = (await (await fetch('https://oauth2.googleapis.com/tokeninfo?access_token=' + tok)).json()).scope || ''; } catch (e) {}
+    const falta = /insufficient|scope|PERMISSION_DENIED/i.test(JSON.stringify(j));
+    return { id: 'sugerencias', titulo: 'Sugerencias de las apps', icono: '💡', items: [{ nombre: falta ? 'Falta permiso para leer la planilla' : 'No pude leer la planilla', valor: 'Pendiente', estado: 'espera', detalle: (j.error?.message || r.status) + (alcance ? ' · permisos actuales: ' + alcance.split(' ').map(x => x.split('/').pop()).join(', ') : ''), link: 'https://docs.google.com/spreadsheets/d/' + PLANILLA_SUG }] };
+  }
+  const [cab = [], ...filas] = j.values || [];
+  const col = re => cab.findIndex(c => re.test(c));
+  const iF = col(/marca|fecha|time/i), iM = col(/mensaje|sugerencia|idea/i), iT = col(/tipo/i), iA = col(/^app/i), iV = col(/versi/i), iC = col(/contacto/i);
+  const v = (f, i) => i >= 0 ? (f[i] || '').trim() : '';
+  const items = filas.slice().reverse().slice(0, 8).map(f => ({
+    nombre: (/error|falla|bug/i.test(v(f, iT)) ? '🐞 ' : '💡 ') + [v(f, iA) || 'App', v(f, iT)].filter(Boolean).join(' · '), valor: v(f, iF).split(' ')[0] || '—',
+    detalle: v(f, iM) + (v(f, iV) ? ` · v${v(f, iV)}` : '') + (v(f, iC) ? ` · contacto: ${v(f, iC)}` : '') }));
+  const antes = previo?.secciones?.find(x => x.id === 'sugerencias')?.total;
+  const nuevas = antes != null ? filas.length - antes : 0;
+  if (!items.length) items.push({ nombre: 'Todavía no llegó ninguna', valor: '0', detalle: 'Se mandan desde Ajustes → Sugerencias de cada app', estado: 'espera' });
+  return { id: 'sugerencias', titulo: 'Sugerencias de las apps', icono: '💡', items, total: filas.length, nuevas, link: 'https://docs.google.com/spreadsheets/d/' + PLANILLA_SUG };
+}
+
 // Instalaciones exactas por app, de los informes que Play Console deja en su Cloud Storage (llegan con 1 o 2 días de atraso).
 async function instalaciones(tok, pkg) {
   const B = F.playConsole.bucket, hoy = new Date(Date.now() - 3 * 3600e3), filas = [];
@@ -371,14 +396,14 @@ const HIST = (previo && previo.historial) || {};
 const CRUDOS = { ...((previo && previo.clicsCrudos) || {}) };
 // Refrescar UNA tarjeta (botón ↻ del tablero): FUENTE=<id>. Las demás quedan con su dato anterior tal cual.
 const FUENTE = (E.FUENTE || '').trim();
-const IDS = { AdMob: 'admob', 'Google Play': 'play', YouTube: 'youtube', Clics: 'clics', 'Estoy viva': 'viva', Portales: 'portales', Cults3D: 'cults', 'Apps en camino': 'camino' };
+const IDS = { AdMob: 'admob', 'Google Play': 'play', YouTube: 'youtube', Clics: 'clics', 'Estoy viva': 'viva', Portales: 'portales', Cults3D: 'cults', 'Apps en camino': 'camino', Sugerencias: 'sugerencias' };
 const corre = id => !FUENTE || FUENTE === id || (FUENTE === 'conversion' && (id === 'play' || id === 'clics')) || (FUENTE === 'rentabilidad' && (id === 'play' || id === 'admob'));
 if (FUENTE && previo) { // arranco desde lo anterior para no perder la plata ni las apps
   for (const a of previo.apps || []) Object.assign(app(a.nombre), a, { nombre: canon(a.nombre) });
   PLATA = previo.plata || null;
 }
 if (previo && previo.cults) CULTS = CULTS || previo.cults;
-for (const [n, f] of [['AdMob', admob], ['Google Play', play], ['YouTube', youtube], ['Clics', clics], ['Estoy viva', viva], ['Portales', portales], ['Cults3D', cults], ['Apps en camino', enCamino]]) {
+for (const [n, f] of [['AdMob', admob], ['Google Play', play], ['YouTube', youtube], ['Clics', clics], ['Estoy viva', viva], ['Portales', portales], ['Cults3D', cults], ['Apps en camino', enCamino], ['Sugerencias', sugerencias]]) {
   if (!corre(IDS[n])) { const p = previo && previo.secciones.find(s => s.id === IDS[n]); if (p) { secciones.push(p); continue; } }
   try { const sec = await f(); sec.buscado = new Date().toISOString(); sec.cuando ||= { hasta: 'instante' }; secciones.push(sec); } catch (e) { errores.push(n + ': ' + e.message); const p = previo && previo.secciones.find(s => s.titulo.includes(n)); if (p) secciones.push({ ...p, viejo: true, error: e.message }); }
 }
@@ -396,6 +421,7 @@ for (const s of secciones) for (const it of s.items) if (it.num != null && !it.s
   } else { const p = previo && previo.secciones.find(x => x.id === 'salud'); if (p) secciones.push(p); }
 }
 const avisos = [];
+{ const sg = secciones.find(x => x.id === 'sugerencias'); if (sg?.nuevas > 0) avisos.push(`💡 ${sg.nuevas} sugerencia${sg.nuevas > 1 ? 's' : ''} nueva${sg.nuevas > 1 ? 's' : ''} desde las apps`); }
 for (const s of secciones) for (const it of s.items) if (it.estado === 'alerta') avisos.push(`${s.titulo}: ${it.nombre} — ${it.valor}`);
 if (PLATA) { const prom = PLATA.serie.slice(6, 13).reduce((t, x) => t + x.gan, 0) / 7; if (prom > 0.05 && PLATA.ayer < prom * 0.5) avisos.push(`Ayer ganaste ${usd(PLATA.ayer)}, menos de la mitad de lo normal (${usd(prom)} por día).`); }
 const descargas = secciones.find(s => s.id === 'play')?.items.reduce((t, it) => t + (it.num || 0), 0) ?? null;
