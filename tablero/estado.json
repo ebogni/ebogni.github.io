@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-11T15:23:22.115Z",
+ "actualizado": "2026-11-11T21:53:47.703Z",
  "botonRefrescar": "listo",
  "fuentes": [
   {
@@ -40,7 +40,9 @@
   {
    "fuente": "Celus usando las apps (al instante)",
    "estado": "ok",
-   "notas": []
+   "notas": [
+    "Contador lento: Se muestra el último valor conocido"
+   ]
   },
   {
    "fuente": "Portales web",
