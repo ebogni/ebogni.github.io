@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-12T10:55:23.190Z",
+ "actualizado": "2026-11-12T11:21:54.728Z",
  "botonRefrescar": "listo",
  "fuentes": [
   {
@@ -69,7 +69,9 @@
   {
    "fuente": "Salud de las apps",
    "estado": "ok",
-   "notas": []
+   "notas": [
+    "FilaKot 3D: AdMob la está revisando; mientras tanto puede no mostrar anuncios"
+   ]
   }
  ],
  "errores": []
