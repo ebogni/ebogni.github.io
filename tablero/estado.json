@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-12T10:05:44.278Z",
+ "actualizado": "2026-11-12T10:14:39.793Z",
  "botonRefrescar": "listo",
  "fuentes": [
   {
@@ -58,7 +58,6 @@
    "fuente": "Apps en camino",
    "estado": "ok",
    "notas": [
-    "FilaKot 3D: Presupuestador para quienes imprimen en 3D, con PDF y logo propio",
     "TatamiGo: App para academias de artes marciales: alumnos, clases, asistencia, cuotas y perfil deportivo entre dojos"
    ]
   },
@@ -70,9 +69,7 @@
   {
    "fuente": "Salud de las apps",
    "estado": "ok",
-   "notas": [
-    "FilaKot 3D: AdMob la aprueba cuando la app esté publicada en Play"
-   ]
+   "notas": []
   }
  ],
  "errores": []
