@@ -110,12 +110,12 @@
       "link": "https://claude.ai/artifact/HbyXLEyDrajfwfgDWaRaiw"
     },
     {
-      "nombre": "DOJO",
+      "nombre": "TatamiGo",
       "que": "App para academias de artes marciales: alumnos, clases, asistencia, cuotas y perfil deportivo entre dojos",
       "etapa": "Etapa 1 · Elegir qué hacer",
-      "paso": "Paso 2: investigar la competencia en Play",
-      "hecho": "Carpeta armada, idea en una frase aprobada, MVP chico con academias piloto de conocidos, servidor propio (hosting + vikingzone.app con SSH desde GitHub)",
-      "visto": "2026-11-11"
+      "paso": "Paso 2: analizar la competencia en Play",
+      "hecho": "Idea en una frase aprobada, nombre TatamiGo (com.ebogni.tatamigo) chequeado en Play, dominios y marcas INPI, academias piloto de conocidos, servidor propio listo (hosting + vikingzone.app con SSH desde GitHub)",
+      "visto": "2026-11-12"
     }
   ]
 }
