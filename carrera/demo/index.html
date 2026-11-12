@@ -838,13 +838,13 @@ body{background-color:#8fd46a!important; background-image:
   radial-gradient(rgba(46,125,50,.30) 1px, transparent 1.3px), radial-gradient(rgba(214,255,170,.5) 1px, transparent 1.3px)!important;
   background-size:13px 11px, 17px 15px!important; background-position:0 0, 6px 5px!important}
 @media (prefers-reduced-motion: reduce){ #btnJugar, .fin2 .podio .auto-mini{animation:none} }
-/* Trompo escudo, jugando solo: arriba del tablero, al medio (parado) o abajo al medio, por encima de las dos mitades táctiles (acostado). */
+/* Trompo escudo, jugando solo: justo arriba del acelerador (pedido de Emanuel: al medio era incómodo). Parado: encima del pedal; acostado: arriba a la derecha, sobre la mitad del acelerador. */
 @media (orientation: portrait){
-  body:not(.pc):not(.de-a-dos) #mando1 .escudo{position:absolute; left:50%; top:-74px; margin-left:-33px; width:66px; height:66px; z-index:3; box-shadow:0 4px 0 var(--tinta)}
+  body:not(.pc):not(.de-a-dos) #mando1 .escudo{position:absolute; right:var(--escudo-der, 24px); top:-74px; width:66px; height:66px; z-index:3; box-shadow:0 4px 0 var(--tinta)}
   body:not(.pc):not(.de-a-dos) #mando1 .escudo .txt-escudo{display:none} body:not(.pc):not(.de-a-dos) #mando1 .escudo .ico-escudo{font-size:30px}
 }
 @media (orientation: landscape) and (max-height:520px){
-  body:not(.de-a-dos):not(.pc) #mando1 .escudo{position:fixed; left:50%; bottom:max(12px, env(safe-area-inset-bottom, 0px)); margin-left:-34px; width:68px; height:68px; z-index:8}
+  body:not(.de-a-dos):not(.pc) #mando1 .escudo{position:fixed; right:max(18px, env(safe-area-inset-right, 0px)); top:66px; width:68px; height:68px; z-index:8}
   body:not(.de-a-dos):not(.pc) #mando1 .escudo .txt-escudo{display:none}
 }
 </style>
