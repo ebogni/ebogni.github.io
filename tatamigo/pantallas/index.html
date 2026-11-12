@@ -159,6 +159,28 @@ input[type=range]{width:100%;accent-color:var(--principal);margin-top:8px}
   .hoja .pie{position:absolute;bottom:9mm;left:0;right:0;display:flex;align-items:baseline;justify-content:center;gap:4mm;font-size:11pt;font-weight:700;color:#6B655B}
   .hoja .pie .marca{font-size:24pt;color:#1E1E1E}
 }
+/* Formularios */
+.campo{display:block;margin-bottom:12px}
+.campo>span{display:block;font-size:13px;font-weight:800;color:var(--tinta-2);margin:0 2px 6px}
+.campo input,.campo select{width:100%;min-height:50px;border-radius:var(--radio-boton);border:2px solid var(--linea);background:var(--tarjeta);font:inherit;font-size:16px;font-weight:700;color:var(--tinta);padding:0 14px}
+.campo input:focus{outline:none;border-color:var(--principal)}
+.chips.envolver{flex-wrap:wrap;overflow:visible}
+.chips button{cursor:pointer}
+.subir-logo{display:flex;align-items:center;gap:14px}
+.subir-logo .hueco{width:72px;height:72px;border-radius:50%;border:2px dashed var(--linea);display:grid;place-items:center;color:var(--tinta-2);flex-shrink:0;background:var(--tarjeta)}
+.paso-ok{display:flex;align-items:center;gap:10px;font-weight:800}
+.paso-ok .n{width:28px;height:28px;border-radius:50%;background:var(--principal);color:#fff;display:grid;place-items:center;font-size:14px;flex-shrink:0}
+/* Bienvenida (pantalla completa) */
+.celu.sin-barras .cabeza,.celu.sin-barras .nav{display:none}
+.celu.sin-barras .contenido{padding:0}
+.celu.sin-barras .pantalla.activa{min-height:100%;display:flex}
+.bienvenida{flex:1;display:flex;flex-direction:column;padding:0 0 24px}
+.bienvenida .arriba{height:38%;min-height:180px;display:grid;place-items:center;border-bottom:5px solid var(--tatami-borde);position:relative}
+.bienvenida .arriba .marca{font-size:52px}
+.bienvenida .lema{text-align:center;font-weight:800;font-size:18px;margin:22px 24px 6px}
+.bienvenida .abajo{padding:0 20px;margin-top:auto}
+.boton.google{background:var(--tarjeta);border:2px solid var(--linea)}
+.mp{background:#009EE3;color:#fff}
 /* Barra de abajo */
 .nav{display:grid;grid-template-columns:repeat(5,1fr);background:var(--barra);border-top:1px solid var(--linea);padding:6px 4px calc(6px + env(safe-area-inset-bottom));flex-shrink:0}
 .nav button{display:grid;justify-items:center;gap:2px;font-size:11px;font-weight:800;color:var(--tinta-2);padding:4px 0;min-height:52px;align-content:center}
@@ -202,6 +224,7 @@ input[type=range]{width:100%;accent-color:var(--principal);margin-top:8px}
     <option value="dojo-azul">Tema: Dojo azul</option>
   </select>
   <select id="quien" aria-label="Vista">
+    <option value="nuevo">Ver como: alguien nuevo</option>
     <option value="profe">Ver como: profe</option>
     <option value="alumno-app">Alumno que paga por la app</option>
     <option value="alumno-efvo">Alumno que paga en efectivo</option>
@@ -285,7 +308,7 @@ input[type=range]{width:100%;accent-color:var(--principal);margin-top:8px}
         <button class="chip sel">Todos</button><button class="chip">Al día</button><button class="chip">Deben</button><button class="chip">Chicos</button><button class="chip">Adultos</button>
       </div>
       <div class="tarjeta lista" id="lista-alumnos"></div>
-      <button class="boton prim"><svg class="i"><use href="#i-plus"/></svg>Sumar alumno</button>
+      <button class="boton prim" data-ir="nuevo-alumno"><svg class="i"><use href="#i-plus"/></svg>Sumar alumno</button>
     </section>
 
     <!-- 3. Perfil -->
@@ -400,10 +423,103 @@ input[type=range]{width:100%;accent-color:var(--principal);margin-top:8px}
       </div>
     </section>
 
+    <!-- Bienvenida -->
+    <section class="pantalla" data-p="bienvenida">
+      <div class="bienvenida">
+        <div class="arriba tatami"><div class="marca" translate="no">TatamiGo</div></div>
+        <div class="lema">Tu dojo, en tu bolsillo</div>
+        <p class="chico" style="text-align:center;margin:0 28px 16px">Clases, asistencia y cuotas de tu academia de artes marciales, todo en un lugar.</p>
+        <img class="ilu" alt="" src="data:image/webp;base64,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" style="width:min(70%,260px);margin:0 auto 20px">
+        <div class="abajo">
+          <button class="boton google" data-ir="alumno"><svg class="i" viewBox="0 0 24 24" style="stroke:none"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.2z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.4 14a6 6 0 0 1 0-3.9V7.5H3.1a10 10 0 0 0 0 9z"/><path fill="#EA4335" d="M12 6c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.5L6.4 10C7.2 7.8 9.4 6 12 6z"/></svg>Entrar con Google</button>
+          <button class="boton sec" data-ir="alumno"><svg class="i"><use href="#i-qr"/></svg>Tengo un código de mi academia</button>
+          <button class="boton prim" data-ir="academia"><svg class="i"><use href="#i-plus"/></svg>Soy profe: crear mi academia</button>
+          <p class="chico" style="text-align:center;margin-top:14px">Sin contraseñas: entrás con tu cuenta de Google o con el código que te pasa tu profe.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Crear / datos de la academia -->
+    <section class="pantalla" data-p="academia">
+      <button class="fila chico" data-ir="mas" style="font-weight:800"><svg class="i"><use href="#i-volver"/></svg>Volver</button>
+      <h2 style="margin-top:10px">Tu academia</h2>
+      <div class="tarjeta">
+        <div class="subir-logo"><div class="hueco"><svg class="i"><use href="#i-plus"/></svg></div><div><div style="font-weight:800">Logo de la academia</div><div class="chico">Sale en la app de tus alumnos y en el QR impreso</div></div></div>
+      </div>
+      <label class="campo"><span>Nombre</span><input value="Academia Kodokan San Juan"></label>
+      <div class="campo"><span>Disciplinas</span>
+        <div class="chips envolver" data-elegir="varias"><button class="chip sel">Jiu jitsu</button><button class="chip sel">Judo</button><button class="chip">Karate</button><button class="chip">Taekwondo</button><button class="chip">Kickboxing</button><button class="chip">MMA</button><button class="chip">Otra</button></div>
+      </div>
+      <label class="campo"><span>Cuota mensual</span><input value="$39.000" inputmode="numeric"></label>
+      <label class="campo"><span>Vence el día</span><input value="10" inputmode="numeric"></label>
+      <div class="tarjeta lista">
+        <div class="item link" data-ir="ubicacion"><svg class="i" style="color:var(--accion)"><use href="#i-ubic"/></svg><div class="datos"><div class="nombre">Ubicación</div><div class="chico">Av. Libertador 850 Oeste</div></div><svg class="i" style="color:var(--tinta-2)"><use href="#i-flecha"/></svg></div>
+        <div class="item"><svg class="i" style="color:#009EE3"><use href="#i-cuota"/></svg><div class="datos"><div class="nombre">Cobrar con Mercado Pago</div><div class="chico">Conectá tu cuenta una vez y las cuotas te llegan directo</div></div><span class="etiq ok">Conectado</span></div>
+        <div class="item"><svg class="i"><use href="#i-paleta"/></svg><div class="datos"><div class="nombre">Tema</div><div class="chico">Tatami</div></div><svg class="i" style="color:var(--tinta-2)"><use href="#i-flecha"/></svg></div>
+      </div>
+      <button class="boton prim" data-ir="inicio">Guardar</button>
+    </section>
+
+    <!-- Sumar alumno -->
+    <section class="pantalla" data-p="nuevo-alumno">
+      <button class="fila chico" data-ir="alumnos" style="font-weight:800"><svg class="i"><use href="#i-volver"/></svg>Alumnos</button>
+      <h2 style="margin-top:10px">Sumar alumno</h2>
+      <div class="tarjeta">
+        <div class="paso-ok"><span class="n">1</span>La forma más rápida</div>
+        <p class="chico" style="margin:8px 0 12px">Mandale el código de tu academia: entra con su Google y ya queda en tu lista.</p>
+        <div class="fila entre" style="background:var(--fondo);border-radius:var(--radio-boton);padding:10px 14px;margin-bottom:12px"><span class="grande" style="font-size:22px;letter-spacing:.12em" translate="no">KOD-482</span><span class="chico">Código</span></div>
+        <button class="boton verde"><svg class="i"><use href="#i-whatsapp"/></svg>Mandar por WhatsApp</button>
+      </div>
+      <div class="paso-ok" style="margin:18px 2px 10px"><span class="n">2</span>O cargalo vos</div>
+      <label class="campo"><span>Nombre y apellido</span><input placeholder="Ej.: Lucía Gómez"></label>
+      <label class="campo"><span>WhatsApp</span><input placeholder="264 555-1234" inputmode="tel"></label>
+      <div class="campo"><span>Es menor de edad</span>
+        <div class="chips" data-elegir="una"><button class="chip">Sí</button><button class="chip sel">No</button></div>
+      </div>
+      <p class="chico" style="margin:-4px 2px 12px">Si es menor, la cuenta la maneja su mamá, papá o tutor.</p>
+      <div class="campo"><span>Disciplina</span><div class="chips" data-elegir="una"><button class="chip sel">Jiu jitsu</button><button class="chip">Judo</button></div></div>
+      <div class="campo"><span>Cinturón</span>
+        <div class="chips envolver" data-elegir="una" id="elegir-cinto"></div>
+      </div>
+      <div class="campo"><span>Cómo paga la cuota</span>
+        <div class="chips" data-elegir="una"><button class="chip sel">Por la app</button><button class="chip">En efectivo</button></div>
+      </div>
+      <button class="boton prim" data-ir="alumnos">Guardar alumno</button>
+    </section>
+
+    <!-- Pagar cuota (alumno) -->
+    <section class="pantalla" data-p="pagar">
+      <button class="fila chico" data-ir="alumno" style="font-weight:800"><svg class="i"><use href="#i-volver"/></svg>Inicio</button>
+      <h2 style="margin-top:10px">Mi cuota</h2>
+      <div class="tarjeta" style="text-align:center">
+        <div class="chico">Diciembre · vence el 10</div>
+        <div class="grande" style="font-size:38px;margin:6px 0">$39.000</div>
+        <div class="chico">Academia Kodokan San Juan</div>
+      </div>
+      <button class="boton mp" data-ir="pagado"><svg class="i"><use href="#i-cuota"/></svg>Pagar con Mercado Pago</button>
+      <p class="chico" style="text-align:center;margin:10px 8px 16px">Con tarjeta, débito o dinero en cuenta. La plata va directo a tu academia.</p>
+      <h3>Pagos anteriores</h3>
+      <div class="tarjeta lista">
+        <div class="item"><svg class="i" style="color:var(--principal)"><use href="#i-check"/></svg><div class="datos"><div class="nombre">Noviembre</div><div class="chico">Pagado el 5/11 por la app</div></div><span class="chico" style="font-weight:800">$39.000</span></div>
+        <div class="item"><svg class="i" style="color:var(--principal)"><use href="#i-check"/></svg><div class="datos"><div class="nombre">Octubre</div><div class="chico">Pagado el 8/10 por la app</div></div><span class="chico" style="font-weight:800">$36.000</span></div>
+      </div>
+    </section>
+
+    <!-- Pago hecho -->
+    <section class="pantalla" data-p="pagado">
+      <div style="text-align:center;padding-top:30px">
+        <div style="width:90px;height:90px;border-radius:50%;background:var(--principal);color:#fff;display:grid;place-items:center;margin:0 auto 16px"><svg class="i" style="width:48px;height:48px"><use href="#i-check"/></svg></div>
+        <h2>¡Cuota pagada!</h2>
+        <p class="chico" style="margin:0 20px 20px">Diciembre · $39.000. Tu profe ya lo ve en la app. Te mandamos el comprobante.</p>
+      </div>
+      <button class="boton verde" data-ir="alumno">Volver al inicio</button>
+    </section>
+
     <!-- Más -->
     <section class="pantalla" data-p="mas">
       <h2>Más</h2>
       <div class="tarjeta lista">
+        <div class="item link" data-ir="academia"><svg class="i"><use href="#i-casa"/></svg><div class="datos"><div class="nombre">Datos de la academia</div><div class="chico">Nombre, logo, disciplinas y cuota</div></div><svg class="i" style="color:var(--tinta-2)"><use href="#i-flecha"/></svg></div>
         <div class="item link" data-ir="ubicacion"><svg class="i" style="color:var(--accion)"><use href="#i-ubic"/></svg><div class="datos"><div class="nombre">Ubicación de la academia</div><div class="chico">Para el QR y para que te encuentren</div></div><svg class="i" style="color:var(--tinta-2)"><use href="#i-flecha"/></svg></div>
         <div class="item"><svg class="i"><use href="#i-calendario"/></svg><div class="datos"><div class="nombre">Clases y horarios</div></div></div>
         <div class="item"><svg class="i"><use href="#i-paleta"/></svg><div class="datos"><div class="nombre">Tema de la academia</div><div class="chico">Tatami, Energía o Dojo azul</div></div></div>
@@ -423,6 +539,7 @@ input[type=range]{width:100%;accent-color:var(--principal);margin-top:8px}
 // Traducción: todo texto que ve el usuario pasa por _t (lista para traducir desde el principio)
 const _t = (s, ...a) => s.replace(/\{(\d+)\}/g, (m, i) => a[i]);
 const $ = id => document.getElementById(id);
+const NOMBRE_CINTO = { blanco:_t('Blanco'), gris:_t('Gris'), amarillo:_t('Amarillo'), naranja:_t('Naranja'), verde:_t('Verde'), azul:_t('Azul'), violeta:_t('Violeta'), marron:_t('Marrón'), negro:_t('Negro') };
 const CINTOS = { blanco:'#FFFFFF', gris:'#9AA0A6', amarillo:'#F2C230', naranja:'#F08A24', verde:'#3E8E41', azul:'#3B5BDB', violeta:'#7B4BB7', marron:'#7A4E2D', negro:'#1E1E1E' };
 const ALUMNOS = [
   { n:'Lucía Gómez', c:'azul', g:2, d:'Jiu jitsu', pago:'app', col:'#7A5C3E' },
@@ -460,15 +577,24 @@ document.querySelectorAll('[data-qr]').forEach(b => b.addEventListener('click', 
 
 $('radio-rango').addEventListener('input', e => { const m = +e.target.value; $('radio-txt').textContent = _t('{0} m', m); $('radio').style.setProperty('--r', (m * 1.2) + 'px'); });
 
+$('elegir-cinto').innerHTML = Object.entries(CINTOS).map(([k, c], i) => `<button class="chip${i ? '' : ' sel'}" style="display:flex;align-items:center;gap:6px"><span class="cinto" style="--cinto:${c};width:22px;margin:0"></span>${NOMBRE_CINTO[k]}</button>`).join('');
+document.querySelectorAll('[data-elegir]').forEach(g => g.addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  if (g.dataset.elegir === 'una') g.querySelectorAll('.chip').forEach(x => x.classList.toggle('sel', x === b)); else b.classList.toggle('sel');
+}));
+
 // Navegación
 const NAV_PROFE = [['inicio','i-casa',_t('Inicio')],['alumnos','i-alumnos',_t('Alumnos')],['qr','i-qr',_t('QR')],['cuotas','i-cuota',_t('Cuotas')],['mas','i-mas',_t('Más')]];
-const NAV_ALUMNO = [['alumno','i-casa',_t('Inicio')],['perfil','i-cinto',_t('Mi perfil')],['alumno','i-qr',_t('Escanear')],['alumno','i-cuota',_t('Mi cuota')],['mas','i-mas',_t('Más')]];
+const NAV_ALUMNO = [['alumno','i-casa',_t('Inicio')],['perfil','i-cinto',_t('Mi perfil')],['alumno','i-qr',_t('Escanear')],['pagar','i-cuota',_t('Mi cuota')],['mas','i-mas',_t('Más')]];
 let quien = 'profe';
 function pintarNav(actual) {
   const items = quien === 'profe' ? NAV_PROFE : NAV_ALUMNO;
-  $('nav').innerHTML = items.map(([p, ic, txt], i) => `<button data-ir="${p}" class="${p === actual && (quien === 'profe' || i !== 2 && i !== 3) ? 'sel' : ''}"><svg class="i"><use href="#${ic}"/></svg>${txt}</button>`).join('');
+  $('nav').innerHTML = items.map(([p, ic, txt], i) => `<button data-ir="${p}" class="${p === actual && (quien === 'profe' || i !== 2) ? 'sel' : ''}"><svg class="i"><use href="#${ic}"/></svg>${txt}</button>`).join('');
 }
 function ir(p) {
+  $('celu').classList.toggle('sin-barras', p === 'bienvenida');
+  if (['alumno', 'pagar', 'pagado'].includes(p)) quien = 'alumno';
+  if (['inicio', 'alumnos', 'qr', 'cuotas', 'academia', 'nuevo-alumno', 'ubicacion'].includes(p)) quien = 'profe';
   document.querySelectorAll('.pantalla').forEach(s => s.classList.toggle('activa', s.dataset.p === p));
   $('contenido').scrollTop = 0; pintarNav(p);
 }
@@ -477,7 +603,7 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-ir]'
 // Demo: tema y quién mira
 $('tema').addEventListener('change', e => document.documentElement.dataset.tema = e.target.value);
 $('quien').addEventListener('change', e => {
-  const v = e.target.value; quien = v === 'profe' ? 'profe' : 'alumno';
+  const v = e.target.value; quien = (v === 'profe' || v === 'nuevo') ? 'profe' : 'alumno';
   const efvo = v === 'alumno-efvo';
   $('anuncio').hidden = !efvo;
   $('btn-qr-alumno').hidden = efvo;
@@ -486,10 +612,10 @@ $('quien').addEventListener('change', e => {
   $('cuota-alumno').innerHTML = efvo
     ? `<div class="fila entre"><span style="font-weight:800">${_t('Cuota de noviembre')}</span><span class="etiq efvo">${_t('Pagada en efectivo')}</span></div>
        <p class="chico" style="margin:8px 0 12px">${_t('Si pagás la cuota por la app, tenés asistencia con QR, ranking y sin publicidad.')}</p>
-       <button class="boton verde">${_t('Pagar diciembre por la app')}</button>`
+       <button class="boton verde" data-ir="pagar">${_t('Pagar diciembre por la app')}</button>`
     : `<div class="fila entre"><span style="font-weight:800">${_t('Cuota de noviembre')}</span><span class="etiq ok">${_t('Al día')}</span></div>
-       <p class="chico" style="margin-top:8px">${_t('Diciembre: $39.000 · vence el 10')}</p>`;
-  ir(quien === 'profe' ? 'inicio' : 'alumno');
+       <p class="chico" style="margin:8px 0 12px">${_t('Diciembre: $39.000 · vence el 10')}</p><button class="boton verde" data-ir="pagar">${_t('Pagar diciembre')}</button>`;
+  ir(v === 'nuevo' ? 'bienvenida' : quien === 'profe' ? 'inicio' : 'alumno');
 });
 if (innerWidth < 700 || innerHeight < 600) { const d = document.querySelector('.demo'); d.classList.add('adentro'); $('lugar-demo').appendChild(d); }
 $('quien').dispatchEvent(new Event('change'));
