@@ -1,121 +1,121 @@
 {
-  "play": [
-    {
-      "nombre": "Carrera en Miniatura",
-      "id": "com.ebogni.carreraenminiatura"
-    },
-    {
-      "nombre": "Anotador de Truco",
-      "id": "com.ebogni.puntosdetruco"
-    },
-    {
-      "nombre": "FilaKot 3D",
-      "id": "com.ebogni.filakot"
-    }
+ "play": [
+  {
+   "nombre": "Carrera en Miniatura",
+   "id": "com.ebogni.carreraenminiatura"
+  },
+  {
+   "nombre": "Anotador de Truco",
+   "id": "com.ebogni.puntosdetruco"
+  },
+  {
+   "nombre": "FilaKot 3D",
+   "id": "com.ebogni.filakot"
+  }
+ ],
+ "youtube": [
+  {
+   "nombre": "VikingZone Juegos",
+   "id": "UCOnJ9g5yBcWLgqVG4GVT-aQ"
+  },
+  {
+   "nombre": "Emanuel Bogni (diseño 3D)",
+   "handle": "@EmanuelBogni"
+  }
+ ],
+ "admob": {
+  "cuenta": "pub-9335514305999185",
+  "umbralUSD": 500,
+  "clientId": "740201206532-mjnmfn73ll62k6m190dntq4cqng1hlid.apps.googleusercontent.com",
+  "saldoBase": {
+   "monto": 180,
+   "fecha": "2026-10-24"
+  }
+ },
+ "playgama": [
+  {
+   "nombre": "Carrera en Miniatura",
+   "estado": "Sandbox publicado",
+   "detalle": "sin moderación todavía; 430 jugadores del 1 al 6/11, el tráfico paró el 04/11",
+   "visto": "2026-11-06",
+   "link": "https://playgama.ai/play/2nt6xkyob2uu6s"
+  }
+ ],
+ "crazygames": [
+  {
+   "nombre": "Carrera en Miniatura",
+   "estado": "Rechazada",
+   "detalle": "06/11: 2º rechazo, 'la calidad general no llega a lo que esperan'",
+   "visto": "2026-11-06",
+   "link": "https://developer.crazygames.com/games/790c2891-6abf-4897-9d34-e6cad152aef5"
+  }
+ ],
+ "y8": [
+  {
+   "nombre": "Carrera en Miniatura",
+   "url": "https://www.y8.com/games/carrera_en_miniatura",
+   "estado": "Rechazada",
+   "detalle": "06/11: figura Rejected en el portal (1 jugada)",
+   "visto": "2026-11-06"
+  }
+ ],
+ "cults3d": {
+  "usuario": "ebogni"
+ },
+ "creality": {
+  "perfil": ""
+ },
+ "playConsole": {
+  "bucket": "pubsite_prod_rev_02740969924565071534"
+ },
+ "viva": {
+  "apps": [
+   {
+    "clave": "carrera",
+    "nombre": "Carrera en Miniatura"
+   },
+   {
+    "clave": "truco",
+    "nombre": "Anotador de Truco"
+   },
+   {
+    "clave": "filakot",
+    "nombre": "FilaKot 3D"
+   }
   ],
-  "youtube": [
-    {
-      "nombre": "VikingZone Juegos",
-      "id": "UCOnJ9g5yBcWLgqVG4GVT-aQ"
-    },
-    {
-      "nombre": "Emanuel Bogni (diseño 3D)",
-      "handle": "@EmanuelBogni"
-    }
-  ],
-  "admob": {
-    "cuenta": "pub-9335514305999185",
-    "umbralUSD": 500,
-    "clientId": "740201206532-mjnmfn73ll62k6m190dntq4cqng1hlid.apps.googleusercontent.com",
-    "saldoBase": {
-      "monto": 180,
-      "fecha": "2026-10-24"
-    }
-  },
-  "playgama": [
-    {
-      "nombre": "Carrera en Miniatura",
-      "estado": "Sandbox publicado",
-      "detalle": "sin moderación todavía; 430 jugadores del 1 al 6/11, el tráfico paró el 04/11",
-      "visto": "2026-11-06",
-      "link": "https://playgama.ai/play/2nt6xkyob2uu6s"
-    }
-  ],
-  "crazygames": [
-    {
-      "nombre": "Carrera en Miniatura",
-      "estado": "Rechazada",
-      "detalle": "06/11: 2º rechazo, 'la calidad general no llega a lo que esperan'",
-      "visto": "2026-11-06",
-      "link": "https://developer.crazygames.com/games/790c2891-6abf-4897-9d34-e6cad152aef5"
-    }
-  ],
-  "y8": [
-    {
-      "nombre": "Carrera en Miniatura",
-      "url": "https://www.y8.com/games/carrera_en_miniatura",
-      "estado": "Rechazada",
-      "detalle": "06/11: figura Rejected en el portal (1 jugada)",
-      "visto": "2026-11-06"
-    }
-  ],
-  "cults3d": {
-    "usuario": "ebogni"
-  },
-  "creality": {
-    "perfil": ""
-  },
-  "playConsole": {
-    "bucket": "pubsite_prod_rev_02740969924565071534"
-  },
-  "viva": {
-    "apps": [
-      {
-        "clave": "carrera",
-        "nombre": "Carrera en Miniatura"
-      },
-      {
-        "clave": "truco",
-        "nombre": "Anotador de Truco"
-      },
-      {
-        "clave": "filakot",
-        "nombre": "FilaKot 3D"
-      }
-    ],
-    "canales": [
-      "organico",
-      "youtube",
-      "tiktok",
-      "directo",
-      "anotador_truco",
-      "compartir"
-    ]
-  },
-  "clics": {
-    "fuentes": [
-      "youtube",
-      "tiktok",
-      "directo"
-    ]
-  },
-  "enCamino": [
-    {
-      "nombre": "FilaKot 3D",
-      "que": "Presupuestador para quienes imprimen en 3D, con PDF y logo propio",
-      "etapa": "Etapa 3 · Prueba cerrada",
-      "paso": "Esperando que Google apruebe la prueba cerrada; después, 12+ probadores durante 14 días y pedir producción",
-      "hecho": "Ficha completa, versión 3 en prueba cerrada (grupo filakot-probadores), comerciante y condiciones del servicio cargados, videos de la app real cada 2 días",
-      "visto": "2026-11-08",
-      "link": "https://claude.ai/artifact/HbyXLEyDrajfwfgDWaRaiw"
-    },
-    {
-      "nombre": "TatamiGo",
-      "que": "App para academias de artes marciales: alumnos, clases, asistencia, cuotas y perfil deportivo entre dojos",
-      "etapa": "Etapa 1 · Elegir qué hacer",
-      "paso": "Paso 4: palabras clave (ASO)",
-      "hecho": "Idea en una frase aprobada, nombre TatamiGo (com.ebogni.tatamigo) chequeado en Play, dominios y marcas INPI, academias piloto de conocidos, servidor propio listo (hosting + vikingzone.app con SSH desde GitHub)",
-      "visto": "2026-11-12"
-    }
+  "canales": [
+   "organico",
+   "youtube",
+   "tiktok",
+   "directo",
+   "anotador_truco",
+   "compartir"
   ]
+ },
+ "clics": {
+  "fuentes": [
+   "youtube",
+   "tiktok",
+   "directo"
+  ]
+ },
+ "enCamino": [
+  {
+   "nombre": "FilaKot 3D",
+   "que": "Presupuestador para quienes imprimen en 3D, con PDF y logo propio",
+   "etapa": "Etapa 4 · Revisión de producción",
+   "paso": "Versión 4 enviada a producción el 10/11 (Google tarda 1 a 3 días); 16 probadores en la prueba cerrada. Cuando la aprueben: link público y campaña en grupos",
+   "hecho": "Ficha completa, versión 3 en prueba cerrada (grupo filakot-probadores), comerciante y condiciones del servicio cargados, videos de la app real cada 2 días",
+   "visto": "2026-11-08",
+   "link": "https://claude.ai/artifact/HbyXLEyDrajfwfgDWaRaiw"
+  },
+  {
+   "nombre": "TatamiGo",
+   "que": "App para academias de artes marciales: alumnos, clases, asistencia, cuotas y perfil deportivo entre dojos",
+   "etapa": "Etapa 1 · Elegir qué hacer",
+   "paso": "Paso 4: palabras clave (ASO)",
+   "hecho": "Idea en una frase aprobada, nombre TatamiGo (com.ebogni.tatamigo) chequeado en Play, dominios y marcas INPI, academias piloto de conocidos, servidor propio listo (hosting + vikingzone.app con SSH desde GitHub)",
+   "visto": "2026-11-12"
+  }
+ ]
 }
