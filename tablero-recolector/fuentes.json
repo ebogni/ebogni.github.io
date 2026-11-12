@@ -103,18 +103,18 @@
     {
       "nombre": "FilaKot 3D",
       "que": "Presupuestador para quienes imprimen en 3D, con PDF y logo propio",
-      "etapa": "Etapa 4 · Revisión de producción",
-      "paso": "Versión 4 enviada a producción el 10/11 (Google tarda 1 a 3 días); 16 probadores en la prueba cerrada. Cuando la aprueben: link público y campaña en grupos",
-      "hecho": "Ficha completa en 3 idiomas, versión 4 (barra de arriba arreglada) en revisión de producción, prueba cerrada con 16 probadores, campaña en grupos de Facebook con video y planilla, videos de la app real cada 2 días",
+      "etapa": "Etapa 5 · Publicada en Play",
+      "paso": "Publicada en producción (versión del 10/11), con 10+ descargas. Ahora: campaña en grupos de impresión 3D con el link público, y que AdMob apruebe la app",
+      "hecho": "Publicada en Play el 10/11 con ficha en 3 idiomas, prueba cerrada con 16 probadores, campaña en grupos de Facebook con video y planilla, videos de la app real cada 2 días",
       "visto": "2026-11-12",
-      "link": "https://claude.ai/artifact/HbyXLEyDrajfwfgDWaRaiw"
+      "link": "https://play.google.com/store/apps/details?id=com.ebogni.filakot"
     },
     {
       "nombre": "TatamiGo",
       "que": "App para academias de artes marciales: alumnos, clases, asistencia, cuotas y perfil deportivo entre dojos",
       "etapa": "Etapa 1 · Elegir qué hacer",
-      "paso": "Paso 5: dónde sale",
-      "hecho": "Idea en una frase aprobada, nombre TatamiGo (com.ebogni.tatamigo) chequeado en Play, dominios y marcas INPI, academias piloto de conocidos, servidor propio listo (hosting + vikingzone.app con SSH desde GitHub)",
+      "paso": "Paso 6: decisión de seguir (falta OK del paso 5)",
+      "hecho": "Idea, nombre TatamiGo chequeado (Play, dominios, INPI), competencia analizada, cobro decidido (1% de cada cuota pagada por la app; el que paga en efectivo queda con lo básico, con anuncios y sin QR), palabras clave (\"TatamiGo: Artes marciales\"), dónde sale (Play + web en vikingzone.app), servidor listo",
       "visto": "2026-11-12"
     }
   ]
