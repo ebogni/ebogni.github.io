@@ -125,6 +125,14 @@ h3{font-size:15px;font-weight:800;margin:18px 2px 8px;color:var(--tinta-2);text-
 .resumen .grande{color:var(--principal)}
 .anuncio{background:repeating-linear-gradient(135deg,var(--linea) 0 10px,transparent 10px 20px);border:1px solid var(--linea);border-radius:10px;min-height:60px;display:grid;place-items:center;font-size:12px;font-weight:800;color:var(--tinta-2);letter-spacing:.06em;margin:12px 0}
 .ilu{width:100%;height:auto;border-radius:10px;display:block;margin-bottom:10px}
+/* Mapa */
+.mapa{position:relative;height:210px;border-radius:var(--radio);overflow:hidden;box-shadow:var(--sombra);background:#E9E4D6}
+.mapa svg{position:absolute;inset:0;width:100%;height:100%}
+.mapa .radio{position:absolute;left:50%;top:50%;width:var(--r,120px);height:var(--r,120px);transform:translate(-50%,-50%);border-radius:50%;background:rgba(91,127,58,.18);border:2px solid var(--principal)}
+.mapa .pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-100%);color:var(--accion)}
+.mapa .pin svg.i{position:static;width:40px;height:40px;fill:var(--accion);stroke:#fff;stroke-width:1.6}
+input[type=range]{width:100%;accent-color:var(--principal);margin-top:8px}
+.item.link{cursor:pointer}
 /* Barra de abajo */
 .nav{display:grid;grid-template-columns:repeat(5,1fr);background:var(--barra);border-top:1px solid var(--linea);padding:6px 4px calc(6px + env(safe-area-inset-bottom));flex-shrink:0}
 .nav button{display:grid;justify-items:center;gap:2px;font-size:11px;font-weight:800;color:var(--tinta-2);padding:4px 0;min-height:52px;align-content:center}
@@ -178,6 +186,8 @@ h3{font-size:15px;font-weight:800;margin:18px 2px 8px;color:var(--tinta-2);text-
   <symbol id="i-tienda" viewBox="0 0 24 24"><path d="M4 8h16l-1 12H5z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></symbol>
   <symbol id="i-paleta" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.5 0 2-1 2-2s-1-1.5-1-2.5S14 15 15 15h2a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-ubic" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></symbol>
+  <symbol id="i-flecha" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
   <symbol id="i-fuego" viewBox="0 0 24 24"><path d="M12 21c-4 0-6.5-2.6-6.5-6.2 0-3.6 3-5.3 3.5-9.3 2.8 1.6 4 4 4 6 1-1 1.5-2.3 1.6-3.6 2 1.8 3.9 4.2 3.9 7 0 3.6-2.5 6.1-6.5 6.1z"/></symbol>
 </svg>
 
@@ -269,7 +279,8 @@ h3{font-size:15px;font-weight:800;margin:18px 2px 8px;color:var(--tinta-2);text-
       <div class="selector"><button class="sel" data-qr="mostrar">Mostrar QR</button><button data-qr="mano">Marcar a mano</button></div>
       <div id="qr-mostrar">
         <div class="qr-caja" id="qr-dibujo"></div>
-        <p class="chico" style="text-align:center;margin:10px 8px 14px">Los alumnos lo escanean con su celu y quedan anotados solos. El código cambia cada clase.</p>
+        <div style="text-align:center;margin-top:12px"><span class="etiq ok"><svg class="i" style="width:16px;height:16px"><use href="#i-ubic"/></svg>Solo vale dentro de la academia (100 m)</span></div>
+        <p class="chico" style="text-align:center;margin:8px 8px 14px">Los alumnos lo escanean con su celu y quedan anotados solos. Si mandan una foto del código, desde afuera no sirve.</p>
         <div class="fila entre" style="margin:0 2px 6px"><span style="font-weight:800">Ya llegaron</span><span class="etiq ok">12 de 18</span></div>
         <div class="tarjeta lista" id="lista-llegaron"></div>
       </div>
@@ -308,6 +319,7 @@ h3{font-size:15px;font-weight:800;margin:18px 2px 8px;color:var(--tinta-2);text-
         <div class="fila entre"><span class="chico">Tu próxima clase · Hoy 19:00</span><span class="etiq ok">Hoy</span></div>
         <div class="titulo" style="margin-top:6px">Jiu jitsu adultos</div>
         <div class="chico" style="margin-top:4px" id="txt-asist">Al llegar, escaneá el QR del profe</div>
+        <button class="fila chico" style="margin-top:8px;font-weight:800;color:var(--principal)"><svg class="i" style="width:18px;height:18px"><use href="#i-ubic"/></svg>Cómo llegar · Av. Libertador 850 Oeste</button>
         <button class="qr-redondo" id="btn-qr-alumno" aria-label="Escanear QR"><svg class="i"><use href="#i-qr"/></svg>Escanear</button>
       </div>
       <div class="anuncio" id="anuncio" hidden>PUBLICIDAD</div>
@@ -323,10 +335,33 @@ h3{font-size:15px;font-weight:800;margin:18px 2px 8px;color:var(--tinta-2);text-
       </div>
     </section>
 
+    <!-- Ubicación de la academia -->
+    <section class="pantalla" data-p="ubicacion">
+      <button class="fila chico" data-ir="mas" style="font-weight:800"><svg class="i"><use href="#i-volver"/></svg>Más</button>
+      <h2 style="margin-top:10px">Ubicación de la academia</h2>
+      <div class="mapa" id="mapa"><svg viewBox="0 0 400 210" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="210" fill="#ECE6D6"/><rect x="250" y="20" width="120" height="70" rx="8" fill="#D9E3C6"/><path d="M0 70H400M0 150H400M90 0V210M300 0V210" stroke="#fff" stroke-width="14"/><path d="M0 110L400 40" stroke="#fff" stroke-width="9"/><path d="M180 0V210" stroke="#F3DDA6" stroke-width="12"/></svg><div class="radio" id="radio"></div><div class="pin"><svg class="i"><use href="#i-ubic"/></svg></div></div>
+      <div class="tarjeta" style="margin-top:12px">
+        <div style="font-weight:800">Av. Libertador 850 Oeste, San Juan</div>
+        <div class="chico">Marcada el 12/11/2026</div>
+        <button class="boton sec" style="margin-top:12px"><svg class="i"><use href="#i-ubic"/></svg>Usar donde estoy ahora</button>
+      </div>
+      <div class="tarjeta">
+        <div class="fila entre"><span style="font-weight:800">Distancia para el QR</span><span class="etiq ok" id="radio-txt">100 m</span></div>
+        <input type="range" min="30" max="300" step="10" value="100" id="radio-rango" aria-label="Distancia para el QR">
+        <p class="chico" style="margin-top:6px">El QR solo anota la asistencia si el alumno está así de cerca.</p>
+      </div>
+      <h3>Que te encuentren</h3>
+      <div class="tarjeta lista">
+        <div class="item"><svg class="i" style="color:var(--principal)"><use href="#i-alumnos"/></svg><div class="datos"><div class="nombre">Visible en TatamiGo</div><div class="chico">Los alumnos te ven en el mapa y llegan con "Cómo llegar"</div></div><span class="etiq ok">Sí</span></div>
+        <div class="item link"><svg class="i" style="color:var(--accion)"><use href="#i-ubic"/></svg><div class="datos"><div class="nombre">Sumala a Google Maps</div><div class="chico">Te guiamos paso a paso para que aparezca cuando buscan "artes marciales cerca"</div></div><svg class="i" style="color:var(--tinta-2)"><use href="#i-flecha"/></svg></div>
+      </div>
+    </section>
+
     <!-- Más -->
     <section class="pantalla" data-p="mas">
       <h2>Más</h2>
       <div class="tarjeta lista">
+        <div class="item link" data-ir="ubicacion"><svg class="i" style="color:var(--accion)"><use href="#i-ubic"/></svg><div class="datos"><div class="nombre">Ubicación de la academia</div><div class="chico">Para el QR y para que te encuentren</div></div><svg class="i" style="color:var(--tinta-2)"><use href="#i-flecha"/></svg></div>
         <div class="item"><svg class="i"><use href="#i-calendario"/></svg><div class="datos"><div class="nombre">Clases y horarios</div></div></div>
         <div class="item"><svg class="i"><use href="#i-paleta"/></svg><div class="datos"><div class="nombre">Tema de la academia</div><div class="chico">Tatami, Energía o Dojo azul</div></div></div>
         <div class="item"><svg class="i"><use href="#i-red"/></svg><div class="datos"><div class="nombre">Red de dojos</div><div class="chico">Próximamente</div></div></div>
@@ -385,6 +420,8 @@ document.querySelectorAll('[data-qr]').forEach(b => b.addEventListener('click', 
   $('qr-mostrar').hidden = b.dataset.qr !== 'mostrar'; $('qr-mano').hidden = b.dataset.qr !== 'mano';
 }));
 
+$('radio-rango').addEventListener('input', e => { const m = +e.target.value; $('radio-txt').textContent = _t('{0} m', m); $('radio').style.setProperty('--r', (m * 1.2) + 'px'); });
+
 // Navegación
 const NAV_PROFE = [['inicio','i-casa',_t('Inicio')],['alumnos','i-alumnos',_t('Alumnos')],['qr','i-qr',_t('QR')],['cuotas','i-cuota',_t('Cuotas')],['mas','i-mas',_t('Más')]];
 const NAV_ALUMNO = [['alumno','i-casa',_t('Inicio')],['perfil','i-cinto',_t('Mi perfil')],['alumno','i-qr',_t('Escanear')],['alumno','i-cuota',_t('Mi cuota')],['mas','i-mas',_t('Más')]];
@@ -407,7 +444,7 @@ $('quien').addEventListener('change', e => {
   $('anuncio').hidden = !efvo;
   $('btn-qr-alumno').hidden = efvo;
   document.querySelector('[data-p="alumno"] .clase-hoy').style.cssText = efvo ? 'padding-bottom:16px;margin-bottom:12px' : '';
-  $('txt-asist').textContent = efvo ? _t('Tu profe te anota la asistencia en la clase') : _t('Al llegar, escaneá el QR del profe');
+  $('txt-asist').textContent = efvo ? _t('Tu profe te anota la asistencia en la clase') : _t('Al llegar, escaneá el QR del profe (tenés que estar en la academia)');
   $('cuota-alumno').innerHTML = efvo
     ? `<div class="fila entre"><span style="font-weight:800">${_t('Cuota de noviembre')}</span><span class="etiq efvo">${_t('Pagada en efectivo')}</span></div>
        <p class="chico" style="margin:8px 0 12px">${_t('Si pagás la cuota por la app, tenés asistencia con QR, ranking y sin publicidad.')}</p>
