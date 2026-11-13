@@ -1,12 +1,40 @@
 {
-  "_ayuda": "Links de '¿Necesitás un cartel?' en PasaLED, por país (código de 2 letras). url vacía = la fila no aparece. 'resto' es para los países que no están en la lista. titulo y detalle son opcionales.",
+  "_ayuda": "Links de '¿Necesitás un cartel?' en PasaLED, por país (código de 2 letras). Son links de afiliado (Mercado Libre en Latinoamérica, AliExpress en el resto): Mercado Libre o AliExpress venden y envían, y pagan la comisión. url vacía = la fila no aparece. titulo y detalle son opcionales.",
   "paises": {
-    "AR": { "url": "", "titulo": "", "detalle": "" },
-    "BR": { "url": "", "titulo": "", "detalle": "" },
-    "MX": { "url": "", "titulo": "", "detalle": "" },
-    "CL": { "url": "", "titulo": "", "detalle": "" },
-    "UY": { "url": "", "titulo": "", "detalle": "" },
-    "CO": { "url": "", "titulo": "", "detalle": "" }
+    "AR": {
+      "url": "",
+      "titulo": "",
+      "detalle": "Mercado Libre"
+    },
+    "BR": {
+      "url": "",
+      "titulo": "",
+      "detalle": "Mercado Livre"
+    },
+    "MX": {
+      "url": "",
+      "titulo": "",
+      "detalle": "Mercado Libre"
+    },
+    "CL": {
+      "url": "",
+      "titulo": "",
+      "detalle": "Mercado Libre"
+    },
+    "UY": {
+      "url": "",
+      "titulo": "",
+      "detalle": "Mercado Libre"
+    },
+    "CO": {
+      "url": "",
+      "titulo": "",
+      "detalle": "Mercado Libre"
+    }
   },
-  "resto": { "url": "", "titulo": "", "detalle": "" }
+  "resto": {
+    "url": "",
+    "titulo": "",
+    "detalle": "AliExpress"
+  }
 }
