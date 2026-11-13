@@ -121,8 +121,8 @@ window.APPS = {
       false
      ],
      [
-      "5. ¿Los usuarios pueden interactuar o intercambiar contenido?",
-      "Sí (tablón de avisos y preguntas, fotos de la academia)",
+      "5. Uso compartido del contenido del usuario",
+      "Interactúan o intercambian contenido (texto, imágenes): Sí · ¿Es la fuente principal de contenido?: No · ¿Desnudos?: No · ¿Violencia gráfica real?: No · ¿Bloquear usuarios o contenido?: No · ¿Denunciar usuarios o contenido?: Sí (\"Pedir que saquen esta foto\") · ¿Moderación de chats?: Sí (el profe decide qué se publica en el tablón) · ¿Limitado a amigos invitados?: Sí (solo los de la academia, que entran con el código del profe)",
       false
      ],
      [
