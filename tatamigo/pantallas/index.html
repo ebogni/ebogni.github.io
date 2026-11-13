@@ -181,6 +181,34 @@ input[type=range]{width:100%;accent-color:var(--principal);margin-top:8px}
 .bienvenida .abajo{padding:0 20px;margin-top:auto}
 .boton.google{background:var(--tarjeta);border:2px solid var(--linea)}
 .mp{background:#009EE3;color:#fff}
+/* Festejos (animaciones) */
+.festejo{position:absolute;inset:0;z-index:20;display:grid;place-items:center;background:rgba(30,30,30,.55);opacity:0;pointer-events:none;transition:opacity .25s}
+.festejo.ver{opacity:1;pointer-events:auto}
+.festejo .caja{background:var(--tarjeta);border-radius:24px;padding:26px 22px 20px;width:min(86%,330px);text-align:center;transform:scale(.7);transition:transform .45s cubic-bezier(.2,1.6,.4,1);position:relative;overflow:hidden}
+.festejo.ver .caja{transform:scale(1)}
+.festejo h2{margin:12px 0 4px}
+.cinto-grande{width:220px;height:110px;margin:0 auto;display:block}
+.cinto-grande .tira{stroke-dasharray:260;stroke-dashoffset:260}
+.festejo.ver .cinto-grande .tira{animation:dibujar 1s .25s ease-out forwards}
+.cinto-grande .nudo{transform-origin:110px 60px;transform:scale(0)}
+.festejo.ver .cinto-grande .nudo{animation:aparecer .5s 1s cubic-bezier(.2,1.8,.4,1) forwards}
+@keyframes dibujar{to{stroke-dashoffset:0}}
+@keyframes aparecer{to{transform:scale(1)}}
+.papelitos i{position:absolute;top:-12px;width:8px;height:14px;border-radius:2px;opacity:0}
+.festejo.ver .papelitos i{animation:caer 1.8s ease-in forwards}
+@keyframes caer{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(380px) rotate(540deg)}}
+.sello{width:120px;height:120px;margin:4px auto 0;border-radius:50%;border:6px solid var(--accion);color:var(--accion);display:grid;place-items:center;font-weight:800;font-size:22px;transform:scale(2.2) rotate(-18deg);opacity:0}
+.festejo.ver .sello{animation:sellar .45s .1s cubic-bezier(.3,1.4,.5,1) forwards}
+@keyframes sellar{to{transform:scale(1) rotate(-12deg);opacity:1}}
+.tilde{width:96px;height:96px;margin:0 auto}
+.tilde circle{fill:var(--principal);transform-origin:48px 48px;transform:scale(0)}
+.tilde path{stroke:#fff;stroke-width:8;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:70;stroke-dashoffset:70}
+.festejo.ver .tilde circle,.pantalla.activa .tilde.anima circle{animation:aparecer .4s cubic-bezier(.2,1.6,.4,1) forwards}
+.festejo.ver .tilde path,.pantalla.activa .tilde.anima path{animation:dibujar .45s .35s ease-out forwards}
+.fuego-salta{display:inline-block}
+.festejo.ver .fuego-salta{animation:salto .6s .2s ease-in-out 3}
+@keyframes salto{50%{transform:translateY(-10px) scale(1.15)}}
+@media (prefers-reduced-motion:reduce){.festejo *{animation-duration:.01s!important;animation-delay:0s!important;transition:none!important}}
 /* Barra de abajo */
 .nav{display:grid;grid-template-columns:repeat(5,1fr);background:var(--barra);border-top:1px solid var(--linea);padding:6px 4px calc(6px + env(safe-area-inset-bottom));flex-shrink:0}
 .nav button{display:grid;justify-items:center;gap:2px;font-size:11px;font-weight:800;color:var(--tinta-2);padding:4px 0;min-height:52px;align-content:center}
@@ -386,7 +414,7 @@ input[type=range]{width:100%;accent-color:var(--principal);margin-top:8px}
         <div class="titulo" style="margin-top:6px">Jiu jitsu adultos</div>
         <div class="chico" style="margin-top:4px" id="txt-asist">Al llegar, escaneá el QR del profe</div>
         <button class="fila chico" style="margin-top:8px;font-weight:800;color:var(--principal)"><svg class="i" style="width:18px;height:18px"><use href="#i-ubic"/></svg>Cómo llegar · Av. Libertador 850 Oeste</button>
-        <button class="qr-redondo" id="btn-qr-alumno" aria-label="Escanear QR"><svg class="i"><use href="#i-qr"/></svg>Escanear</button>
+        <button class="qr-redondo" id="btn-qr-alumno" data-festejo="presente" aria-label="Escanear QR"><svg class="i"><use href="#i-qr"/></svg>Escanear</button>
       </div>
       <div class="anuncio" id="anuncio" hidden>PUBLICIDAD</div>
       <div class="grilla2">
@@ -394,6 +422,10 @@ input[type=range]{width:100%;accent-color:var(--principal);margin-top:8px}
         <div class="tarjeta mini" style="--cinto:#3B5BDB"><div class="chico">Tu cinturón</div><div style="font-weight:800;margin-top:6px">Azul · 2 grados</div><span class="cinto"></span></div>
       </div>
       <div class="tarjeta" id="cuota-alumno"></div>
+      <div class="tarjeta">
+        <div style="font-weight:800;margin-bottom:10px">Festejos (para probar)</div>
+        <div class="chips envolver"><button class="chip" data-festejo="cinto">Cinturón nuevo</button><button class="chip" data-festejo="presente">Asistencia</button><button class="chip" data-festejo="racha">Racha</button><button class="chip" data-festejo="pago">Cuota pagada</button></div>
+      </div>
       <div class="tarjeta">
         <img class="ilu" alt="" src="data:image/webp;base64,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">
         <div style="font-weight:800">Tu dojo, en tu bolsillo</div>
@@ -506,7 +538,7 @@ input[type=range]{width:100%;accent-color:var(--principal);margin-top:8px}
     <!-- Pago hecho -->
     <section class="pantalla" data-p="pagado">
       <div style="text-align:center;padding-top:30px">
-        <div style="width:90px;height:90px;border-radius:50%;background:var(--principal);color:#fff;display:grid;place-items:center;margin:0 auto 16px"><svg class="i" style="width:48px;height:48px"><use href="#i-check"/></svg></div>
+        <svg class="tilde anima" viewBox="0 0 96 96" style="margin-bottom:16px"><circle cx="48" cy="48" r="46"/><path d="M28 50l13 13 27-29"/></svg>
         <h2>¡Cuota pagada!</h2>
         <p class="chico" style="margin:0 20px 20px">Diciembre · $39.000. Tu profe ya lo ve en la app. Te mandamos el comprobante.</p>
       </div>
@@ -529,6 +561,7 @@ input[type=range]{width:100%;accent-color:var(--principal);margin-top:8px}
     </section>
   </main>
 
+  <div class="festejo" id="festejo" role="dialog" aria-live="polite"><div class="caja" id="festejo-caja"></div></div>
   <nav class="nav" id="nav"></nav>
 </div>
 </div>
@@ -580,6 +613,25 @@ document.querySelectorAll('[data-elegir]').forEach(g => g.addEventListener('clic
   const b = e.target.closest('.chip'); if (!b) return;
   if (g.dataset.elegir === 'una') g.querySelectorAll('.chip').forEach(x => x.classList.toggle('sel', x === b)); else b.classList.toggle('sel');
 }));
+
+// Festejos
+const PAPEL = ['#5B7F3A','#C8402F','#C9A24B','#3B5BDB','#F2C230'];
+const papelitos = () => '<div class="papelitos">' + Array.from({length: 26}, (_, i) => `<i style="left:${Math.random()*100}%;background:${PAPEL[i % 5]};animation-delay:${(Math.random()*.6).toFixed(2)}s"></i>`).join('') + '</div>';
+const FESTEJOS = {
+  cinto: () => `${papelitos()}<svg class="cinto-grande" viewBox="0 0 220 110"><path class="tira" d="M110 58C40 58 14 50 14 36S56 14 110 14s96 8 96 22-26 22-96 22" fill="none" stroke="#3B5BDB" stroke-width="16" stroke-linecap="round" pathLength="260"/><g class="nudo"><path d="M102 64l-22 38" stroke="#2F4AB8" stroke-width="15" stroke-linecap="round"/><path d="M118 64l22 38" stroke="#3B5BDB" stroke-width="15" stroke-linecap="round"/><path d="M128 96l6 10" stroke="#1E1E1E" stroke-width="15"/><rect x="95" y="44" width="30" height="26" rx="7" fill="#2F4AB8"/></g></svg>
+    <h2>¡Felicitaciones, Lucía!</h2><p class="chico">Ya sos cinturón azul. Sensei Martín te lo entregó hoy.</p><button class="boton prim" style="margin-top:16px" data-cerrar>Compartir</button>`,
+  presente: () => `<div class="sello">${_t('PRESENTE')}</div><h2>¡Quedaste anotada!</h2><p class="chico">Jiu jitsu adultos · 19:04</p><button class="boton verde" style="margin-top:16px" data-cerrar>Listo</button>`,
+  racha: () => `${papelitos()}<div style="font-size:56px;line-height:1;color:var(--dorado)"><span class="fuego-salta"><svg class="i" style="width:64px;height:64px"><use href="#i-fuego"/></svg></span></div><h2>¡10 clases seguidas!</h2><p class="chico">Tu mejor racha. Seguí así.</p><button class="boton verde" style="margin-top:16px" data-cerrar>Seguir</button>`,
+  pago: () => `<svg class="tilde" viewBox="0 0 96 96"><circle cx="48" cy="48" r="46"/><path d="M28 50l13 13 27-29"/></svg><h2>¡Cuota pagada!</h2><p class="chico">Diciembre · $39.000</p><button class="boton verde" style="margin-top:16px" data-cerrar>Listo</button>`,
+};
+function festejar(tipo) {
+  const f = $('festejo'); f.classList.remove('ver'); $('festejo-caja').innerHTML = FESTEJOS[tipo]();
+  void f.offsetWidth; f.classList.add('ver');
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-festejo]'); if (b) { e.stopPropagation(); festejar(b.dataset.festejo); return; }
+  if (e.target.closest('[data-cerrar]') || e.target.id === 'festejo') $('festejo').classList.remove('ver');
+}, true);
 
 // Navegación
 const NAV_PROFE = [['inicio','i-casa',_t('Inicio')],['alumnos','i-alumnos',_t('Alumnos')],['qr','i-qr',_t('QR')],['cuotas','i-cuota',_t('Cuotas')],['mas','i-mas',_t('Más')]];
