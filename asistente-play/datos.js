@@ -99,84 +99,124 @@ window.APPS = {
    },
    {
     "titulo": "Configurar: clasificación de contenido",
-    "donde": "Panel → Clasificación de contenido → Iniciar cuestionario",
+    "donde": "Panel → Clasificación de contenido (pasos: 1 Categoría · 2 Cuestionario · 3 Resumen)",
     "campos": [
      [
-      "1. Correo electrónico",
+      "## Categoría",
+      "",
+      false
+     ],
+     [
+      "Categoría elegida",
+      "El resto de los tipos de app",
+      false
+     ],
+     [
+      "Correo electrónico (si lo pide)",
       "ebogni@gmail.com"
      ],
      [
-      "2. Categoría",
-      "Todos los demás tipos de apps (no es juego, ni red social, ni tienda)",
+      "Términos y Condiciones",
+      "Tildar: Acepto las Condiciones de Uso que describe la Coalición Internacional de Calificación por Edad (IARC).",
       false
      ],
      [
-      "3. Términos y Condiciones",
-      "Tildar \"Acepto las Condiciones de Uso que describe la Coalición Internacional de Calificación por Edad (IARC)\" → Siguiente",
+      "## Cuestionario — App descargada",
+      "",
       false
      ],
      [
-      "4. Violencia, sexo, lenguaje, drogas, apuestas, miedo, contenido delicado",
-      "No a todo",
+      "¿La app contiene algún tipo de contenido relevante para la calificación (p. ej., sexo, violencia, lenguaje) que se descarga como parte del paquete de la app (código, elementos)?",
+      "No",
       false
      ],
      [
-      "Uso compartido del contenido del usuario — ¿La app permite de forma nativa que los usuarios interactúen o intercambien contenido con otros usuarios mediante mensajes de voz o de texto, o que compartan imágenes o audio?",
+      "## Cuestionario — Uso compartido del contenido del usuario",
+      "",
+      false
+     ],
+     [
+      "¿La app permite de forma nativa que los usuarios interactúen o intercambien contenido con otros usuarios mediante mensajes de voz o de texto, o que compartan imágenes o audio?",
       "Sí",
       false
      ],
      [
-      "Uso compartido del contenido del usuario — ¿El contenido compartido y generado por usuarios es la fuente principal de contenido en la app?",
+      "¿El contenido compartido y generado por usuarios es la fuente principal de contenido en la app?",
       "No",
       false
      ],
      [
-      "Uso compartido del contenido del usuario — ¿La app permite compartir imágenes de desnudos con el público?",
+      "¿La app permite compartir imágenes de desnudos con el público?",
       "No",
       false
      ],
      [
-      "Uso compartido del contenido del usuario — ¿La app permite que el público comparta contenido de violencia gráfica real fuera de un contexto noticioso?",
+      "¿La app permite que el público comparta contenido de violencia gráfica real fuera de un contexto noticioso?",
       "No",
       false
      ],
      [
-      "Uso compartido del contenido del usuario — ¿La app incluye la posibilidad de bloquear usuarios o contenido generado por usuarios?",
+      "¿La app incluye la posibilidad de bloquear usuarios o contenido generado por usuarios?",
       "No",
       false
      ],
      [
-      "Uso compartido del contenido del usuario — ¿La app incluye la posibilidad de denunciar a usuarios o contenido generado por usuarios?",
+      "¿La app incluye la posibilidad de denunciar a usuarios o contenido generado por usuarios?",
       "Sí",
       false
      ],
      [
-      "Uso compartido del contenido del usuario — ¿La app incluye la moderación de chats?",
+      "¿La app incluye la moderación de chats?",
       "Sí",
       false
      ],
      [
-      "Uso compartido del contenido del usuario — ¿Las interacciones de la app se pueden limitar solo a amigos invitados?",
+      "¿Las interacciones de la app se pueden limitar solo a amigos invitados?",
       "Sí",
       false
      ],
      [
-      "6. ¿Comparte la ubicación del usuario con otros usuarios?",
-      "No",
+      "## Cuestionario — Contenido en línea",
+      "",
       false
      ],
      [
-      "7. ¿Permite comprar productos digitales?",
-      "No",
+      "(preguntas pendientes: pasáselas a Claude tal cual)",
+      "",
       false
      ],
      [
-      "8. Otras preguntas que aparezcan",
-      "Si dudás, copiale la pregunta a Claude",
+      "## Cuestionario — Promoción o venta de productos o actividades con restricción de edad",
+      "",
+      false
+     ],
+     [
+      "(preguntas pendientes: pasáselas a Claude tal cual)",
+      "",
+      false
+     ],
+     [
+      "## Cuestionario — Varios",
+      "",
+      false
+     ],
+     [
+      "(preguntas pendientes: pasáselas a Claude tal cual)",
+      "",
+      false
+     ],
+     [
+      "## Resumen",
+      "",
+      false
+     ],
+     [
+      "Qué hacer",
+      "Revisar y enviar",
       false
      ]
     ],
-    "nota": "Los textos de las preguntas son tal cual los muestra Play Console. Al final: Guardar → Ver resumen → Enviar.",
+    "nota": "Textos tal cual los muestra Play Console. Lo marcado como pendiente se completa cuando Emanuel lo pase.",
     "bloque": "Panel → Configura la app (12 tareas)"
    },
    {

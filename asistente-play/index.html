@@ -17,6 +17,7 @@ select{font:inherit;padding:8px;border-radius:10px}
 .campo .val{flex:1;white-space:pre-wrap;font-size:14px;word-break:break-word}
 .campo button,.listo{border:0;border-radius:10px;padding:8px 12px;font:inherit;font-weight:700;cursor:pointer}
 .campo button{background:#efe7da}.campo button.ok{background:#3e8e41;color:#fff}
+.seccion{font-weight:800;color:#c23d2a;margin:14px 0 2px;font-size:15px}
 .nota{background:#fff7e0;border-radius:10px;padding:10px 12px;font-size:14px;margin-top:10px}
 .listo{background:#c23d2a;color:#fff;margin-top:12px}.hecho .listo{background:#999}
 @media(max-width:600px){.campo{flex-direction:column}.campo .et{width:auto}}
@@ -41,7 +42,7 @@ function pintar() {
   $('pasos').innerHTML = a.pasos.map((p, i) => `<div class="paso ${h.includes(i) ? 'hecho' : ''} ${i === actual ? 'actual' : ''}" id="paso-${i}">
     <div class="cab"><span class="num">${h.includes(i) ? '✓' : i + 1}</span><h2>${esc(p.titulo)}</h2></div>
     ${p.bloque ? `<div class="donde" style="margin-bottom:0">${esc(p.bloque)}</div>` : ''}<div class="donde">Dónde: <b>${esc(p.donde)}</b></div>
-    ${p.campos.map(([et, val, copiar], j) => `<div class="campo"><div class="et">${esc(et)}</div><div class="val">${esc(val)}</div>${copiar === false ? '' : `<button data-copiar="${i}-${j}">Copiar</button>`}</div>`).join('')}
+    ${p.campos.map(([et, val, copiar], j) => et.startsWith('## ') ? `<div class="seccion">${esc(et.slice(3))}</div>` : `<div class="campo"><div class="et">${esc(et)}</div><div class="val">${esc(val)}</div>${copiar === false ? '' : `<button data-copiar="${i}-${j}">Copiar</button>`}</div>`).join('')}
     ${p.nota ? `<div class="nota">${esc(p.nota)}</div>` : ''}
     <button class="listo" data-listo="${i}">${h.includes(i) ? 'Volver a marcar como pendiente' : 'Listo, siguiente'}</button></div>`).join('');
   if (actual >= 0) document.getElementById('paso-' + actual).scrollIntoView({ block: 'center' });
