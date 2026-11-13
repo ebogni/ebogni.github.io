@@ -1,5 +1,6 @@
 // Datos de cada app para el asistente de Play Console. Lo arma Claude; una entrada por app.
 // Orden y nombres según el Panel de Play Console (revisado el 13/11/2026).
+// La cuenta de Emanuel es anterior a noviembre de 2023: no necesita prueba cerrada con 12 verificadores.
 window.APPS = {
  "tatamigo": {
   "nombre": "TatamiGo",
@@ -36,60 +37,6 @@ window.APPS = {
      ]
     ],
     "nota": "Tildá las dos declaraciones (políticas y leyes de exportación) y tocá Crear app."
-   },
-   {
-    "titulo": "Prueba interna: seleccionar verificadores",
-    "bloque": "Panel → Comienza las pruebas ahora",
-    "donde": "Panel → \"Lanza la app de forma anticipada para realizar pruebas internas\" → Ver tareas → Seleccionar verificadores",
-    "campos": [
-     [
-      "Qué hacer",
-      "Crear una lista de correos (por ejemplo \"Yo\") con tu mail, y tildarla",
-      false
-     ],
-     [
-      "Nombre de la lista",
-      "Yo"
-     ],
-     [
-      "Correo",
-      "ebogni@gmail.com"
-     ]
-    ],
-    "nota": "La prueba interna no pasa por revisión: sirve para probarla ya en tu celu desde Play."
-   },
-   {
-    "titulo": "Prueba interna: crear la versión",
-    "bloque": "Panel → Comienza las pruebas ahora",
-    "donde": "Panel → misma tarjeta → Crea una nueva versión",
-    "campos": [
-     [
-      "Firma de apps",
-      "Si pregunta: \"Usar la clave generada por Google\" (la recomendada)",
-      false
-     ],
-     [
-      "Archivo para subir (Paquetes de aplicación → Subir)",
-      "F:\\Progamacion\\Android\\01 - Apps\\DOJO\\Compilados\\TatamiGo-v1.aab"
-     ],
-     [
-      "Nombre de la versión",
-      "1 (se completa solo)",
-      false
-     ],
-     [
-      "Notas de la versión",
-      "<es-419>\nPrimera versión: asistencia con QR, cuotas, tablón, avisos de clases suspendidas, biblioteca, torneos y medallas.\n</es-419>"
-     ]
-    ],
-    "nota": "Tocá Siguiente → Guardar y publicar (en la prueba interna \"publicar\" solo la habilita para tus verificadores). Las versiones siguientes las sube Claude solo."
-   },
-   {
-    "titulo": "Huella de la firma de Google (para Claude)",
-    "bloque": "Panel → Comienza las pruebas ahora",
-    "donde": "Menú izquierdo → Probar y lanzar → Integridad de la app → Firma de apps (o Configuración de la firma de apps)",
-    "campos": [],
-    "nota": "Copiá el \"Certificado SHA-256\" de la CLAVE DE FIRMA DE APPS (no la de subida) y pegáselo a Claude en el chat."
    },
    {
     "titulo": "Configurar: política de privacidad",
@@ -364,22 +311,42 @@ window.APPS = {
     "bloque": "Panel → Configura la app (12 tareas)"
    },
    {
-    "titulo": "Prueba cerrada (14 días, 12 testers)",
-    "donde": "Panel → \"Prueba la app con un grupo más grande de verificadores\" (se habilita cuando están las 12 tareas) → Ver tareas",
+    "titulo": "Producción: subir y mandar a revisión",
+    "bloque": "Panel → Lanza la app → Crea y publica una versión",
+    "donde": "Menú izquierdo → Probar y lanzar → Producción → Crear versión nueva (se habilita cuando están las 12 tareas)",
     "campos": [
      [
-      "Testers",
-      "Elegí tu lista fija de testers (la misma de las otras apps)",
+      "Países (pestaña Países/regiones)",
+      "Agregar países: Argentina como mínimo (o todos los que quieras)",
       false
      ],
      [
-      "Países",
-      "Argentina (y los que quieras sumar)",
+      "Firma de apps",
+      "Si pregunta: \"Usar la clave generada por Google\" (la recomendada)",
       false
+     ],
+     [
+      "Archivo para subir (Paquetes de aplicación → Subir)",
+      "F:\\Progamacion\\Android\\01 - Apps\\DOJO\\Compilados\\TatamiGo-v1.aab"
+     ],
+     [
+      "Nombre de la versión",
+      "1 (se completa solo)",
+      false
+     ],
+     [
+      "Notas de la versión",
+      "<es-419>\nPrimera versión: asistencia con QR, cuotas, tablón, avisos de clases suspendidas, biblioteca, torneos y medallas.\n</es-419>"
      ]
     ],
-    "nota": "Cuando esté creada, avisale a Claude: él sube la versión a la prueba cerrada y la manda a revisión. Desde que los testers la instalan corren los 14 días.",
-    "bloque": "Panel → Lanza la app"
+    "nota": "Siguiente → revisar que no haya errores → Guardar → \"Enviar cambios a revisión\" (en Descripción general de la publicación). Tu cuenta es anterior a noviembre de 2023: no hace falta prueba cerrada ni los 12 verificadores. Las versiones siguientes las sube Claude solo."
+   },
+   {
+    "titulo": "Huella de la firma de Google (para Claude)",
+    "bloque": "Después de subir la versión",
+    "donde": "Menú izquierdo → Probar y lanzar → Integridad de la app → Firma de apps (o Configuración de la firma de apps)",
+    "campos": [],
+    "nota": "Copiá el \"Certificado SHA-256\" de la CLAVE DE FIRMA DE APPS (no la de subida) y pegáselo a Claude en el chat."
    }
   ]
  }
