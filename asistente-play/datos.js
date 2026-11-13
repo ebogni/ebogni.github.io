@@ -102,42 +102,46 @@ window.APPS = {
     "donde": "Panel → Clasificación de contenido → Iniciar cuestionario",
     "campos": [
      [
-      "Correo electrónico",
-      "(el tuyo de desarrollador)",
+      "1. Correo electrónico",
+      "ebogni@gmail.com"
+     ],
+     [
+      "2. Categoría",
+      "Todos los demás tipos de apps (no es juego, ni red social, ni tienda)",
       false
      ],
      [
-      "Categoría",
-      "Todos los demás tipos de apps (no es juego, ni red social de referencia, ni tienda)",
+      "3. Términos y Condiciones",
+      "Tildar \"Acepto las Condiciones de Uso que describe la Coalición Internacional de Calificación por Edad (IARC)\" → Siguiente",
       false
      ],
      [
-      "Violencia, sexo, lenguaje, drogas, apuestas, miedo",
+      "4. Violencia, sexo, lenguaje, drogas, apuestas, miedo, contenido delicado",
       "No a todo",
       false
      ],
      [
-      "¿Los usuarios pueden interactuar o intercambiar contenido?",
+      "5. ¿Los usuarios pueden interactuar o intercambiar contenido?",
       "Sí (tablón de avisos y preguntas, fotos de la academia)",
       false
      ],
      [
-      "¿Comparte la ubicación del usuario con otros?",
+      "6. ¿Comparte la ubicación del usuario con otros usuarios?",
       "No",
       false
      ],
      [
-      "¿Compras digitales?",
+      "7. ¿Permite comprar productos digitales?",
       "No",
       false
      ],
      [
-      "¿Contenido generado por usuarios sin moderar?",
-      "Responder lo que pregunte: el profe modera su academia y se puede pedir que se borre una foto",
+      "8. Otras preguntas que aparezcan",
+      "Si dudás, copiale la pregunta a Claude",
       false
      ]
     ],
-    "nota": "Terminá y tocá Guardar → Enviar.",
+    "nota": "Al final: Guardar → Ver resumen → Enviar (o \"Enviar clasificación\").",
     "bloque": "Panel → Configura la app (12 tareas)"
    },
    {
