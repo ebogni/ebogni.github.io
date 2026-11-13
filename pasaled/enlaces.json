@@ -1,0 +1,12 @@
+{
+  "_ayuda": "Links de '¿Necesitás un cartel?' en PasaLED, por país (código de 2 letras). url vacía = la fila no aparece. 'resto' es para los países que no están en la lista. titulo y detalle son opcionales.",
+  "paises": {
+    "AR": { "url": "", "titulo": "", "detalle": "" },
+    "BR": { "url": "", "titulo": "", "detalle": "" },
+    "MX": { "url": "", "titulo": "", "detalle": "" },
+    "CL": { "url": "", "titulo": "", "detalle": "" },
+    "UY": { "url": "", "titulo": "", "detalle": "" },
+    "CO": { "url": "", "titulo": "", "detalle": "" }
+  },
+  "resto": { "url": "", "titulo": "", "detalle": "" }
+}
