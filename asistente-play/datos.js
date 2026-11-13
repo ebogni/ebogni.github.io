@@ -1,4 +1,5 @@
 // Datos de cada app para el asistente de Play Console. Lo arma Claude; una entrada por app.
+// Orden y nombres según el Panel de Play Console (revisado el 13/11/2026).
 window.APPS = {
  "tatamigo": {
   "nombre": "TatamiGo",
@@ -7,6 +8,7 @@ window.APPS = {
   "pasos": [
    {
     "titulo": "Crear la app",
+    "bloque": "Todas las apps",
     "donde": "Play Console → Todas las apps → Crear app",
     "campos": [
      [
@@ -36,74 +38,121 @@ window.APPS = {
     "nota": "Tildá las dos declaraciones (políticas y leyes de exportación) y tocá Crear app."
    },
    {
-    "titulo": "Subir la primera versión (prueba interna)",
-    "donde": "Prueba y lanzamiento → Pruebas → Prueba interna → Crear versión nueva",
+    "titulo": "Prueba interna: seleccionar verificadores",
+    "bloque": "Panel → Comienza las pruebas ahora",
+    "donde": "Panel → \"Lanza la app de forma anticipada para realizar pruebas internas\" → Ver tareas → Seleccionar verificadores",
     "campos": [
      [
-      "Archivo para subir",
+      "Qué hacer",
+      "Crear una lista de correos (por ejemplo \"Yo\") con tu mail, y tildarla",
+      false
+     ],
+     [
+      "Nombre de la lista",
+      "Yo"
+     ],
+     [
+      "Correo",
+      "ebogni@gmail.com"
+     ]
+    ],
+    "nota": "La prueba interna no pasa por revisión: sirve para probarla ya en tu celu desde Play."
+   },
+   {
+    "titulo": "Prueba interna: crear la versión",
+    "bloque": "Panel → Comienza las pruebas ahora",
+    "donde": "Panel → misma tarjeta → Crea una nueva versión",
+    "campos": [
+     [
+      "Firma de apps",
+      "Si pregunta: \"Usar la clave generada por Google\" (la recomendada)",
+      false
+     ],
+     [
+      "Archivo para subir (Paquetes de aplicación → Subir)",
       "F:\\Progamacion\\Android\\01 - Apps\\DOJO\\Compilados\\TatamiGo-v1.aab"
      ],
      [
       "Nombre de la versión",
-      "1"
+      "1 (se completa solo)",
+      false
      ],
      [
       "Notas de la versión",
       "<es-419>\nPrimera versión: asistencia con QR, cuotas, tablón, avisos de clases suspendidas, biblioteca, torneos y medallas.\n</es-419>"
      ]
     ],
-    "nota": "Si pregunta por la firma de apps, elegí \"Usar la clave generada por Google\". Guardá; no hace falta publicar todavía. Las versiones siguientes las sube Claude solo."
+    "nota": "Tocá Siguiente → Guardar y publicar (en la prueba interna \"publicar\" solo la habilita para tus verificadores). Las versiones siguientes las sube Claude solo."
    },
    {
     "titulo": "Huella de la firma de Google (para Claude)",
-    "donde": "Prueba y lanzamiento → Configuración → Integridad de la app → Firma de apps",
+    "bloque": "Panel → Comienza las pruebas ahora",
+    "donde": "Menú izquierdo → Probar y lanzar → Integridad de la app → Firma de apps (o Configuración de la firma de apps)",
     "campos": [],
-    "nota": "Copiá el \"Certificado SHA-256\" de la clave de firma de apps y pegáselo a Claude en el chat. Sin eso, la app de Play muestra la barra de dirección arriba."
+    "nota": "Copiá el \"Certificado SHA-256\" de la CLAVE DE FIRMA DE APPS (no la de subida) y pegáselo a Claude en el chat."
    },
    {
-    "titulo": "Política de privacidad",
-    "donde": "Panel → Configurar la app → Política de privacidad (o Contenido de la app)",
+    "titulo": "Configurar: política de privacidad",
+    "donde": "Panel → \"Brinda información sobre la app…\" → Ver tareas → Configura la política de privacidad",
     "campos": [
      [
       "URL",
       "https://tatamigo.vikingzone.app/privacidad.html"
      ]
-    ]
+    ],
+    "bloque": "Panel → Configura la app (12 tareas)"
    },
    {
-    "titulo": "Acceso a la app",
-    "donde": "Contenido de la app → Acceso a la app",
+    "titulo": "Configurar: detalles de acceso",
+    "bloque": "Panel → Configura la app (12 tareas)",
+    "donde": "Panel → Detalles de acceso",
     "campos": [
      [
-      "Opción",
-      "Todas o algunas funciones están restringidas",
+      "¿Alguna parte de tu app está restringida?",
+      "Sí",
       false
      ],
      [
-      "Nombre de las instrucciones",
-      "Entrar con Google"
+      "Tocar",
+      "+ Agrega detalles",
+      false
      ],
      [
-      "Instrucciones",
-      "La app se usa entrando con cualquier cuenta de Google (no hay usuario ni contraseña propios). Para probar todo: 1) Tocá \"Continuar con Google\" con cualquier cuenta. 2) Elegí \"Soy profe\" y creá una academia de prueba. 3) Para ver la vista de alumno, entrá con otra cuenta de Google, elegí \"Soy alumno\" y escribí el código de la academia que aparece en el inicio del profe."
+      "Nombre",
+      "Google sign-in"
+     ],
+     [
+      "Nombre de usuario y Contraseña",
+      "Dejarlos vacíos (se entra con cualquier cuenta de Google)",
+      false
+     ],
+     [
+      "Cualquier otra información necesaria (en inglés)",
+      "Sign in with ANY Google account (button \"Continue with Google\"); there is no separate username or password. To test everything: 1) Sign in, choose \"I'm a coach\" and create a test academy. 2) For the student view, sign in with a second Google account, choose \"I'm a student\" and enter the academy code shown on the coach's home screen. QR attendance needs to be at the academy's location; the coach can also mark attendance manually."
+     ],
+     [
+      "Casilla al final",
+      "Tildar \"Los detalles de acceso… proporcionan acceso completo…\"",
+      false
      ]
     ],
-    "nota": "No hace falta cargar usuario y contraseña: el ingreso es con Google."
+    "nota": "Tocá Agregar y después Guardar (abajo a la derecha)."
    },
    {
-    "titulo": "Anuncios",
-    "donde": "Contenido de la app → Anuncios",
+    "titulo": "Configurar: anuncios",
+    "donde": "Panel → Anuncios",
     "campos": [
      [
-      "¿Tiene anuncios?",
+      "¿Tu app contiene anuncios?",
       "No, mi app no contiene anuncios",
       false
      ]
-    ]
+    ],
+    "bloque": "Panel → Configura la app (12 tareas)"
    },
    {
-    "titulo": "Clasificación del contenido",
-    "donde": "Contenido de la app → Clasificación del contenido → Iniciar cuestionario",
+    "titulo": "Configurar: clasificación de contenido",
+    "donde": "Panel → Clasificación de contenido → Iniciar cuestionario",
     "campos": [
      [
       "Correo electrónico",
@@ -141,54 +190,30 @@ window.APPS = {
       false
      ]
     ],
-    "nota": "Terminá y tocá Guardar → Enviar."
+    "nota": "Terminá y tocá Guardar → Enviar.",
+    "bloque": "Panel → Configura la app (12 tareas)"
    },
    {
-    "titulo": "Público objetivo",
-    "donde": "Contenido de la app → Público objetivo y contenido",
+    "titulo": "Configurar: público objetivo",
+    "donde": "Panel → Público objetivo",
     "campos": [
      [
-      "Grupos de edad",
-      "18 años o más",
+      "Grupos de edad objetivo",
+      "Tildar solo: 18 años o más",
       false
      ],
      [
-      "¿Atrae a niños?",
+      "¿La app podría atraer a niños sin querer?",
       "No",
       false
      ]
     ],
-    "nota": "Los menores entran con permiso de su adulto, pero la app está pensada para profes y adultos. Si marcás menores de 13, entra en las reglas de Familias (mucho más estrictas)."
+    "nota": "Los menores entran con permiso de su adulto, pero la app está pensada para profes y adultos. Si marcás menores de 13, entra en las reglas de Familias (mucho más estrictas).",
+    "bloque": "Panel → Configura la app (12 tareas)"
    },
    {
-    "titulo": "Noticias, apps gubernamentales, funciones financieras y salud",
-    "donde": "Contenido de la app (cada una)",
-    "campos": [
-     [
-      "¿Es app de noticias?",
-      "No",
-      false
-     ],
-     [
-      "¿App gubernamental?",
-      "No",
-      false
-     ],
-     [
-      "Funciones financieras",
-      "Mi app no ofrece ninguna función financiera (las cuotas se registran, no se cobran por la app todavía)",
-      false
-     ],
-     [
-      "Salud",
-      "Mi app no tiene funciones de salud",
-      false
-     ]
-    ]
-   },
-   {
-    "titulo": "Seguridad de los datos",
-    "donde": "Contenido de la app → Seguridad de los datos",
+    "titulo": "Configurar: seguridad de los datos",
+    "donde": "Panel → Seguridad de los datos",
     "campos": [
      [
       "¿Recopila o comparte datos?",
@@ -220,11 +245,92 @@ window.APPS = {
       false
      ]
     ],
-    "nota": "Google pide marcar cada tipo y para qué se usa. Nada se comparte con terceros ni se usa para publicidad."
+    "nota": "Google pide marcar cada tipo y para qué se usa. Nada se comparte con terceros ni se usa para publicidad.",
+    "bloque": "Panel → Configura la app (12 tareas)"
    },
    {
-    "titulo": "Ficha de Play Store (español)",
-    "donde": "Crecer → Presencia en Play Store → Ficha principal",
+    "titulo": "Configurar: apps gubernamentales",
+    "bloque": "Panel → Configura la app (12 tareas)",
+    "donde": "Panel → Apps gubernamentales",
+    "campos": [
+     [
+      "Respuesta",
+      "No",
+      false
+     ]
+    ]
+   },
+   {
+    "titulo": "Configurar: funciones financieras",
+    "bloque": "Panel → Configura la app (12 tareas)",
+    "donde": "Panel → Funciones financieras",
+    "campos": [
+     [
+      "Respuesta",
+      "Mi app no ofrece ninguna función financiera (las cuotas solo se anotan; todavía no se cobra por la app)",
+      false
+     ]
+    ],
+    "nota": "Cuando sumemos Mercado Pago (parte 7) hay que volver a esta declaración."
+   },
+   {
+    "titulo": "Configurar: salud",
+    "bloque": "Panel → Configura la app (12 tareas)",
+    "donde": "Panel → Salud",
+    "campos": [
+     [
+      "Respuesta",
+      "Mi app no tiene funciones de salud",
+      false
+     ]
+    ]
+   },
+   {
+    "titulo": "Configurar: estado del comerciante",
+    "bloque": "Panel → Configura la app (12 tareas)",
+    "donde": "Panel → Estado del comerciante",
+    "campos": [
+     [
+      "Qué es",
+      "Una ley de la Unión Europea: si sos \"comerciante\" (ganás plata con la app), Google muestra tu nombre, dirección y teléfono a los usuarios de Europa.",
+      false
+     ],
+     [
+      "Sugerencia",
+      "Usá la misma respuesta que en FilaKot y el Truco. Si no la recordás: hoy TatamiGo no cobra nada, así que \"No soy comerciante\" es válido; cuando cobre comisión, pasa a \"Soy comerciante\".",
+      false
+     ]
+    ],
+    "nota": "Lo decidís vos."
+   },
+   {
+    "titulo": "Configurar: categoría y contacto",
+    "donde": "Panel → Selecciona la categoría de app y proporcionar detalles de contacto",
+    "campos": [
+     [
+      "Categoría",
+      "Deportes (alternativa: Educación)",
+      false
+     ],
+     [
+      "Etiquetas",
+      "Deportes, Fitness, Organizador",
+      false
+     ],
+     [
+      "Correo",
+      "ebogni@gmail.com"
+     ],
+     [
+      "Sitio web",
+      "https://tatamigo.vikingzone.app"
+     ]
+    ],
+    "bloque": "Panel → Configura la app (12 tareas)"
+   },
+   {
+    "titulo": "Configurar: ficha de Play Store",
+    "donde": "Panel → Configura la ficha de Play Store",
     "campos": [
      [
       "Nombre",
@@ -254,35 +360,12 @@ window.APPS = {
       false
      ]
     ],
-    "nota": "Las traducciones (inglés y portugués) y sus capturas las carga Claude solo por GitHub cuando la ficha en español esté guardada."
-   },
-   {
-    "titulo": "Categoría y datos de contacto",
-    "donde": "Crecer → Presencia en Play Store → Configuración de la tienda",
-    "campos": [
-     [
-      "Categoría",
-      "Deportes (alternativa: Educación)",
-      false
-     ],
-     [
-      "Etiquetas",
-      "Deportes, Fitness, Organizador",
-      false
-     ],
-     [
-      "Correo",
-      "ebogni@gmail.com"
-     ],
-     [
-      "Sitio web",
-      "https://tatamigo.vikingzone.app"
-     ]
-    ]
+    "nota": "Las traducciones (inglés y portugués) y sus capturas las carga Claude solo por GitHub cuando la ficha en español esté guardada.",
+    "bloque": "Panel → Configura la app (12 tareas)"
    },
    {
     "titulo": "Prueba cerrada (14 días, 12 testers)",
-    "donde": "Prueba y lanzamiento → Pruebas → Prueba cerrada → Crear pista / Alpha",
+    "donde": "Panel → \"Prueba la app con un grupo más grande de verificadores\" (se habilita cuando están las 12 tareas) → Ver tareas",
     "campos": [
      [
       "Testers",
@@ -295,7 +378,8 @@ window.APPS = {
       false
      ]
     ],
-    "nota": "Cuando esté creada, avisale a Claude: él sube la versión a la prueba cerrada y la manda a revisión. Desde que los testers la instalan corren los 14 días."
+    "nota": "Cuando esté creada, avisale a Claude: él sube la versión a la prueba cerrada y la manda a revisión. Desde que los testers la instalan corren los 14 días.",
+    "bloque": "Panel → Lanza la app"
    }
   ]
  }

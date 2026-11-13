@@ -40,7 +40,7 @@ function pintar() {
   $('progreso').style.width = (100 * h.length / a.pasos.length) + '%';
   $('pasos').innerHTML = a.pasos.map((p, i) => `<div class="paso ${h.includes(i) ? 'hecho' : ''} ${i === actual ? 'actual' : ''}" id="paso-${i}">
     <div class="cab"><span class="num">${h.includes(i) ? '✓' : i + 1}</span><h2>${esc(p.titulo)}</h2></div>
-    <div class="donde">Dónde: <b>${esc(p.donde)}</b></div>
+    ${p.bloque ? `<div class="donde" style="margin-bottom:0">${esc(p.bloque)}</div>` : ''}<div class="donde">Dónde: <b>${esc(p.donde)}</b></div>
     ${p.campos.map(([et, val, copiar], j) => `<div class="campo"><div class="et">${esc(et)}</div><div class="val">${esc(val)}</div>${copiar === false ? '' : `<button data-copiar="${i}-${j}">Copiar</button>`}</div>`).join('')}
     ${p.nota ? `<div class="nota">${esc(p.nota)}</div>` : ''}
     <button class="listo" data-listo="${i}">${h.includes(i) ? 'Volver a marcar como pendiente' : 'Listo, siguiente'}</button></div>`).join('');
