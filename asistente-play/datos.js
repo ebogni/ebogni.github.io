@@ -121,8 +121,43 @@ window.APPS = {
       false
      ],
      [
-      "5. Uso compartido del contenido del usuario",
-      "Interactúan o intercambian contenido (texto, imágenes): Sí · ¿Es la fuente principal de contenido?: No · ¿Desnudos?: No · ¿Violencia gráfica real?: No · ¿Bloquear usuarios o contenido?: No · ¿Denunciar usuarios o contenido?: Sí (\"Pedir que saquen esta foto\") · ¿Moderación de chats?: Sí (el profe decide qué se publica en el tablón) · ¿Limitado a amigos invitados?: Sí (solo los de la academia, que entran con el código del profe)",
+      "Uso compartido del contenido del usuario — ¿La app permite de forma nativa que los usuarios interactúen o intercambien contenido con otros usuarios mediante mensajes de voz o de texto, o que compartan imágenes o audio?",
+      "Sí",
+      false
+     ],
+     [
+      "Uso compartido del contenido del usuario — ¿El contenido compartido y generado por usuarios es la fuente principal de contenido en la app?",
+      "No",
+      false
+     ],
+     [
+      "Uso compartido del contenido del usuario — ¿La app permite compartir imágenes de desnudos con el público?",
+      "No",
+      false
+     ],
+     [
+      "Uso compartido del contenido del usuario — ¿La app permite que el público comparta contenido de violencia gráfica real fuera de un contexto noticioso?",
+      "No",
+      false
+     ],
+     [
+      "Uso compartido del contenido del usuario — ¿La app incluye la posibilidad de bloquear usuarios o contenido generado por usuarios?",
+      "No",
+      false
+     ],
+     [
+      "Uso compartido del contenido del usuario — ¿La app incluye la posibilidad de denunciar a usuarios o contenido generado por usuarios?",
+      "Sí",
+      false
+     ],
+     [
+      "Uso compartido del contenido del usuario — ¿La app incluye la moderación de chats?",
+      "Sí",
+      false
+     ],
+     [
+      "Uso compartido del contenido del usuario — ¿Las interacciones de la app se pueden limitar solo a amigos invitados?",
+      "Sí",
       false
      ],
      [
@@ -141,7 +176,7 @@ window.APPS = {
       false
      ]
     ],
-    "nota": "Al final: Guardar → Ver resumen → Enviar (o \"Enviar clasificación\").",
+    "nota": "Los textos de las preguntas son tal cual los muestra Play Console. Al final: Guardar → Ver resumen → Enviar.",
     "bloque": "Panel → Configura la app (12 tareas)"
    },
    {
