@@ -113,8 +113,8 @@
       "nombre": "TatamiGo",
       "que": "App para academias de artes marciales: alumnos, clases, asistencia, cuotas y perfil deportivo entre dojos",
       "etapa": "Etapa 3 · Programando la versión 1",
-      "paso": "Parte 2 de 8: alumnos (sumar con código o a mano, lista, perfil)",
-      "hecho": "Diseño aprobado (ebogni.github.io/tatamigo/pantallas). Parte 1 andando en tatamigo.vikingzone.app: entrar con Google y crear la academia. Piloto mirando las pantallas: pidieron tablón y biblioteca",
+      "paso": "Parte 5 de 8: vista del alumno, tablón, biblioteca, festejos y temas. El piloto gratis ya puede arrancar",
+      "hecho": "Diseño aprobado. Andando en tatamigo.vikingzone.app: entrar con Google, academia, alumnos, clases, asistencia con QR + GPS (y QR impreso), cuotas en efectivo. Pruebas automáticas en GitHub",
       "visto": "2026-11-13",
       "link": "https://tatamigo.vikingzone.app/"
     }
