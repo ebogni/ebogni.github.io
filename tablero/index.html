@@ -60,6 +60,7 @@ header{display:flex;align-items:center;gap:10px;margin:4px 0 4px}h1{font-size:cl
 .chip{font-size:.75em;font-weight:650;padding:2px 8px;border-radius:99px;white-space:nowrap;background:var(--card2);color:var(--mu)}.chip.bien{color:var(--sube)}.chip.alerta{color:#fff;background:var(--baja)}.chip.espera{color:var(--azul)}
 .app .acc{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.app .acc button{font:inherit;font-size:.88em;font-weight:650;padding:7px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--card2);color:var(--tx);cursor:pointer}.app .acc button:hover{border-color:var(--oro)}.app .acc button[disabled]{opacity:.55;cursor:default}
 .ingresos .barra{max-width:260px}
+#aviso{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);max-width:min(92vw,520px);background:var(--card2);border:1px solid var(--oro);color:var(--tx);border-radius:14px;padding:12px 16px;box-shadow:0 8px 30px #0008;z-index:50;font-size:.95em;display:none}#aviso.ver{display:block}#aviso.mal{border-color:var(--baja)}#aviso b{display:block;margin-bottom:2px}
 h2.titulo{font-size:1.05em;margin:6px 0 10px}
 svg.graf{width:100%;height:auto;display:block}
 
@@ -410,18 +411,38 @@ async function refrescar(fuente, boton, solo) {
   document.querySelectorAll('.rf.gira').forEach(b => b.classList.remove('gira'));
 }
 document.addEventListener('click', e => { const b = e.target.closest('.rf'); if (b) refrescar(b.dataset.f, b); });
-// 📣 Armar publicación: larga la Promoción (repo apps-android) para esa app; el clip y los textos llegan por Telegram.
+// 📣 Armar publicación: larga la Promoción (repo apps-android) para esa app y sigue el pedido hasta que el clip sale para Telegram.
+function avisar(titulo, texto, mal, seg) {
+  let d = $('aviso'); if (!d) { d = document.createElement('div'); d.id = 'aviso'; document.body.appendChild(d); d.onclick = () => d.classList.remove('ver'); }
+  d.innerHTML = `<b>${titulo}</b>${texto || ''}`; d.classList.toggle('mal', !!mal); d.classList.add('ver');
+  clearTimeout(avisar.t); if (seg) avisar.t = setTimeout(() => d.classList.remove('ver'), seg * 1000);
+}
 document.addEventListener('click', async e => {
   const b = e.target.closest('.promo'); if (!b || b.disabled) return;
-  if (!ULT?.promoListo) { $('estado').textContent = 'Para armar publicaciones desde acá, el permiso de GitHub del tablero tiene que llegar también al repo apps-android (se configura una sola vez).'; return; }
+  const original = '📣 Armar publicación';
+  if (!ULT?.promoListo) { avisar('Todavía no puedo armar publicaciones desde acá', 'Al permiso de GitHub del tablero le falta acceso al repositorio de las apps (apps-android). Se configura una sola vez: pedíselo a Claude y te guía.', true, 12); return; }
   if (!confirm('¿Armar una publicación de ' + b.dataset.n + ' ahora? Llega por Telegram en unos 5 a 10 minutos y se publica en Facebook e Instagram.')) return;
-  b.disabled = true; b.textContent = '⏳ Pidiendo…';
+  const API = 'https://api.github.com/repos/ebogni/apps-android/actions/workflows/promo.yml', H = { Authorization: 'Bearer ' + ULT.disparar, Accept: 'application/vnd.github+json' };
+  b.disabled = true; b.textContent = '⏳ Mandando el pedido…'; avisar('⏳ Procesando el pedido', 'Le aviso a GitHub que arme la publicación de ' + esc(b.dataset.n) + '…');
+  const desde = new Date(Date.now() - 60000).toISOString();
   try {
-    const r = await fetch('https://api.github.com/repos/ebogni/apps-android/actions/workflows/promo.yml/dispatches', { method: 'POST', headers: { Authorization: 'Bearer ' + ULT.disparar, Accept: 'application/vnd.github+json' }, body: JSON.stringify({ ref: 'main', inputs: { app: b.dataset.app } }) });
+    const r = await fetch(API + '/dispatches', { method: 'POST', headers: H, body: JSON.stringify({ ref: 'main', inputs: { app: b.dataset.app } }) });
     if (!r.ok) throw new Error('GitHub dijo ' + r.status);
-    b.textContent = '✅ En camino (Telegram en 5-10 min)';
-    setTimeout(() => { b.disabled = false; b.textContent = '📣 Armar publicación'; }, 10 * 60000);
-  } catch (err) { b.disabled = false; b.textContent = '📣 Armar publicación'; $('estado').textContent = 'No pude largar la publicación: ' + err.message; }
+  } catch (err) { b.disabled = false; b.textContent = original; avisar('No pude largar la publicación', esc(err.message), true, 12); return; }
+  b.textContent = '✅ Pedido recibido'; avisar('✅ Pedido recibido', 'Ya se está armando el clip y los textos de ' + esc(b.dataset.n) + '. Te llegan por Telegram en 5 a 10 minutos; podés cerrar el tablero.', false, 15);
+  // Seguimiento: cada 20 s mira la corrida (hasta 15 min).
+  for (let i = 0; i < 45; i++) {
+    await new Promise(r => setTimeout(r, 20000));
+    try {
+      const j = await (await fetch(API + '/runs?event=workflow_dispatch&per_page=3&created=>' + desde, { headers: H })).json();
+      const run = (j.workflow_runs || [])[0]; if (!run) continue;
+      if (run.status !== 'completed') { b.textContent = '🎬 Armando el clip… (' + Math.round((Date.now() - new Date(run.created_at)) / 60000) + ' min)'; continue; }
+      if (run.conclusion === 'success') { b.textContent = '📨 ¡Listo! Mirá Telegram'; avisar('📨 Publicación lista', 'La de ' + esc(b.dataset.n) + ' ya salió para Telegram (y Facebook e Instagram).', false, 20); }
+      else { b.textContent = '⚠️ Falló: probá de nuevo'; avisar('⚠️ La publicación falló', 'GitHub no pudo terminarla (' + esc(run.conclusion) + '). Probá de nuevo o avisale a Claude.', true, 20); }
+      setTimeout(() => { b.disabled = false; b.textContent = original; }, 60000); return;
+    } catch (err) { }
+  }
+  b.disabled = false; b.textContent = original;
 });
 // 💌 Agradecer: escribís en castellano, se traduce (traductor gratuito, sin clave), se copia y se abre el perfil en Cults3D para pegarlo.
 let GR = null;
