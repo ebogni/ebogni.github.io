@@ -239,40 +239,149 @@ window.APPS = {
    },
    {
     "titulo": "Configurar: seguridad de los datos",
-    "donde": "Panel → Seguridad de los datos",
+    "bloque": "Configura la app",
+    "donde": "Panel → Contenido de la app → Seguridad de los datos (5 pasos)",
     "campos": [
      [
-      "¿Recopila o comparte datos?",
+      "## Paso 1: Descripción general",
+      "Solo se lee. Tocá Siguiente.",
+      false
+     ],
+     [
+      "## Paso 2: Seguridad y recopilación de datos",
+      "",
+      false
+     ],
+     [
+      "¿Tu app recopila o comparte alguno de los tipos de datos que se requieren de los usuarios?",
       "Sí",
       false
      ],
      [
-      "¿Datos encriptados en tránsito?",
+      "¿Todos los datos de los usuarios que recopila tu app se encriptan en tránsito?",
       "Sí",
       false
      ],
      [
-      "Forma de borrar la cuenta",
-      "Desde la app y desde la web",
+      "¿Cuál de los siguientes métodos de creación de cuentas admite la app?",
+      "OAuth",
       false
      ],
      [
-      "URL para borrar la cuenta",
-      "https://tatamigo.vikingzone.app/borrar-cuenta.html"
+      "URL de eliminación de cuenta",
+      "https://tatamigo.vikingzone.app/borrar-cuenta.html",
+      true
      ],
      [
-      "Datos que se recopilan (todos: Recopilados, NO compartidos, para Funcionalidad de la app y Administración de cuentas)",
-      "Ubicación precisa (solo al escanear el QR, procesada al momento: marcar \"efímera\"); Nombre; Correo electrónico; Número de teléfono (WhatsApp, opcional); Otra información (fecha de nacimiento, cinturón); Fotos; Otros mensajes en la app (tablón); Historial de compras (registro de cuotas); IDs de dispositivo u otros (para notificaciones)",
+      "¿Pones a disposición una forma de borrar parte de los datos sin borrar la cuenta? (Opcional)",
+      "Sin responder",
       false
      ],
      [
-      "¿Es obligatorio?",
-      "Nombre, correo y fecha de nacimiento: obligatorios. Teléfono, fotos y ubicación: opcionales (el usuario elige)",
+      "Insignias adicionales",
+      "Ninguna",
+      false
+     ],
+     [
+      "## Paso 3: Tipos de datos (la página abre una categoría por vez)",
+      "",
+      false
+     ],
+     [
+      "Información personal",
+      "Nombre · Dirección de correo electrónico · ID de usuario · Número de teléfono · Otra información",
+      false
+     ],
+     [
+      "Información financiera",
+      "Otra información financiera",
+      false
+     ],
+     [
+      "Mensajes",
+      "Otros mensajes desde la app",
+      false
+     ],
+     [
+      "Fotos y videos",
+      "Fotos",
+      false
+     ],
+     [
+      "Actividad en apps",
+      "Interacciones en la app · Otro contenido generado por usuarios",
+      false
+     ],
+     [
+      "Dispositivo u otros IDs",
+      "Dispositivo u otros IDs",
+      false
+     ],
+     [
+      "## Paso 4: Uso y manejo de datos (botón Comenzar en cada tipo)",
+      "En TODOS: marcá Recopilados (NO Compartidos) y «No, los datos recopilados no se procesan de forma efímera».",
+      false
+     ],
+     [
+      "Nombre, Correo, ID de usuario",
+      "La recopilación de datos es necesaria · Funciones de la app + Administración de la cuenta",
+      false
+     ],
+     [
+      "Número de teléfono, Otra información",
+      "Los usuarios pueden decidir si los datos se recopilan o no · Funciones de la app",
+      false
+     ],
+     [
+      "Otra información financiera",
+      "La recopilación de datos es necesaria · Funciones de la app",
+      false
+     ],
+     [
+      "Otros mensajes desde la app",
+      "Los usuarios pueden decidir · Funciones de la app",
+      false
+     ],
+     [
+      "Fotos",
+      "Los usuarios pueden decidir · Funciones de la app",
+      false
+     ],
+     [
+      "Interacciones en la app",
+      "La recopilación de datos es necesaria · Funciones de la app",
+      false
+     ],
+     [
+      "Otro contenido generado por usuarios",
+      "Los usuarios pueden decidir · Funciones de la app",
+      false
+     ],
+     [
+      "Dispositivo u otros IDs",
+      "Los usuarios pueden decidir · Funciones de la app + Comunicaciones del desarrollador",
+      false
+     ],
+     [
+      "## Paso 5: Vista previa",
+      "Tiene que decir «No se comparten datos con terceros», «Los datos están encriptados en tránsito» y la Política de Privacidad. Tocá Guardar.",
       false
      ]
     ],
-    "nota": "Google pide marcar cada tipo y para qué se usa. Nada se comparte con terceros ni se usa para publicidad.",
-    "bloque": "Panel → Configura la app (12 tareas)"
+    "nota": "Al guardar sale: «Se guardó el cambio. Envíalo a revisión en Descripción general de la publicación.»"
+   },
+   {
+    "titulo": "Configurar: ID de publicidad",
+    "bloque": "Configura la app",
+    "donde": "Panel → Contenido de la app → ID de publicidad",
+    "campos": [
+     [
+      "¿Tu app usa un ID de publicidad? (incluye los SDK que importa la app)",
+      "No",
+      false
+     ]
+    ],
+    "nota": "Tocá Guardar."
    },
    {
     "titulo": "Configurar: apps gubernamentales",
@@ -280,7 +389,7 @@ window.APPS = {
     "donde": "Panel → Apps gubernamentales",
     "campos": [
      [
-      "Respuesta",
+      "¿Un Gobierno o alguien en nombre de un Gobierno desarrolló tu app?",
       "No",
       false
      ]
@@ -292,12 +401,17 @@ window.APPS = {
     "donde": "Panel → Funciones financieras",
     "campos": [
      [
-      "Respuesta",
-      "Mi app no ofrece ninguna función financiera (las cuotas solo se anotan; todavía no se cobra por la app)",
+      "## Paso 1: Funciones financieras de tu app",
+      "Marcá «Mi app no ofrece ninguna función financiera» y tocá Siguiente.",
+      false
+     ],
+     [
+      "## Paso 2: Documentación",
+      "Dice que no hace falta documentación. Tocá Guardar.",
       false
      ]
     ],
-    "nota": "Cuando sumemos Mercado Pago (parte 7) hay que volver a esta declaración."
+    "nota": "Revisar cuando se agregue Mercado Pago."
    },
    {
     "titulo": "Configurar: salud",
@@ -305,8 +419,13 @@ window.APPS = {
     "donde": "Panel → Salud",
     "campos": [
      [
-      "Respuesta",
-      "Mi app no tiene funciones de salud",
+      "## Paso 1: Funciones de salud de tu app",
+      "Marcá «Ninguna función de salud» y tocá Siguiente.",
+      false
+     ],
+     [
+      "## Paso 2: Requisitos regionales",
+      "Dice que no hace falta nada. Tocá Guardar.",
       false
      ]
     ]
@@ -317,46 +436,69 @@ window.APPS = {
     "donde": "Panel → Estado del comerciante",
     "campos": [
      [
-      "Qué es",
-      "Una ley de la Unión Europea: si sos \"comerciante\" (ganás plata con la app), Google muestra tu nombre, dirección y teléfono a los usuarios de Europa.",
+      "¿Tu estado de comerciante se aplica a esta app?",
+      "Sí, mi estado de comerciante se aplica a esta app",
       false
      ],
      [
-      "Sugerencia",
-      "Usá la misma respuesta que en FilaKot y el Truco. Si no la recordás: hoy TatamiGo no cobra nada, así que \"No soy comerciante\" es válido; cuando cobre comisión, pasa a \"Soy comerciante\".",
-      false
+      "Condiciones del Servicio (URL)",
+      "https://tatamigo.vikingzone.app/terminos.html",
+      true
      ]
     ],
-    "nota": "Lo decidís vos."
+    "nota": "Tocá Guardar. La cuenta ya está declarada como de comerciante."
    },
    {
     "titulo": "Configurar: categoría y contacto",
-    "donde": "Panel → Selecciona la categoría de app y proporcionar detalles de contacto",
+    "donde": "Panel → Selecciona la categoría de app y proporciona detalles de contacto (Configuración de la tienda)",
     "campos": [
      [
+      "## Categoría de app (editar)",
+      "",
+      false
+     ],
+     [
+      "App o juego",
+      "Aplicación",
+      false
+     ],
+     [
       "Categoría",
-      "Deportes (alternativa: Educación)",
+      "Deportes",
       false
      ],
      [
       "Etiquetas",
-      "Deportes, Fitness, Organizador",
+      "Opcional (hay «Artes marciales»)",
       false
      ],
      [
-      "Correo",
-      "ebogni@gmail.com"
+      "## Detalles de contacto de la ficha de Play Store (editar)",
+      "",
+      false
+     ],
+     [
+      "Dirección de correo electrónico",
+      "ebogni@gmail.com",
+      true
+     ],
+     [
+      "Número de teléfono",
+      "Vacío (opcional)",
+      false
      ],
      [
       "Sitio web",
-      "https://tatamigo.vikingzone.app"
+      "https://tatamigo.vikingzone.app",
+      true
      ]
     ],
-    "bloque": "Panel → Configura la app (12 tareas)"
+    "bloque": "Panel → Configura la app (12 tareas)",
+    "nota": "Cada bloque se guarda con su propio botón Guardar."
    },
    {
     "titulo": "Configurar: ficha de Play Store",
-    "donde": "Panel → Configura la ficha de Play Store",
+    "donde": "Fichas de Play Store → Crear ficha de Play Store predeterminada (idioma es-419)",
     "campos": [
      [
       "Nombre",
@@ -384,9 +526,29 @@ window.APPS = {
       "Capturas del teléfono",
       "F:\\Progamacion\\Android\\01 - Apps\\DOJO\\Ficha Play Store\\capturas\\es-419 (las 6)",
       false
+     ],
+     [
+      "## Imágenes (hay que subirlas a mano)",
+      "",
+      false
+     ],
+     [
+      "Ícono de la app",
+      "icono-c.png (512×512)",
+      false
+     ],
+     [
+      "Gráfico de funciones",
+      "grafico-play-es.png (1024×500)",
+      false
+     ],
+     [
+      "Capturas de teléfono (2 a 8)",
+      "Ficha Play Store\\capturas\\es-419\\1.png a 6.png",
+      false
      ]
     ],
-    "nota": "Las traducciones (inglés y portugués) y sus capturas las carga Claude solo por GitHub cuando la ficha en español esté guardada.",
+    "nota": "Los textos ya los dejó cargados Claude como borrador. Faltan las imágenes: «Agregar recursos» → elegí el archivo. Después Siguiente (paso 2 Opinión) y Guardar.",
     "bloque": "Panel → Configura la app (12 tareas)"
    },
    {
