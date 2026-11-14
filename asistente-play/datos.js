@@ -546,6 +546,16 @@ window.APPS = {
       "Capturas de teléfono (2 a 8)",
       "Ficha Play Store\\capturas\\es-419\\1.png a 6.png",
       false
+     ],
+     [
+      "Video (opcional, es-419)",
+      "https://www.youtube.com/watch?v=lOwbgdBLuE4",
+      true
+     ],
+     [
+      "Videos en otros idiomas (para sus fichas traducidas)",
+      "en: https://www.youtube.com/watch?v=Hn303zRBETg · pt-BR: https://www.youtube.com/watch?v=7Oh2mGKL958",
+      false
      ]
     ],
     "nota": "Los textos ya los dejó cargados Claude como borrador. Faltan las imágenes: «Agregar recursos» → elegí el archivo. Después Siguiente (paso 2 Opinión) y Guardar.",
