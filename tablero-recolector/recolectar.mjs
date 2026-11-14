@@ -303,6 +303,9 @@ async function viva() {
     const porCanal = [];
     for (const c of canales) { const n = await leer(`${a.clave}-instalada-${c}`); if (n) porCanal.push([c, n]); }
     const ins = porCanal.reduce((t, [, n]) => t + n, 0); tot += hoy;
+    // Lo mismo, guardado en la tarjeta de la app (al instante).
+    Object.assign(app(a.nombre), { clave: a.clave, promo: a.promo || null, abrieronHoy: hoy, abrieronAyer: ayer, nuevasAviso: ins,
+      canales: [...porCanal].sort((x, y) => y[1] - x[1]).map(([c, n]) => ({ nombre: NOM[c] || c, n })) });
     items.push({ nombre: a.nombre, valor: fmt(hoy), num: hoy, unidad: 'celus hoy',
       detalle: `Ayer ${fmt(ayer)} · ${fmt(ins)} instalaciones nuevas desde que salió el aviso` });
     porCanal.sort((x, y) => y[1] - x[1]);
@@ -418,7 +421,7 @@ for (const s of secciones) for (const it of s.items) if (it.num != null && !it.s
   const EST = { APPROVED: ['Anuncios OK', 'bien', 'AdMob la aprobó y muestra anuncios'], IN_REVIEW: ['En revisión', 'espera', 'AdMob la está revisando; mientras tanto puede no mostrar anuncios'], ACTION_REQUIRED: ['Sin anuncios', 'alerta', 'AdMob la rechazó: entrá al Centro de políticas de AdMob y pedí otra revisión'] };
   const enPlay = n => (F.play || []).some(p => p.nombre === n);
   if (SALUD_ADMOB) {
-    const items = SALUD_ADMOB.filter(x => enPlay(x.nombre)).map(x => { let e = EST[x.estado] || [x.estado, 'espera', '']; if (APPS[x.nombre]?.noFigura && x.estado !== 'APPROVED') e = ['Sin anuncios todavía', 'espera', 'AdMob la aprueba cuando la app esté publicada en Play']; return { nombre: x.nombre, valor: e[0], estado: e[1], detalle: e[2], link: 'https://admob.google.com/v2/policycenter' }; });
+    const items = SALUD_ADMOB.filter(x => enPlay(x.nombre)).map(x => { let e = EST[x.estado] || [x.estado, 'espera', '']; if (APPS[x.nombre]?.noFigura && x.estado !== 'APPROVED') e = ['Sin anuncios todavía', 'espera', 'AdMob la aprueba cuando la app esté publicada en Play']; app(x.nombre).salud = { valor: e[0], estado: e[1], detalle: e[2] }; return { nombre: x.nombre, valor: e[0], estado: e[1], detalle: e[2], link: 'https://admob.google.com/v2/policycenter' }; });
     secciones.push({ id: 'salud', titulo: 'Salud de las apps', icono: '🩺', items, buscado: new Date().toISOString(), cuando: { hasta: 'instante', nota: 'aprobación de anuncios en AdMob' } });
   } else { const p = previo && previo.secciones.find(x => x.id === 'salud'); if (p) secciones.push(p); }
 }
@@ -433,6 +436,9 @@ for (const a of Object.values(APPS)) { if (a.instalaciones != null) (hist['app|'
 // ¿Anda el permiso del botón ↻? (solo se prueba, nunca se muestra)
 let botonRefrescar = 'sin permiso cargado';
 if (E.TABLERO_DISPARAR) { try { const r = await fetch('https://api.github.com/repos/ebogni/ebogni.github.io/actions/workflows/tablero.yml', { headers: { Authorization: 'Bearer ' + E.TABLERO_DISPARAR, Accept: 'application/vnd.github+json', 'User-Agent': 'tablero' } }); botonRefrescar = r.ok ? 'listo' : 'el permiso no sirve (' + r.status + ')'; } catch (e) { botonRefrescar = 'no se pudo probar'; } }
+// ¿El mismo permiso sirve para largar la Promoción (repo apps-android)? Botón "Armar publicación" de cada app.
+let botonPromo = 'sin permiso cargado';
+if (E.TABLERO_DISPARAR) { try { const r = await fetch('https://api.github.com/repos/ebogni/apps-android/actions/workflows/promo.yml', { headers: { Authorization: 'Bearer ' + E.TABLERO_DISPARAR, Accept: 'application/vnd.github+json', 'User-Agent': 'tablero' } }); botonPromo = r.ok ? 'listo' : 'el permiso no llega a apps-android (' + r.status + ')'; } catch (e) { botonPromo = 'no se pudo probar'; } }
 // ---------- Resumen de TODOS los ingresos (arriba de todo en el tablero), en dólares ----------
 let cot = (previo && previo.ingresos && previo.ingresos.cotizacion) || null;
 try { const r = await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD'); const j = await r.json(); if (j.rates && j.rates.USD) cot = { EUR: j.rates.USD, fecha: j.date }; } catch (e) { }
@@ -447,8 +453,8 @@ for (const [k, n] of [['playgama', 'Playgama'], ['crazygames', 'CrazyGames'], ['
 const sumar = k => fuentesPlata.reduce((t, x) => t + (x[k] || 0), 0);
 const INGRESOS = { mesUSD: sumar('mesUSD'), cobrarUSD: sumar('cobrarUSD'), fuentes: fuentesPlata, cotizacion: cot };
 (hist['total|ingresos'] ||= {})[dia] = INGRESOS.mesUSD;
-const datos = { v: 2, ingresos: INGRESOS, cults: CULTS, apps: Object.values(APPS).sort((a, b) => (b.ganMes || 0) - (a.ganMes || 0) || (b.instalaciones || b.descargasMin || 0) - (a.instalaciones || a.descargasMin || 0)), actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist, clicsCrudos: CRUDOS, disparar: E.TABLERO_DISPARAR || null };
+const datos = { v: 2, ingresos: INGRESOS, cults: CULTS, apps: Object.values(APPS).sort((a, b) => (b.ganMes || 0) - (a.ganMes || 0) || (b.instalaciones || b.descargasMin || 0) - (a.instalaciones || a.descargasMin || 0)), actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist, clicsCrudos: CRUDOS, disparar: E.TABLERO_DISPARAR || null, promoListo: botonPromo === 'listo' };
 fs.writeFileSync(SALIDA, JSON.stringify(await cifrar(K, datos)));
 // Estado público (sin números): qué fuentes andan, para revisar fallas sin abrir el tablero.
-fs.writeFileSync(DIR + '../tablero/estado.json', JSON.stringify({ actualizado: datos.actualizado, botonRefrescar, fuentes: secciones.map(s => ({ fuente: s.titulo, estado: s.viejo ? 'error (muestra el dato anterior)' : s.items[0]?.nombre === 'Sin conectar' ? 'sin conectar' : 'ok', notas: s.items.filter(i => i.estado === 'espera' && i.nombre !== 'Sin conectar').map(i => i.nombre + ': ' + (i.detalle || i.valor)).concat(s.id === 'play' ? [`${s.items.filter(i => i.unidad === 'instalaciones').length} apps con instalaciones exactas`] : []) })), errores }, null, 1));
+fs.writeFileSync(DIR + '../tablero/estado.json', JSON.stringify({ actualizado: datos.actualizado, botonRefrescar, botonPromo, fuentes: secciones.map(s => ({ fuente: s.titulo, estado: s.viejo ? 'error (muestra el dato anterior)' : s.items[0]?.nombre === 'Sin conectar' ? 'sin conectar' : 'ok', notas: s.items.filter(i => i.estado === 'espera' && i.nombre !== 'Sin conectar').map(i => i.nombre + ': ' + (i.detalle || i.valor)).concat(s.id === 'play' ? [`${s.items.filter(i => i.unidad === 'instalaciones').length} apps con instalaciones exactas`] : []) })), errores }, null, 1));
 console.log('Listo:', secciones.map(s => s.titulo).join(', '), errores.length ? '| errores: ' + errores.join(' / ') : '');

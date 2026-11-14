@@ -56,6 +56,10 @@ header{display:flex;align-items:center;gap:10px;margin:4px 0 4px}h1{font-size:cl
 .datos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.dato{background:var(--card2);border-radius:12px;padding:8px 10px;min-width:0}
 .dato .v{font-weight:700;font-size:1.1em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dato .t{color:var(--mu);font-size:.75em;line-height:1.25}
 .app .pie{color:var(--mu);font-size:.8em;margin-top:8px}
+.app .dato small{display:block;color:var(--mu);font-size:.72em;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{font-size:.75em;font-weight:650;padding:2px 8px;border-radius:99px;white-space:nowrap;background:var(--card2);color:var(--mu)}.chip.bien{color:var(--sube)}.chip.alerta{color:#fff;background:var(--baja)}.chip.espera{color:var(--azul)}
+.app .acc{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.app .acc button{font:inherit;font-size:.88em;font-weight:650;padding:7px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--card2);color:var(--tx);cursor:pointer}.app .acc button:hover{border-color:var(--oro)}.app .acc button[disabled]{opacity:.55;cursor:default}
+.ingresos .barra{max-width:260px}
 h2.titulo{font-size:1.05em;margin:6px 0 10px}
 svg.graf{width:100%;height:auto;display:block}
 
@@ -277,7 +281,7 @@ const rf = id => `<button class="rf" data-f="${id}" title="Volver a buscar ahora
 function pintar(D) {
   ULT = D;
   const H = D.historial || {}, P = D.plata;
-  $('estado').textContent = 'Actualizado ' + fh(D.actualizado) + ' (' + hace(D.actualizado) + ') · se renueva solo cada 30 min';
+  if (!BUSCANDO) $('estado').textContent = 'Actualizado ' + fh(D.actualizado) + ' (' + hace(D.actualizado) + ')' + (D.disparar ? ' · al abrir el tablero se busca solo si tiene más de 20 min' : ' · se renueva solo cada tanto');
   const SEC = id => (D.secciones || []).find(x => x.id === id);
   const lin = id => { const x = SEC(id); if (!x) return '—'; const c = x.cuando || {}; if (x.viejo) return `<b>⚠ sin actualizar desde ${fh(x.buscado)}</b>`; return (c.hasta === 'instante' || !c.hasta ? 'al instante' : 'hasta ' + (['hoy', 'ayer'].includes(diaCorto(c.hasta)) ? diaCorto(c.hasta) : 'el ' + diaCorto(c.hasta))) + (x.buscado ? ` (${hhmm(x.buscado)})` : ''); };
   $('cuandoKpis').innerHTML = P ? 'Plata de AdMob: ' + lin('admob') + (SEC('play') ? ' · Descargas: ' + lin('play') : '') + ' ' + rf('admob') : '';
@@ -290,7 +294,7 @@ function pintar(D) {
     const cot = I.cotizacion ? ` · 1 EUR = US$ ${I.cotizacion.EUR.toFixed(2)}` : '';
     $('ingresos').innerHTML = `<h2>💰 Todos tus ingresos <small>este mes, en dólares</small></h2>
       <div class="tot"><span class="v">${usd(I.mesUSD)}</span><span class="s">${cambio(H['total|ingresos'], true) || ''}</span><span class="s">🏦 Para cobrar en total ~${usd(I.cobrarUSD)}</span></div>
-      ${I.fuentes.filter(f => f.mesUSD > 0 || f.cobrarUSD).map(f => `<div class="fila ${f.mesUSD > 0 ? 'bien' : ''}"><span class="n">${f.icono} ${esc(f.nombre)}</span><span class="v">${usd(f.mesUSD)}${f.mon && f.mon !== 'USD' ? `<small>${Number(f.mes).toFixed(2)} ${esc(f.mon)}</small>` : ''}</span><span class="x"><span>${esc(f.nota || '')}</span>${f.cobrarUSD ? `<span>para cobrar ~${usd(f.cobrarUSD)}</span>` : ''}</span></div>`).join('')}
+      ${I.fuentes.filter(f => f.mesUSD > 0 || f.cobrarUSD).map(f => `<div class="fila ${f.mesUSD > 0 ? 'bien' : ''}"><span class="n">${f.icono} ${esc(f.nombre)}</span><span class="v">${usd(f.mesUSD)}${f.mon && f.mon !== 'USD' ? `<small>${Number(f.mes).toFixed(2)} ${esc(f.mon)}</small>` : ''}</span><span class="x"><span>${esc(f.nota || '')}</span>${f.cobrarUSD ? `<span>para cobrar ~${usd(f.cobrarUSD)}</span>` : ''}</span>${f.icono === '📱' && P && P.saldo != null ? `<span class="x" style="display:block"><div class="barra"><i style="width:${(Math.min(1, P.saldo / P.umbral) * 100).toFixed(1)}%"></i></div>${P.saldo >= P.umbral ? '¡Llegaste al mínimo de cobro!' : `Faltan ${usd(P.umbral - P.saldo)} para cobrar`}</span>` : ''}</div>`).join('')}
       ${(() => { const z = I.fuentes.filter(f => !(f.mesUSD > 0 || f.cobrarUSD)); return z.length ? `<div class="fila sub"><span class="n">${z.map(f => f.icono + ' ' + esc(f.nombre.replace(/ \(.*\)/, ''))).join(' · ')}</span><span class="v">US$ 0,00</span><span class="x"><span>todavía sin ingresos</span></span></div>` : ''; })()}
       <div class="cuando">AdMob y Cults3D se leen solos${cot}</div>`;
   }
@@ -304,22 +308,25 @@ function pintar(D) {
     const G = { hoy: [P.hoy, `Ayer ${usd(P.ayer)}`, P.impHoy], sem: [sem, `Promedio ${usd(sem / 7)} por día`, impSem], mes: [P.mes, `Cierra en ~${usd(P.proy)} · mes pasado ${usd(P.mesAnterior)}`, (P.porFormato || []).reduce((t, x) => t + x.imp, 0)] }[R];
     k += `<div class="kpi"><span class="t">💵 Ganancia AdMob · ${NOM_R[R]}</span><span class="v">${usd(G[0])}</span><span class="s">${G[1]}</span></div>`;
     k += `<div class="kpi"><span class="t">👀 Anuncios vistos · ${NOM_R[R]}</span><span class="v">${num(G[2])}</span><span class="s">${G[2] ? `US$ ${(G[0] / G[2] * 1000).toFixed(2)} cada 1.000` : 'sin anuncios en el período'}</span></div>`;
-    if (P.saldo != null) { const f = Math.min(1, P.saldo / P.umbral); k += `<div class="kpi"><span class="t">🏦 AdMob para cobrar</span><span class="v">${usd(P.saldo)}</span><div class="barra"><i style="width:${(f * 100).toFixed(1)}%"></i></div><span class="s">${f >= 1 ? '¡Llegaste al mínimo!' : `Faltan ${usd(P.umbral - P.saldo)} para los US$ ${P.umbral}`}</span></div>`; }
   } else k += `<div class="kpi"><span class="t">💵 Ganancias</span><span class="v">—</span><span class="s">AdMob sin conectar</span></div>`;
-  if (D.descargas != null) k += `<div class="kpi"><span class="t">📲 Descargas en Play</span><span class="v">${num(D.descargas)}+</span><span class="s">${cambio(H['total|descargas']) || 'Todas tus apps juntas'}</span></div>`;
   $('kpis').innerHTML = k;
-  // Una tarjeta por app: plata + descargas + instalaciones juntas.
-  const A = unirApps(D.apps || []).filter(a => a.play || a.noFigura || a.ganMes > 0);
+  // Una tarjeta por app con TODO lo de esa app: plata, uso al instante, instalaciones de Play, de dónde llegan, anuncios y botón de publicación.
+  const A = unirApps(D.apps || []).filter(a => a.play || a.noFigura || a.ganMes > 0 || a.clave);
   $('tituloApps').hidden = !A.length;
-  $('cuandoApps').innerHTML = A.length ? 'Plata: ' + lin('admob') + ' · Instalaciones: ' + lin('play') + ' ' + rf('play') : '';
+  $('tituloApps').innerHTML = '📱 Tus apps' + (D.descargas != null ? ` <small style="color:var(--mu);font-weight:400;font-size:.7em">${num(D.descargas)}+ descargas en Play ${cambio(H['total|descargas'])}</small>` : '');
+  $('cuandoApps').innerHTML = A.length ? 'Plata: ' + lin('admob') + ' · Abrieron: ' + lin('viva') + ' · Instalaciones: ' + lin('play') + ' ' + rf('') : '';
   $('apps').innerHTML = A.map(a => {
-    const dato = (v, t) => `<div class="dato"><div class="v">${v}</div><div class="t">${t}</div></div>`;
-    const desc = a.instalaciones != null ? num(a.instalaciones) : a.descargasRango || (a.descargasMin != null ? num(a.descargasMin) + '+' : '—');
-    const cI = cambio(H['app|' + a.nombre + '|ins']);
-    return `<section class="app"><div class="cab"><b>${a.play ? `<a href="${esc(a.play)}" target="_blank" rel="noopener">${esc(a.nombre)} ↗</a>` : esc(a.nombre)}</b>${a.puntaje ? `<span>★ ${a.puntaje.toFixed(1)} <small>(${num(a.votos)})</small></span>` : ''}</div>
-      <div class="plata"><span class="v">${usd({ hoy: a.ganHoy, sem: a.ganSem, mes: a.ganMes }[R] || 0)}</span><span class="s">${NOM_R[R]}${a.ecpm ? ` · US$ ${a.ecpm.toFixed(2)} cada 1.000` : ''}</span></div>
-      <div class="datos">${dato(desc, a.instalaciones != null ? 'Instalaciones' : 'Descargas')}${dato(a.activas != null ? num(a.activas) : '—', 'La tienen hoy')}${dato(a.nuevas7 != null ? `+${num(a.nuevas7)}${a.bajas7 ? ' −' + num(a.bajas7) : ''}` : '—', 'Altas y bajas 7 días')}${dato(num({ hoy: a.impHoy, sem: a.impSem, mes: a.impMes }[R] ?? null), 'Anuncios ' + NOM_R[R])}</div>
-      <div class="pie">${[cI, a.noFigura ? 'No aparece en Play' : '', a.datoDel ? `Instalaciones al ${a.datoDel} (Play las informa con 1 o 2 días de atraso)` : a.play ? 'Instalaciones exactas: Play todavía no mandó el informe' : ''].filter(Boolean).join(' · ')}</div></section>`;
+    const dato = (v, t, sub) => `<div class="dato"><div class="v">${v}</div><div class="t">${t}</div>${sub ? `<small>${sub}</small>` : ''}</div>`;
+    const ins = a.instalaciones != null ? num(a.instalaciones) : a.descargasRango || (a.descargasMin != null ? num(a.descargasMin) + '+' : '—');
+    const insSub = a.datoDel ? 'al ' + diaCorto(a.datoDel) : a.play ? 'rango de Play' : '';
+    const sal = a.salud && a.salud.estado !== 'bien' ? `<span class="chip ${a.salud.estado}" title="${esc(a.salud.detalle)}">${esc(a.salud.valor)}</span>` : a.salud ? '<span class="chip bien" title="AdMob la aprobó">Anuncios OK</span>' : '';
+    const vino = (a.canales || []).slice(0, 3).map(c => `${esc(c.nombre)} ${num(c.n)}`).join(' · ');
+    const pie = [cambio(H['app|' + a.nombre + '|ins']), vino ? 'Instalaron desde: ' + vino : '', a.noFigura ? 'No aparece en Play' : ''].filter(Boolean).join(' · ');
+    const promo = a.promo ? `<button class="promo" data-app="${esc(a.promo)}" data-n="${esc(a.nombre)}">📣 Armar publicación</button>` : `<button disabled title="Falta sumarla a la herramienta de promoción">📣 Publicación: todavía no</button>`;
+    return `<section class="app"><div class="cab"><b>${a.play ? `<a href="${esc(a.play)}" target="_blank" rel="noopener">${esc(a.nombre)} ↗</a>` : esc(a.nombre)}</b>${sal}${a.puntaje ? `<span>★ ${a.puntaje.toFixed(1)} <small>(${num(a.votos)})</small></span>` : ''}</div>
+      <div class="plata"><span class="v">${usd({ hoy: a.ganHoy, sem: a.ganSem, mes: a.ganMes }[R] || 0)}</span><span class="s">${NOM_R[R]}${a.ecpm ? ` · US$ ${a.ecpm.toFixed(2)} cada 1.000 anuncios` : ''}</span></div>
+      <div class="datos">${dato(a.abrieronHoy != null ? num(a.abrieronHoy) : '—', 'Celus que la abrieron hoy', a.abrieronAyer != null ? 'ayer ' + num(a.abrieronAyer) : '')}${dato(ins, a.instalaciones != null ? 'Instalaciones' : 'Descargas', insSub)}${dato(a.activas != null ? num(a.activas) : '—', 'La tienen instalada', a.nuevas7 != null ? `+${num(a.nuevas7)} −${num(a.bajas7 || 0)} en 7 días` : '')}${dato(num({ hoy: a.impHoy, sem: a.impSem, mes: a.impMes }[R] ?? null), 'Anuncios vistos', NOM_R[R])}</div>
+      ${pie ? `<div class="pie">${pie}</div>` : ''}<div class="acc">${promo}</div></section>`;
   }).join('');
   // Tarjetas
   let g = '';
@@ -338,7 +345,7 @@ function pintar(D) {
       `<div class="tabla"><table><tr><th>Día</th>${ns.map(k => `<th>${esc(k.split(' ')[0])}</th>`).join('')}</tr>${SV[ns[0]].map((_, i) => SV[ns[0]].length - 1 - i).map(i => `<tr><td>${diaCorto(SV[ns[0]][i].fecha)}</td>${ns.map(k => `<td>${num(SV[k][i]?.n)}</td>`).join('')}</tr>`).join('')}</table></div>`}</section>`;
   }
   for (const s of D.secciones) {
-    if (s.oculta || s.id === 'rentabilidad' || (s.id === 'play' && A.length)) continue;
+    if (s.oculta || ['rentabilidad', 'salud', 'viva'].includes(s.id) || (s.id === 'play' && A.length)) continue;
     const nums = s.items.filter(it => !it.sub && nro(it.num ?? it.valor) != null).map(it => ({ n: it.nombre.replace(/^· /, ''), v: nro(it.num ?? it.valor), t: it.valor + (it.unidad ? ' ' + it.unidad : '') }));
     const puedeG = nums.length >= 2, vS = puedeG ? vistaDe(s.id, 'lista') : 'lista';
     if (vS === 'graf') { g += `<section class="card" data-k="${s.id}"><h2>${s.icono} ${esc(s.titulo)}${btnVista(s.id, vS)}${rf(s.id)}</h2>${lineaCuando(s)}${hbarras(nums)}</section>`; continue; }
@@ -350,17 +357,26 @@ function pintar(D) {
       return `<div class="fila ${it.sub ? 'sub' : ''} ${it.estado || ''}"><span class="n">${nom} ${ag}</span><span class="v">${esc(it.valor)}${it.unidad ? `<small>${esc(it.unidad)}</small>` : ''}</span>${extra ? `<span class="x">${extra}</span>` : ''}</div>`;
     }).join('')}</section>`;
   }
-  { const m = g.match(/<section class="card" data-k="salud">[\s\S]*?<\/section>/); if (m) g = m[0] + g.replace(m[0], ''); } // salud primero
   $('grilla').innerHTML = g;
   ordenable($('grilla'), 'tablero-orden-grilla'); ordenable($('arriba'), 'tablero-orden-arriba');
 }
 async function cargar() {
-  $('estado').textContent = 'Cargando…';
-  try { pintar(await bajar()); } catch (e) { $('estado').textContent = 'No pude leer los datos: ' + e.message; }
+  if (!BUSCANDO) $('estado').textContent = 'Cargando…';
+  try { pintar(await bajar()); autoActualizar(); } catch (e) { $('estado').textContent = 'No pude leer los datos: ' + e.message; }
+}
+// GitHub corre el trabajo "cada 30 min" cuando puede (a veces cada 4 a 8 horas). Por eso, al abrir el tablero
+// (o volver a la pestaña) con datos de más de 20 min, se piden datos nuevos solos. Como mucho una vez cada 15 min por dispositivo.
+let BUSCANDO = false;
+async function autoActualizar() {
+  if (!ULT || !ULT.disparar || BUSCANDO || document.hidden) return;
+  if (Date.now() - new Date(ULT.actualizado) < 20 * 60000) return;
+  const ult = +(LS.get('tablero-auto') || 0); if (Date.now() - ult < 15 * 60000) return;
+  LS.set('tablero-auto', String(Date.now()));
+  refrescar('', null, true);
 }
 async function entrar(k) {
   K = k; try { pintar(await bajar()); } catch (e) { K = null; return false; }
-  $('login').classList.add('oculto'); $('tablero').classList.remove('oculto'); return true;
+  $('login').classList.add('oculto'); $('tablero').classList.remove('oculto'); autoActualizar(); return true;
 }
 $('fLogin').onsubmit = async e => {
   e.preventDefault(); $('msgLogin').textContent = 'Abriendo…';
@@ -370,23 +386,43 @@ $('fLogin').onsubmit = async e => {
 };
 $('btnAct').onclick = cargar;
 // ↻ de cada tarjeta: le pide a GitHub que vuelva a buscar esa fuente y espera los datos nuevos.
-async function refrescar(fuente, boton) {
+async function refrescar(fuente, boton, solo) {
+  if (BUSCANDO) return;
   if (!ULT || !ULT.disparar) { $('estado').textContent = 'Para refrescar desde acá falta un permiso de GitHub (se carga una sola vez). Mientras tanto se actualiza solo cada 30 min.'; return; }
   const antes = (ULT.secciones || []).find(x => x.id === fuente)?.buscado || ULT.actualizado;
   document.querySelectorAll(`.rf[data-f="${fuente}"]`).forEach(b => b.classList.add('gira'));
-  $('estado').textContent = 'Pidiendo datos nuevos' + (fuente ? '' : ' de todo') + '… (tarda 1 o 2 minutos)';
+  BUSCANDO = true;
+  $('estado').textContent = (solo ? '🔄 Los datos tenían más de 20 min: buscando nuevos solo' : 'Pidiendo datos nuevos' + (fuente ? '' : ' de todo')) + '… (2 o 3 minutos; mientras tanto ves los anteriores)';
   try {
+    // Si ya hay una búsqueda andando (otra pestaña, otro celu o la programada), no se pide otra: se espera esa.
+    const ya = await (await fetch('https://api.github.com/repos/ebogni/ebogni.github.io/actions/workflows/tablero.yml/runs?per_page=3', { headers: { Authorization: 'Bearer ' + ULT.disparar, Accept: 'application/vnd.github+json' } })).json().catch(() => ({}));
+    const andando = (ya.workflow_runs || []).some(r => r.status !== 'completed');
+    if (!andando) {
     const r = await fetch('https://api.github.com/repos/ebogni/ebogni.github.io/actions/workflows/tablero.yml/dispatches', { method: 'POST', headers: { Authorization: 'Bearer ' + ULT.disparar, Accept: 'application/vnd.github+json' }, body: JSON.stringify({ ref: 'main', inputs: { fuente } }) });
-    if (!r.ok) throw new Error('GitHub dijo ' + r.status);
-  } catch (e) { $('estado').textContent = 'No pude pedir la actualización: ' + e.message; document.querySelectorAll('.rf.gira').forEach(b => b.classList.remove('gira')); return; }
-  for (let i = 0; i < 18; i++) { // hasta ~6 minutos
-    await new Promise(r => setTimeout(r, 20000));
-    try { const D = await bajar(); const ahora = (D.secciones || []).find(x => x.id === fuente)?.buscado || D.actualizado; if (ahora !== antes) { pintar(D); return; } } catch (e) { }
+    if (!r.ok) throw new Error('GitHub dijo ' + r.status); }
+  } catch (e) { BUSCANDO = false; $('estado').textContent = 'No pude pedir la actualización: ' + e.message; document.querySelectorAll('.rf.gira').forEach(b => b.classList.remove('gira')); return; }
+  for (let i = 0; i < 24; i++) { // hasta ~8 minutos
+    await new Promise(r => setTimeout(r, 15000));
+    try { const D = await bajar(); const ahora = (D.secciones || []).find(x => x.id === fuente)?.buscado || D.actualizado; if (ahora !== antes) { BUSCANDO = false; pintar(D); return; } } catch (e) { }
   }
+  BUSCANDO = false;
   $('estado').textContent = 'Todavía no llegaron los datos nuevos: probá recargar en un rato.';
   document.querySelectorAll('.rf.gira').forEach(b => b.classList.remove('gira'));
 }
 document.addEventListener('click', e => { const b = e.target.closest('.rf'); if (b) refrescar(b.dataset.f, b); });
+// 📣 Armar publicación: larga la Promoción (repo apps-android) para esa app; el clip y los textos llegan por Telegram.
+document.addEventListener('click', async e => {
+  const b = e.target.closest('.promo'); if (!b || b.disabled) return;
+  if (!ULT?.promoListo) { $('estado').textContent = 'Para armar publicaciones desde acá, el permiso de GitHub del tablero tiene que llegar también al repo apps-android (se configura una sola vez).'; return; }
+  if (!confirm('¿Armar una publicación de ' + b.dataset.n + ' ahora? Llega por Telegram en unos 5 a 10 minutos y se publica en Facebook e Instagram.')) return;
+  b.disabled = true; b.textContent = '⏳ Pidiendo…';
+  try {
+    const r = await fetch('https://api.github.com/repos/ebogni/apps-android/actions/workflows/promo.yml/dispatches', { method: 'POST', headers: { Authorization: 'Bearer ' + ULT.disparar, Accept: 'application/vnd.github+json' }, body: JSON.stringify({ ref: 'main', inputs: { app: b.dataset.app } }) });
+    if (!r.ok) throw new Error('GitHub dijo ' + r.status);
+    b.textContent = '✅ En camino (Telegram en 5-10 min)';
+    setTimeout(() => { b.disabled = false; b.textContent = '📣 Armar publicación'; }, 10 * 60000);
+  } catch (err) { b.disabled = false; b.textContent = '📣 Armar publicación'; $('estado').textContent = 'No pude largar la publicación: ' + err.message; }
+});
 // 💌 Agradecer: escribís en castellano, se traduce (traductor gratuito, sin clave), se copia y se abre el perfil en Cults3D para pegarlo.
 let GR = null;
 document.addEventListener('click', e => {
