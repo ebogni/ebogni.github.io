@@ -534,7 +534,7 @@ window.APPS = {
      ],
      [
       "Ícono de la app",
-      "icono-c.png (512×512)",
+      "icono-512.png (512×512; está en Ficha Play Store; si hace falta otro: iconos.py --directo)",
       false
      ],
      [
