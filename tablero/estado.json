@@ -1,6 +1,7 @@
 {
- "actualizado": "2026-11-14T02:16:01.786Z",
+ "actualizado": "2026-11-14T03:53:31.670Z",
  "botonRefrescar": "listo",
+ "botonPromo": "el permiso no llega a apps-android (404)",
  "fuentes": [
   {
    "fuente": "Ganancias de AdMob",
@@ -64,7 +65,9 @@
   {
    "fuente": "Sugerencias de las apps",
    "estado": "ok",
-   "notas": []
+   "notas": [
+    "No pude leer la planilla: The service is currently unavailable. · permisos actuales: admob.readonly, devstorage.read_only, spreadsheets.readonly"
+   ]
   },
   {
    "fuente": "Salud de las apps",
