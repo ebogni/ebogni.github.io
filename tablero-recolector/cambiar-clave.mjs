@@ -2,7 +2,6 @@
 // los vuelve a cifrar con la nueva (clave.nueva, que dejó nueva-clave.php) y actualiza .env. Lo llama ejecutar.sh. Nadie más ve la clave.
 import fs from 'fs';
 const DIR = new URL('.', import.meta.url).pathname;
-const SALIDA = TDIR + 'datos.json';
 const SAL = new TextEncoder().encode('vikingzone-tablero-v1');
 const TDIR = (process.env.TABLERO_DIR || DIR + '../tablero').replace(/\/$/, '') + '/';
 async function clave(pass) {
