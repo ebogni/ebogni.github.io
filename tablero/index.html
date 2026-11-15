@@ -387,23 +387,28 @@ $('fLogin').onsubmit = async e => {
 };
 $('btnAct').onclick = cargar;
 // ↻ de cada tarjeta: le pide a GitHub que vuelva a buscar esa fuente y espera los datos nuevos.
+// En el servidor propio (vikingzone.app) los datos se juntan ahí mismo: el botón ↻ le avisa al servidor y no hace falta GitHub.
+const EN_SERVIDOR = location.hostname === 'vikingzone.app';
 async function refrescar(fuente, boton, solo) {
   if (BUSCANDO) return;
-  if (!ULT || !ULT.disparar) { $('estado').textContent = 'Para refrescar desde acá falta un permiso de GitHub (se carga una sola vez). Mientras tanto se actualiza solo cada 30 min.'; return; }
+  if (!EN_SERVIDOR && (!ULT || !ULT.disparar)) { $('estado').textContent = 'Para refrescar desde acá falta un permiso de GitHub (se carga una sola vez). Mientras tanto se actualiza solo cada 30 min.'; return; }
   const antes = (ULT.secciones || []).find(x => x.id === fuente)?.buscado || ULT.actualizado;
   document.querySelectorAll(`.rf[data-f="${fuente}"]`).forEach(b => b.classList.add('gira'));
   BUSCANDO = true;
   $('estado').textContent = (solo ? '🔄 Los datos tenían más de 20 min: buscando nuevos solo' : 'Pidiendo datos nuevos' + (fuente ? '' : ' de todo')) + '… (2 o 3 minutos; mientras tanto ves los anteriores)';
   try {
     // Si ya hay una búsqueda andando (otra pestaña, otro celu o la programada), no se pide otra: se espera esa.
+    if (EN_SERVIDOR) { const r = await fetch('refrescar.php?fuente=' + encodeURIComponent(fuente || ''), { method: 'POST', cache: 'no-store' }); if (!r.ok) throw new Error('el servidor dijo ' + r.status); }
+    else {
     const ya = await (await fetch('https://api.github.com/repos/ebogni/ebogni.github.io/actions/workflows/tablero.yml/runs?per_page=3', { headers: { Authorization: 'Bearer ' + ULT.disparar, Accept: 'application/vnd.github+json' } })).json().catch(() => ({}));
     const andando = (ya.workflow_runs || []).some(r => r.status !== 'completed');
     if (!andando) {
     const r = await fetch('https://api.github.com/repos/ebogni/ebogni.github.io/actions/workflows/tablero.yml/dispatches', { method: 'POST', headers: { Authorization: 'Bearer ' + ULT.disparar, Accept: 'application/vnd.github+json' }, body: JSON.stringify({ ref: 'main', inputs: { fuente } }) });
     if (!r.ok) throw new Error('GitHub dijo ' + r.status); }
+    }
   } catch (e) { BUSCANDO = false; $('estado').textContent = 'No pude pedir la actualización: ' + e.message; document.querySelectorAll('.rf.gira').forEach(b => b.classList.remove('gira')); return; }
-  for (let i = 0; i < 24; i++) { // hasta ~8 minutos
-    await new Promise(r => setTimeout(r, 15000));
+  for (let i = 0; i < (EN_SERVIDOR ? 40 : 24); i++) { // hasta ~8 minutos (en el servidor tarda 1 o 2)
+    await new Promise(r => setTimeout(r, EN_SERVIDOR ? 6000 : 15000));
     try { const D = await bajar(); const ahora = (D.secciones || []).find(x => x.id === fuente)?.buscado || D.actualizado; if (ahora !== antes) { BUSCANDO = false; pintar(D); return; } } catch (e) { }
   }
   BUSCANDO = false;
@@ -476,7 +481,7 @@ $('grOk').onclick = async () => {
 };
 $('btnSalir').onclick = () => { LS.del('tablero-k'); K = null; $('tablero').classList.add('oculto'); $('login').classList.remove('oculto'); };
 document.addEventListener('visibilitychange', () => { if (!document.hidden && K) cargar(); });
-setInterval(() => { if (K && !document.hidden) cargar(); }, 5 * 60000);
+setInterval(() => { if (K && !document.hidden) cargar(); }, (EN_SERVIDOR ? 1 : 5) * 60000);
 (async () => {
   const g = LS.get('tablero-k');
   if (g) { const k = await crypto.subtle.importKey('raw', deb64(g), 'AES-GCM', true, ['decrypt']); if (!(await entrar(k))) LS.del('tablero-k'); }

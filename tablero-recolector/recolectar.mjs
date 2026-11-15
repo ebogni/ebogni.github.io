@@ -6,7 +6,9 @@ import { webcrypto as crypto } from 'node:crypto';
 import gplay from 'google-play-scraper';
 
 const DIR = new URL('.', import.meta.url).pathname;
-const SALIDA = DIR + '../tablero/datos.json';
+// En el servidor (vikingzone.app) la página del tablero está en otra carpeta: TABLERO_DIR la indica.
+const TDIR = (process.env.TABLERO_DIR || DIR + '../tablero').replace(/\/$/, '') + '/';
+const SALIDA = TDIR + 'datos.json';
 const F = JSON.parse(fs.readFileSync(DIR + 'fuentes.json', 'utf8'));
 const E = process.env;
 const fmt = n => n == null || isNaN(n) ? '—' : Number(n).toLocaleString('es-AR');
@@ -456,5 +458,5 @@ const INGRESOS = { mesUSD: sumar('mesUSD'), cobrarUSD: sumar('cobrarUSD'), fuent
 const datos = { v: 2, ingresos: INGRESOS, cults: CULTS, apps: Object.values(APPS).sort((a, b) => (b.ganMes || 0) - (a.ganMes || 0) || (b.instalaciones || b.descargasMin || 0) - (a.instalaciones || a.descargasMin || 0)), actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist, clicsCrudos: CRUDOS, disparar: E.TABLERO_DISPARAR || null, promoListo: botonPromo === 'listo' };
 fs.writeFileSync(SALIDA, JSON.stringify(await cifrar(K, datos)));
 // Estado público (sin números): qué fuentes andan, para revisar fallas sin abrir el tablero.
-fs.writeFileSync(DIR + '../tablero/estado.json', JSON.stringify({ actualizado: datos.actualizado, botonRefrescar, botonPromo, fuentes: secciones.map(s => ({ fuente: s.titulo, estado: s.viejo ? 'error (muestra el dato anterior)' : s.items[0]?.nombre === 'Sin conectar' ? 'sin conectar' : 'ok', notas: s.items.filter(i => i.estado === 'espera' && i.nombre !== 'Sin conectar').map(i => i.nombre + ': ' + (i.detalle || i.valor)).concat(s.id === 'play' ? [`${s.items.filter(i => i.unidad === 'instalaciones').length} apps con instalaciones exactas`] : []) })), errores }, null, 1));
+fs.writeFileSync(TDIR + 'estado.json', JSON.stringify({ actualizado: datos.actualizado, botonRefrescar, botonPromo, fuentes: secciones.map(s => ({ fuente: s.titulo, estado: s.viejo ? 'error (muestra el dato anterior)' : s.items[0]?.nombre === 'Sin conectar' ? 'sin conectar' : 'ok', notas: s.items.filter(i => i.estado === 'espera' && i.nombre !== 'Sin conectar').map(i => i.nombre + ': ' + (i.detalle || i.valor)).concat(s.id === 'play' ? [`${s.items.filter(i => i.unidad === 'instalaciones').length} apps con instalaciones exactas`] : []) })), errores }, null, 1));
 console.log('Listo:', secciones.map(s => s.titulo).join(', '), errores.length ? '| errores: ' + errores.join(' / ') : '');
