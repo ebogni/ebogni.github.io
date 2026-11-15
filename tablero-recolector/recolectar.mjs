@@ -246,6 +246,11 @@ async function cults() {
   return { id: 'cults', titulo: 'Cults3D', icono: '🧩', items, cuando: { hasta: 'instante', nota: 'plata: Cults3D libera cada venta al mes' } };
 }
 
+// Contador abacus: a veces tarda 30 s en contestar. Se consulta de a 5 a la vez y cada consulta corta a los 8 s
+// (si no contesta, queda el último valor conocido), así una corrida tarda segundos y no 20 minutos.
+const limite = (n => { let activos = 0; const cola = []; const sig = () => { if (activos >= n || !cola.length) return; activos++; const [f, ok, mal] = cola.shift(); f().then(ok, mal).finally(() => { activos--; sig(); }); }; return f => new Promise((ok, mal) => { cola.push([f, ok, mal]); sig(); }); })(5);
+const traer = url => limite(() => fetch(url, { signal: AbortSignal.timeout(8000) }).catch(() => null));
+
 // Clics en el link de promoción (jugar.html): llegan al instante, mucho antes que las estadísticas de Google.
 async function clics() {
   let fallas = 0;
@@ -253,8 +258,8 @@ async function clics() {
   const espera = ms => new Promise(r => setTimeout(r, ms));
   const leer = async k => { // de a uno y despacito: el servicio acepta 30 consultas cada 10 segundos y a veces falla
     for (let intento = 0; intento < 3; intento++) {
-      await espera(400 + intento * 1500); const r = await fetch(NS + k).catch(() => null);
-      if (r?.ok) return (CRUDOS[k] = (await r.json()).value || 0);
+      if (intento) await espera(1500); const r = await traer(NS + k);
+      if (r?.ok) return (CRUDOS[k] = (await r.json().catch(() => ({}))).value || 0);
       if (r?.status === 404 || (r?.status === 500 && intento === 0 && CRUDOS[k] == null)) { // nadie hizo clic todavía: lo creo en 0
         const c = await fetch(NS.replace('/get/', '/create/') + k + '?initializer=0').catch(() => null); if (c?.ok) return (CRUDOS[k] = 0);
       }
@@ -264,7 +269,7 @@ async function clics() {
   const ayer = k => { const h = previo?.historial?.['clics|' + k] || {}; const ds = Object.keys(h).filter(d => d < hoyISO()).sort(); return ds.length ? h[ds[ds.length - 1]] : null; };
   let tot = 0;
   for (const de of (F.clics?.fuentes || ['youtube', 'tiktok', 'directo'])) {
-    const play = await leer(`carrera-${de}-play`), demo = await leer(`carrera-${de}-demo`), visita = await leer(`carrera-${de}-visita`);
+    const [play, demo, visita] = await Promise.all(['play', 'demo', 'visita'].map(d => leer(`carrera-${de}-${d}`)));
     const n = play + demo + visita; tot += n; if (!n) continue;
     const nom = de[0].toUpperCase() + de.slice(1), a = ayer(nom), hoy = a == null ? null : n - a;
     items.push({ nombre: nom, valor: fmt(n), num: n, unidad: 'clics', detalle: `${fmt(play)} fueron a Google Play · ${fmt(demo)} a la demo${hoy != null ? ` · +${fmt(hoy)} hoy` : ''}` });
@@ -281,9 +286,9 @@ async function viva() {
   const NS = 'https://abacus.jasoncameron.dev/get/vikingzone-clics/', espera = ms => new Promise(r => setTimeout(r, ms));
   let fallas = 0;
   const leer = async k => { // como en clics(): de a uno y despacito; si no existe todavía, es 0
-    for (let intento = 0; intento < 3; intento++) {
-      await espera(400 + intento * 1500); const r = await fetch(NS + k).catch(() => null);
-      if (r?.ok) return (CRUDOS[k] = (await r.json()).value || 0);
+    for (let intento = 0; intento < 2; intento++) {
+      if (intento) await espera(1500); const r = await traer(NS + k);
+      if (r?.ok) return (CRUDOS[k] = (await r.json().catch(() => ({}))).value || 0);
       if (r?.status === 404) return 0;
     }
     fallas++; return CRUDOS[k] || 0;
@@ -294,16 +299,15 @@ async function viva() {
   const NOM = { ...NOMBRE_CANAL, organico: 'Play sin link' };
   const items = []; let tot = 0;
   for (const a of apps) {
-    const hoy = await leer(`${a.clave}-activo-${dia(0)}`), ayer = await leer(`${a.clave}-activo-${dia(1)}`);
-    const serie = [];
-    for (let d = 29; d >= 0; d--) {
-      const k = `${a.clave}-activo-${dia(d)}`;
-      const n = d === 0 ? hoy : d === 1 ? ayer : (k in CRUDOS ? CRUDOS[k] : await leer(k));
-      serie.push({ fecha: dia(d).replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'), n });
-    }
+    // Hoy y ayer siempre; los días anteriores solo si no los tengo guardados (ya no cambian). Todo en paralelo.
+    const ks = [...Array(30).keys()].map(d => `${a.clave}-activo-${dia(d)}`);
+    const vals = await Promise.all(ks.map((k, d) => d < 2 || !(k in CRUDOS) ? leer(k) : CRUDOS[k]));
+    const hoy = vals[0], ayer = vals[1], serie = [];
+    for (let d = 29; d >= 0; d--) serie.push({ fecha: dia(d).replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'), n: vals[d] });
     SERIES_VIVA[a.nombre] = serie;
     const porCanal = [];
-    for (const c of canales) { const n = await leer(`${a.clave}-instalada-${c}`); if (n) porCanal.push([c, n]); }
+    const nCan = await Promise.all(canales.map(c => leer(`${a.clave}-instalada-${c}`)));
+    canales.forEach((c, i) => { if (nCan[i]) porCanal.push([c, nCan[i]]); });
     const ins = porCanal.reduce((t, [, n]) => t + n, 0); tot += hoy;
     // Lo mismo, guardado en la tarjeta de la app (al instante).
     Object.assign(app(a.nombre), { clave: a.clave, promo: a.promo || null, abrieronHoy: hoy, abrieronAyer: ayer, nuevasAviso: ins,
