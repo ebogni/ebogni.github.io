@@ -10,15 +10,6 @@ const DIR = new URL('.', import.meta.url).pathname;
 const TDIR = (process.env.TABLERO_DIR || DIR + '../tablero').replace(/\/$/, '') + '/';
 const SALIDA = TDIR + 'datos.json';
 const F = JSON.parse(fs.readFileSync(DIR + 'fuentes.json', 'utf8'));
-// Mudanza al servidor (una sola vez): si está mandar-al-servidor.txt (con el código del buzón), GitHub le pasa los permisos
-// del tablero a vikingzone.app por HTTPS y sigue normal. Después se borra el archivo.
-if (fs.existsSync(DIR + 'mandar-al-servidor.txt') && !process.env.TABLERO_DIR) {
-  const cod = fs.readFileSync(DIR + 'mandar-al-servidor.txt', 'utf8').trim();
-  const env = ['TABLERO_CLAVE', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'ADMOB_REFRESH_TOKEN', 'YOUTUBE_KEY', 'CULTS_KEY', 'TABLERO_DISPARAR']
-    .filter(k => process.env[k]).map(k => `${k}="${process.env[k].replace(/[\r\n]/g, '').replace(/"/g, '\\"')}"`).join('\n') + '\n';
-  try { const r = await fetch('https://vikingzone.app/tablero/recibir.php', { method: 'POST', body: new URLSearchParams({ codigo: cod, env }) }); console.log('Mudanza al servidor:', r.status, await r.text()); }
-  catch (e) { console.log('Mudanza al servidor: no se pudo', e.message); }
-}
 const E = process.env;
 const fmt = n => n == null || isNaN(n) ? '—' : Number(n).toLocaleString('es-AR');
 const usd = n => n == null ? '—' : 'US$ ' + Number(n).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -421,7 +412,8 @@ if (FUENTE && previo) { // arranco desde lo anterior para no perder la plata ni 
 if (previo && previo.cults) CULTS = CULTS || previo.cults;
 for (const [n, f] of [['AdMob', admob], ['Google Play', play], ['YouTube', youtube], ['Clics', clics], ['Estoy viva', viva], ['Portales', portales], ['Cults3D', cults], ['Apps en camino', enCamino], ['Sugerencias', sugerencias]]) {
   if (!corre(IDS[n])) { const p = previo && previo.secciones.find(s => s.id === IDS[n]); if (p) { secciones.push(p); continue; } }
-  try { const sec = await f(); sec.buscado = new Date().toISOString(); sec.cuando ||= { hasta: 'instante' }; secciones.push(sec); } catch (e) { errores.push(n + ': ' + e.message); const p = previo && previo.secciones.find(s => s.titulo.includes(n)); if (p) secciones.push({ ...p, viejo: true, error: e.message }); }
+  const t0 = Date.now();
+  try { const sec = await f(); console.log(`${n}: ${((Date.now() - t0) / 1000).toFixed(1)} s`); sec.buscado = new Date().toISOString(); sec.cuando ||= { hasta: 'instante' }; secciones.push(sec); } catch (e) { errores.push(n + ': ' + e.message); const p = previo && previo.secciones.find(s => s.titulo.includes(n)); if (p) secciones.push({ ...p, viejo: true, error: e.message }); }
 }
 for (const [n, f] of [['Conversión', () => conversion(secciones)], ['Rentabilidad', rentabilidad]]) { const id = n === 'Conversión' ? 'conversion' : 'rentabilidad'; if (FUENTE && !corre(id) && !['play', 'admob', 'clics'].includes(FUENTE)) { const p = previo && previo.secciones.find(s => s.id === id); if (p) { secciones.splice(1, 0, p); continue; } } try { const sec = await f(); sec.buscado = new Date().toISOString(); secciones.splice(1, 0, sec); } catch (e) { errores.push(n + ': ' + e.message); } }
 // Historial diario para ver cómo crece cada número (se guarda el último valor de cada día, 90 días).

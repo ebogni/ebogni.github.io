@@ -7,6 +7,6 @@ if [ -f "$P" ] || [ ! -f "$L" ] || [ $(( $(date +%s) - $(stat -c %Y "$L") )) -ge
   exec 9>corriendo.lock; flock -n 9 || exit 0
   F=$(cat "$P" 2>/dev/null); rm -f "$P"
   echo "== $(date '+%F %T') ${F:-todo}" >> registro.txt
-  FUENTE="$F" TABLERO_DIR="$HOME/domains/vikingzone.app/public_html/tablero" timeout 300 "$HOME/node/bin/node" --env-file=.env recolectar.mjs >> registro.txt 2>&1 && touch "$L"
+  FUENTE="$F" TABLERO_DIR="$HOME/domains/vikingzone.app/public_html/tablero" timeout 900 "$HOME/node/bin/node" --env-file=.env recolectar.mjs >> registro.txt 2>&1 && touch "$L"
   tail -n 400 registro.txt > registro.tmp && mv registro.tmp registro.txt
 fi
