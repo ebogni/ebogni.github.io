@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-15T08:02:40.882Z",
+ "actualizado": "2026-11-15T13:43:34.151Z",
  "botonRefrescar": "listo",
  "botonPromo": "el permiso no llega a apps-android (404)",
  "fuentes": [
@@ -36,16 +36,12 @@
   {
    "fuente": "Clics en el link del juego",
    "estado": "ok",
-   "notas": [
-    "Contador lento: Se muestra el último valor conocido"
-   ]
+   "notas": []
   },
   {
    "fuente": "Celus usando las apps (al instante)",
    "estado": "ok",
-   "notas": [
-    "Contador lento: Se muestra el último valor conocido"
-   ]
+   "notas": []
   },
   {
    "fuente": "Portales web",
@@ -54,7 +50,7 @@
   },
   {
    "fuente": "Cults3D",
-   "estado": "ok",
+   "estado": "error (muestra el dato anterior)",
    "notas": []
   },
   {
@@ -75,5 +71,7 @@
    "notas": []
   }
  ],
- "errores": []
+ "errores": [
+  "Cults3D: Cannot read properties of undefined (reading 'myself')"
+ ]
 }
