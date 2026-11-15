@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PasaLED: tu cartel LED por Wi-Fi</title>
+<meta name="description" content="Cargá mensajes en tu cartel LED de texto pasante por Wi-Fi, sin perder internet.">
+<style>
+:root{--rojo:#E5332A;--tinta:#24262C;--crema:#F4EFE6;--gris:#6B655B}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:var(--crema);color:var(--tinta);line-height:1.55}
+main{max-width:620px;margin:0 auto;padding:36px 20px 60px}
+.marca{display:flex;align-items:center;gap:14px}.marca img{width:72px;height:72px;border-radius:18px}
+h1{font-size:2.1em;margin:0;letter-spacing:-.02em}.sub{color:var(--gris);margin:4px 0 0}
+.panel{margin:26px 0;background:var(--tinta);border-radius:16px;padding:18px;overflow:hidden}
+.panel p{margin:0;font-family:monospace;font-size:1.5em;font-weight:700;color:var(--rojo);white-space:nowrap;animation:pasa 9s linear infinite;text-shadow:0 0 12px #e5332a99}
+@keyframes pasa{from{transform:translateX(100%)}to{transform:translateX(-100%)}}
+@media (prefers-reduced-motion:reduce){.panel p{animation:none}}
+.boton{display:block;text-align:center;background:var(--rojo);color:#fff;text-decoration:none;font-weight:800;font-size:1.15em;padding:16px;border-radius:14px;margin:18px 0 6px}
+.boton:focus-visible{outline:3px solid var(--tinta);outline-offset:3px}
+.nota{color:var(--gris);font-size:.9em;text-align:center;margin:0}
+ol{padding-left:1.3em}li{margin:6px 0}
+h2{font-size:1.2em;margin-top:2em}
+footer{margin-top:40px;color:var(--gris);font-size:.85em}
+[hidden]{display:none!important}
+</style></head><body><main>
+<div class="marca"><img src="icono.png" alt=""><div><h1>PasaLED</h1><p class="sub">Tu cartel LED por Wi-Fi, desde el celular</p></div></div>
+<div class="panel" aria-hidden="true"><p>¡ABIERTO! ★ PROMO 2x1 ★ PASÁ SIN GOLPEAR</p></div>
+<p>Cargá mensajes en tu cartel LED de texto pasante: la app se conecta sola al Wi-Fi del cartel, manda el mensaje y vuelve a tu internet. Con efectos, letras, íconos, dibujo a mano, horarios y brillo.</p>
+
+<section id="web">
+  <a class="boton" id="descargar" href="PasaLED.apk" download>Descargar PasaLED para Android</a>
+  <p class="nota">Versión de adelanto, completa y gratis · Android 7 o más nuevo</p>
+  <h2>Cómo instalarla</h2>
+  <ol>
+    <li>Tocá <b>Descargar</b> y abrí el archivo cuando termine.</li>
+    <li>Si el celular avisa que es de una fuente desconocida, tocá <b>Configuración</b>, activá <b>Permitir de esta fuente</b> y volvé.</li>
+    <li>Tocá <b>Instalar</b>. Listo: abrí PasaLED y buscá tu cartel.</li>
+  </ol>
+  <p class="nota">Cuando PasaLED salga en Google Play, esta versión te va a avisar para que te pases a la de Play.</p>
+</section>
+
+<section id="play" hidden>
+  <a class="boton" href="https://play.google.com/store/apps/details?id=com.ebogni.pasaled">Bajala gratis en Google Play</a>
+  <p class="nota">PasaLED ya está en Google Play. Si tenías la versión de esta página, bajá la de Play y desinstalá la vieja.</p>
+</section>
+
+<footer>Hecho por VikingZone · <a href="privacidad.html">Privacidad</a></footer>
+</main>
+<script>
+// Si el tablero vio que PasaLED ya está en Play (o se trabó a mano), la página deja de ofrecer la descarga.
+fetch('estado-web.json?t=' + Date.now()).then(r => r.json()).then(e => {
+  if (e.enPlay || e.bloquear) { document.getElementById('web').hidden = true; document.getElementById('play').hidden = false; }
+}).catch(() => {});
+</script>
+</body></html>

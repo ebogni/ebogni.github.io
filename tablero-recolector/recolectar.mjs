@@ -466,6 +466,14 @@ const INGRESOS = { mesUSD: sumar('mesUSD'), cobrarUSD: sumar('cobrarUSD'), fuent
 (hist['total|ingresos'] ||= {})[dia] = INGRESOS.mesUSD;
 const datos = { v: 2, ingresos: INGRESOS, cults: CULTS, apps: Object.values(APPS).sort((a, b) => (b.ganMes || 0) - (a.ganMes || 0) || (b.instalaciones || b.descargasMin || 0) - (a.instalaciones || a.descargasMin || 0)), actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist, clicsCrudos: CRUDOS, disparar: E.TABLERO_DISPARAR || null, promoListo: botonPromo === 'listo' };
 fs.writeFileSync(SALIDA, JSON.stringify(await cifrar(K, datos)));
+// PasaLED versión web: cuando la app aparece en Google Play, la página de descarga (pasaled/) pasa a mostrar el botón de Play.
+try {
+  const EW = TDIR + '../pasaled/estado-web.json', ew = JSON.parse(fs.readFileSync(EW, 'utf8'));
+  if (!ew.enPlay) {
+    const r = await fetch('https://play.google.com/store/apps/details?id=com.ebogni.pasaled&hl=es', { redirect: 'manual', headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (r.status === 200 && (await r.text()).includes('com.ebogni.pasaled')) { ew.enPlay = true; ew.enPlayDesde = new Date().toISOString(); fs.writeFileSync(EW, JSON.stringify(ew, null, 1)); console.log('PasaLED ya está en Play: la página de descarga pasa a Play.'); }
+  }
+} catch (e) { console.log('No pude revisar si PasaLED está en Play:', e.message); }
 // Estado público (sin números): qué fuentes andan, para revisar fallas sin abrir el tablero.
 fs.writeFileSync(TDIR + 'estado.json', JSON.stringify({ actualizado: datos.actualizado, botonRefrescar, botonPromo, fuentes: secciones.map(s => ({ fuente: s.titulo, estado: s.viejo ? 'error (muestra el dato anterior)' : s.items[0]?.nombre === 'Sin conectar' ? 'sin conectar' : 'ok', notas: s.items.filter(i => i.estado === 'espera' && i.nombre !== 'Sin conectar').map(i => i.nombre + ': ' + (i.detalle || i.valor)).concat(s.id === 'play' ? [`${s.items.filter(i => i.unidad === 'instalaciones').length} apps con instalaciones exactas`] : []) })), errores }, null, 1));
 console.log('Listo:', secciones.map(s => s.titulo).join(', '), errores.length ? '| errores: ' + errores.join(' / ') : '');
