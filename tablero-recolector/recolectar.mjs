@@ -10,6 +10,15 @@ const DIR = new URL('.', import.meta.url).pathname;
 const TDIR = (process.env.TABLERO_DIR || DIR + '../tablero').replace(/\/$/, '') + '/';
 const SALIDA = TDIR + 'datos.json';
 const F = JSON.parse(fs.readFileSync(DIR + 'fuentes.json', 'utf8'));
+// Mudanza al servidor (una sola vez): si está mandar-al-servidor.txt (con el código del buzón), GitHub le pasa los permisos
+// del tablero a vikingzone.app por HTTPS y sigue normal. Después se borra el archivo.
+if (fs.existsSync(DIR + 'mandar-al-servidor.txt') && !process.env.TABLERO_DIR) {
+  const cod = fs.readFileSync(DIR + 'mandar-al-servidor.txt', 'utf8').trim();
+  const env = ['TABLERO_CLAVE', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'ADMOB_REFRESH_TOKEN', 'YOUTUBE_KEY', 'CULTS_KEY', 'TABLERO_DISPARAR']
+    .filter(k => process.env[k]).map(k => `${k}="${process.env[k].replace(/[\r\n]/g, '').replace(/"/g, '\\"')}"`).join('\n') + '\n';
+  try { const r = await fetch('https://vikingzone.app/tablero/recibir.php', { method: 'POST', body: new URLSearchParams({ codigo: cod, env }) }); console.log('Mudanza al servidor:', r.status, await r.text()); }
+  catch (e) { console.log('Mudanza al servidor: no se pudo', e.message); }
+}
 const E = process.env;
 const fmt = n => n == null || isNaN(n) ? '—' : Number(n).toLocaleString('es-AR');
 const usd = n => n == null ? '—' : 'US$ ' + Number(n).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
