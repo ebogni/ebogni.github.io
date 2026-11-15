@@ -1,0 +1,31 @@
+# Le pasa los permisos del tablero (secretos de este repo) al servidor vikingzone.app, por HTTPS, a un buzón de un solo uso
+# que deja "Tablero: subir al servidor" (repo apps-android) con el mismo código. Los permisos nunca se escriben en ningún lado visible.
+name: "Tablero: mandar permisos al servidor"
+on:
+  workflow_dispatch:
+    inputs:
+      codigo: { description: "El mismo código de un solo uso", required: true }
+permissions:
+  contents: read
+jobs:
+  mandar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mandar
+        env:
+          TABLERO_CLAVE: ${{ secrets.TABLERO_CLAVE }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          ADMOB_REFRESH_TOKEN: ${{ secrets.ADMOB_REFRESH_TOKEN }}
+          YOUTUBE_KEY: ${{ secrets.YOUTUBE_KEY }}
+          CULTS_KEY: ${{ secrets.CULTS_KEY }}
+          TABLERO_DISPARAR: ${{ secrets.TABLERO_DISPARAR }}
+          CODIGO: ${{ inputs.codigo }}
+        run: |
+          : > env.txt
+          for k in TABLERO_CLAVE GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET ADMOB_REFRESH_TOKEN YOUTUBE_KEY CULTS_KEY TABLERO_DISPARAR; do
+            v="${!k}"; [ -n "$v" ] && printf '%s="%s"\n' "$k" "$(printf '%s' "$v" | tr -d '\r\n' | sed 's/"/\\"/g')" >> env.txt
+          done
+          echo "Permisos a mandar: $(wc -l < env.txt)"
+          r=$(curl -s -w ' %{http_code}' --data-urlencode "codigo=$CODIGO" --data-urlencode "env@env.txt" https://vikingzone.app/tablero/recibir.php); rm -f env.txt
+          echo "Servidor: $r"; case "$r" in "ok 200") ;; *) exit 1;; esac
