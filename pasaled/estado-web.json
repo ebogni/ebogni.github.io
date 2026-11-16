@@ -2,5 +2,5 @@
  "_LEEME": "Versión web de PasaLED (la que se baja de esta página). enPlay lo pone solo el tablero cuando la app aparece en Google Play: la página deja de ofrecer la descarga. La app web se traba sola cuando ve la app en Play; bloquear=true la traba antes, a mano.",
  "enPlay": false,
  "bloquear": false,
- "version": 10
+ "version": 15
 }
