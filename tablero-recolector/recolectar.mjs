@@ -188,17 +188,14 @@ async function portales() {
 
 async function cults() {
   if (!E.CULTS_KEY || !F.cults3d.usuario) return pendiente('cults', 'Cults3D', '🧩', 'Falta tu usuario y la llave de la API de Cults3D (paso de permisos).');
-  // Cults3D a veces bloquea un rato las conexiones que vienen de GitHub ("Access Denied"): se reintenta 2 veces antes de rendirse.
-  const pedir = async (query, intento = 0) => {
-    try { return await pedirUna(query); }
-    catch (e) { if (intento < 2 && /página web/.test(e.message)) { await new Promise(r => setTimeout(r, 8000 * (intento + 1))); return pedir(query, intento + 1); } throw e; }
-  };
+  // Cults3D bloquea ("Access Denied"/429) si se le pregunta muy seguido: sin reintentos, y se le pregunta cada 2 h (ver CULTS_CADA abajo).
+  const pedir = query => pedirUna(query);
   const pedirUna = async query => {
     const r = await fetch('https://cults3d.com/graphql', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 VikingZone-Tablero', Authorization: 'Basic ' + Buffer.from(F.cults3d.usuario + ':' + E.CULTS_KEY).toString('base64') }, body: JSON.stringify({ query }) });
     const t = await r.text();
     let j; try { j = JSON.parse(t); } catch (e) { // Contestó una página web: digo qué fue (código y título), sin datos privados
       const titulo = (t.match(/<title[^>]*>([^<]*)/i) || [])[1] || '';
-      const porque = r.status === 401 ? 'la llave o el usuario no son válidos' : r.status === 403 ? (/just a moment|attention required|cloudflare|access denied/i.test(t) ? 'Cults3D bloqueó un rato la conexión desde GitHub (pasa a veces; la próxima vuelta se reintenta sola y se muestra el dato anterior)' : 'Cults3D no dejó pasar (si sigue varias horas, revisar la llave)') : r.status >= 500 ? 'Cults3D está caído' : 'respuesta inesperada';
+      const porque = r.status === 401 ? 'la llave o el usuario no son válidos' : r.status === 403 ? (/just a moment|attention required|cloudflare|access denied/i.test(t) ? 'Cults3D bloqueó un rato la conexión (se le vuelve a preguntar en 3 horas; mientras, se muestra el dato anterior)' : 'Cults3D no dejó pasar (si sigue varias horas, revisar la llave)') : r.status >= 500 ? 'Cults3D está caído' : 'respuesta inesperada';
       throw new Error(`respondió ${r.status} con una página web ("${titulo.trim().slice(0, 60)}"): ${porque}`);
     }
     if (j.errors) throw new Error(j.errors.map(e => e.message).join('; ').slice(0, 200));
@@ -414,10 +411,15 @@ if (FUENTE && previo) { // arranco desde lo anterior para no perder la plata ni 
   PLATA = previo.plata || null;
 }
 if (previo && previo.cults) CULTS = CULTS || previo.cults;
+// Cults3D: se le pregunta como mucho cada 2 h (cada 10 min lo bloqueaba); si falla, se espera 3 h. El ↻ de su tarjeta fuerza.
+const CULTS_CADA = 2 * 3600e3, CULTS_ESPERA_ERROR = 3 * 3600e3;
+let cultsProximo = (previo && previo.cultsProximo) || 0;
 for (const [n, f] of [['AdMob', admob], ['Google Play', play], ['YouTube', youtube], ['Clics', clics], ['Estoy viva', viva], ['Portales', portales], ['Cults3D', cults], ['Apps en camino', enCamino], ['Sugerencias', sugerencias]]) {
   if (!corre(IDS[n])) { const p = previo && previo.secciones.find(s => s.id === IDS[n]); if (p) { secciones.push(p); continue; } }
+  if (n === 'Cults3D' && FUENTE !== 'cults' && Date.now() < cultsProximo) { const p = previo && previo.secciones.find(s => s.id === 'cults'); if (p) { secciones.push(p); continue; } }
   const t0 = Date.now();
-  try { const sec = await f(); console.log(`${n}: ${((Date.now() - t0) / 1000).toFixed(1)} s`); sec.buscado = new Date().toISOString(); sec.cuando ||= { hasta: 'instante' }; secciones.push(sec); } catch (e) { errores.push(n + ': ' + e.message); const p = previo && previo.secciones.find(s => s.titulo.includes(n)); if (p) secciones.push({ ...p, viejo: true, error: e.message }); }
+  if (n === 'Cults3D') cultsProximo = Date.now() + CULTS_ESPERA_ERROR; // si sale bien se corrige abajo
+  try { const sec = await f(); if (n === 'Cults3D') cultsProximo = Date.now() + CULTS_CADA; console.log(`${n}: ${((Date.now() - t0) / 1000).toFixed(1)} s`); sec.buscado = new Date().toISOString(); sec.cuando ||= { hasta: 'instante' }; secciones.push(sec); } catch (e) { errores.push(n + ': ' + e.message); const p = previo && previo.secciones.find(s => s.titulo.includes(n)); if (p) secciones.push({ ...p, viejo: true, error: e.message }); }
 }
 for (const [n, f] of [['Conversión', () => conversion(secciones)], ['Rentabilidad', rentabilidad]]) { const id = n === 'Conversión' ? 'conversion' : 'rentabilidad'; if (FUENTE && !corre(id) && !['play', 'admob', 'clics'].includes(FUENTE)) { const p = previo && previo.secciones.find(s => s.id === id); if (p) { secciones.splice(1, 0, p); continue; } } try { const sec = await f(); sec.buscado = new Date().toISOString(); secciones.splice(1, 0, sec); } catch (e) { errores.push(n + ': ' + e.message); } }
 // Historial diario para ver cómo crece cada número (se guarda el último valor de cada día, 90 días).
@@ -460,7 +462,7 @@ for (const [k, n] of [['playgama', 'Playgama'], ['crazygames', 'CrazyGames'], ['
 const sumar = k => fuentesPlata.reduce((t, x) => t + (x[k] || 0), 0);
 const INGRESOS = { mesUSD: sumar('mesUSD'), cobrarUSD: sumar('cobrarUSD'), fuentes: fuentesPlata, cotizacion: cot };
 (hist['total|ingresos'] ||= {})[dia] = INGRESOS.mesUSD;
-const datos = { v: 2, ingresos: INGRESOS, cults: CULTS, apps: Object.values(APPS).sort((a, b) => (b.ganMes || 0) - (a.ganMes || 0) || (b.instalaciones || b.descargasMin || 0) - (a.instalaciones || a.descargasMin || 0)), actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist, clicsCrudos: CRUDOS, disparar: E.TABLERO_DISPARAR || null, promoListo: botonPromo === 'listo' };
+const datos = { v: 2, ingresos: INGRESOS, cults: CULTS, apps: Object.values(APPS).sort((a, b) => (b.ganMes || 0) - (a.ganMes || 0) || (b.instalaciones || b.descargasMin || 0) - (a.instalaciones || a.descargasMin || 0)), actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist, clicsCrudos: CRUDOS, disparar: E.TABLERO_DISPARAR || null, promoListo: botonPromo === 'listo', cultsProximo };
 fs.writeFileSync(SALIDA, JSON.stringify(await cifrar(K, datos)));
 // PasaLED versión web: cuando la app aparece en Google Play, la página de descarga (pasaled/) pasa a mostrar el botón de Play.
 try {
