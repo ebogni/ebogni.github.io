@@ -88,6 +88,10 @@
     "clave": "filakot",
     "nombre": "FilaKot 3D",
     "promo": "filakot"
+   },
+   {
+    "clave": "tatamigo",
+    "nombre": "TatamiGo"
    }
   ],
   "canales": [
