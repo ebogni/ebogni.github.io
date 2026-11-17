@@ -11,6 +11,10 @@
   {
    "nombre": "FilaKot 3D",
    "id": "com.ebogni.filakot"
+  },
+  {
+   "nombre": "TatamiGo",
+   "id": "com.ebogni.tatamigo"
   }
  ],
  "youtube": [
@@ -116,11 +120,11 @@
   {
    "nombre": "TatamiGo",
    "que": "App para academias de artes marciales: alumnos, clases, asistencia, cuotas y perfil deportivo entre dojos",
-   "etapa": "Etapa 3 · Programando la versión 1",
-   "paso": "Parte 5 de 8: vista del alumno, tablón, biblioteca, festejos y temas. El piloto gratis ya puede arrancar",
-   "hecho": "Diseño aprobado. Andando en tatamigo.vikingzone.app: entrar con Google, academia, alumnos, clases, asistencia con QR + GPS (y QR impreso), cuotas en efectivo. Pruebas automáticas en GitHub",
-   "visto": "2026-11-13",
-   "link": "https://tatamigo.vikingzone.app/"
+   "etapa": "Publicada en Play (beta)",
+   "paso": "Pilotos con Juanma y Julito. Falta probar el cobro real con Mercado Pago y que pasen a la de Play",
+   "hecho": "Publicada en Play el 14/11. Web app con QR, 'Voy' con confirmación del profe, cuotas, tienda con fotos, ocultar cobros por sede y ayudas. Cartel de Play dentro de la app",
+   "visto": "2026-11-17",
+   "link": "https://play.google.com/store/apps/details?id=com.ebogni.tatamigo"
   },
   {
    "nombre": "Impresión por QR (provisorio)",
