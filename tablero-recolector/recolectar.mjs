@@ -201,6 +201,10 @@ async function cults() {
     if (j.errors) throw new Error(j.errors.map(e => e.message).join('; ').slice(0, 200));
     return j.data.myself;
   };
+  // Cults3D bloquea al servidor (IP de Hostinger, "Access Denied") desde nov 2026: la PC de Emanuel le pregunta cada 2 h y manda
+  // lo crudo a tablero/cults-pc.php (firmado con la misma llave de Cults), que lo deja en cults-pc.json. Si está fresco, se usa eso.
+  let pc = null; try { const st = fs.statSync(DIR + 'cults-pc.json'); if (Date.now() - st.mtimeMs < 8 * 3600e3) pc = JSON.parse(fs.readFileSync(DIR + 'cults-pc.json', 'utf8')); } catch (e) { }
+  if (pc && pc.yo && pc.modelos && pc.ventas) return armarCults(pc.yo, pc.modelos, pc.ventas, pc.cuando);
   const yo = await pedir(`{ myself { user { nick creationsCount followersCount url } activityNotificationsBatch(limit: 60) { results { activity { verb createdAt actor { nick url } target { ... on Creation { name(locale: ES) url } } } } } } }`);
   // Modelos (descargas, vistas, me gusta) y ventas, de a 100.
   const modelos = [], ventas = [];
@@ -212,6 +216,9 @@ async function cults() {
     const b = await pedir(`{ myself { salesBatch(limit: 100, offset: ${off}) { results { createdAt payedOutAt income { cents currency } buyer { nick url } orderCountry { code } creation { name(locale: ES) url } } } } }`);
     const r = b.salesBatch.results; ventas.push(...r); if (r.length < 100) break;
   }
+  return armarCults(yo, modelos, ventas);
+}
+function armarCults(yo, modelos, ventas, desdePC) {
   const u = yo.user, mon = ventas[0]?.income.currency || 'EUR';
   const plata = n => (n / 100).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + mon;
   const sum = (arr, k) => arr.reduce((t, x) => t + (x[k] || 0), 0);
@@ -240,7 +247,7 @@ async function cults() {
   ];
   items.push({ nombre: recientes.length ? 'Últimas descargas' : 'Sin descargas recientes', valor: '', titulo: true });
   for (const r of recientes) items.push({ nombre: '· ' + r.quien + (r.pais ? ' ' + r.pais : ''), valor: r.tipo === 'gratis' ? 'gratis' : r.tipo, detalle: `${r.modelo} · ${fecha(r.cuando)}`, sub: true, agradecer: { nick: r.quien, perfil: r.perfil, idioma: r.idioma } });
-  return { id: 'cults', titulo: 'Cults3D', icono: '🧩', items, cuando: { hasta: 'instante', nota: 'plata: Cults3D libera cada venta al mes' } };
+  return { id: 'cults', titulo: 'Cults3D', icono: '🧩', items, cuando: { hasta: 'instante', nota: 'plata: Cults3D libera cada venta al mes' + (desdePC ? ' · datos traídos por tu PC el ' + new Date(desdePC).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '') } };
 }
 
 // Contador abacus: a veces tarda 30 s en contestar. Se consulta de a 5 a la vez y cada consulta corta a los 8 s
@@ -414,9 +421,11 @@ if (previo && previo.cults) CULTS = CULTS || previo.cults;
 // Cults3D: se le pregunta como mucho cada 2 h (cada 10 min lo bloqueaba); si falla, se espera 3 h. El ↻ de su tarjeta fuerza.
 const CULTS_CADA = 2 * 3600e3, CULTS_ESPERA_ERROR = 3 * 3600e3;
 let cultsProximo = (previo && previo.cultsProximo) || 0;
+const cultsPCnuevo = () => { try { return fs.statSync(DIR + 'cults-pc.json').mtimeMs > ((previo && previo.cultsPCvisto) || 0); } catch (e) { return false; } };
+let cultsPCvisto = (previo && previo.cultsPCvisto) || 0; try { cultsPCvisto = Math.max(cultsPCvisto, fs.statSync(DIR + 'cults-pc.json').mtimeMs); } catch (e) { }
 for (const [n, f] of [['AdMob', admob], ['Google Play', play], ['YouTube', youtube], ['Clics', clics], ['Estoy viva', viva], ['Portales', portales], ['Cults3D', cults], ['Apps en camino', enCamino], ['Sugerencias', sugerencias]]) {
   if (!corre(IDS[n])) { const p = previo && previo.secciones.find(s => s.id === IDS[n]); if (p) { secciones.push(p); continue; } }
-  if (n === 'Cults3D' && FUENTE !== 'cults' && Date.now() < cultsProximo) { const p = previo && previo.secciones.find(s => s.id === 'cults'); if (p) { secciones.push(p); continue; } }
+  if (n === 'Cults3D' && FUENTE !== 'cults' && Date.now() < cultsProximo && !cultsPCnuevo()) { const p = previo && previo.secciones.find(s => s.id === 'cults'); if (p) { secciones.push(p); continue; } }
   const t0 = Date.now();
   if (n === 'Cults3D') cultsProximo = Date.now() + CULTS_ESPERA_ERROR; // si sale bien se corrige abajo
   try { const sec = await f(); if (n === 'Cults3D') cultsProximo = Date.now() + CULTS_CADA; console.log(`${n}: ${((Date.now() - t0) / 1000).toFixed(1)} s`); sec.buscado = new Date().toISOString(); sec.cuando ||= { hasta: 'instante' }; secciones.push(sec); } catch (e) { errores.push(n + ': ' + e.message); const p = previo && previo.secciones.find(s => s.titulo.includes(n)); if (p) secciones.push({ ...p, viejo: true, error: e.message }); }
@@ -462,7 +471,7 @@ for (const [k, n] of [['playgama', 'Playgama'], ['crazygames', 'CrazyGames'], ['
 const sumar = k => fuentesPlata.reduce((t, x) => t + (x[k] || 0), 0);
 const INGRESOS = { mesUSD: sumar('mesUSD'), cobrarUSD: sumar('cobrarUSD'), fuentes: fuentesPlata, cotizacion: cot };
 (hist['total|ingresos'] ||= {})[dia] = INGRESOS.mesUSD;
-const datos = { v: 2, ingresos: INGRESOS, cults: CULTS, apps: Object.values(APPS).sort((a, b) => (b.ganMes || 0) - (a.ganMes || 0) || (b.instalaciones || b.descargasMin || 0) - (a.instalaciones || a.descargasMin || 0)), actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist, clicsCrudos: CRUDOS, disparar: E.TABLERO_DISPARAR || null, promoListo: botonPromo === 'listo', cultsProximo };
+const datos = { v: 2, ingresos: INGRESOS, cults: CULTS, apps: Object.values(APPS).sort((a, b) => (b.ganMes || 0) - (a.ganMes || 0) || (b.instalaciones || b.descargasMin || 0) - (a.instalaciones || a.descargasMin || 0)), actualizado: new Date().toISOString(), plata: PLATA, descargas, avisos, secciones, errores, historial: hist, clicsCrudos: CRUDOS, disparar: E.TABLERO_DISPARAR || null, promoListo: botonPromo === 'listo', cultsProximo, cultsPCvisto };
 fs.writeFileSync(SALIDA, JSON.stringify(await cifrar(K, datos)));
 // PasaLED versión web: cuando la app aparece en Google Play, la página de descarga (pasaled/) pasa a mostrar el botón de Play.
 try {
