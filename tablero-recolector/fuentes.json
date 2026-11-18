@@ -92,6 +92,9 @@
    {
     "clave": "tatamigo",
     "nombre": "TatamiGo"
+   },{
+    "clave": "pasaled",
+    "nombre": "PasaLED"
    }
   ],
   "canales": [
