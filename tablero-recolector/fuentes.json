@@ -93,8 +93,7 @@
     "clave": "tatamigo",
     "nombre": "TatamiGo", "promo": "tatamigo"},{
     "clave": "pasaled",
-    "nombre": "PasaLED"
-   }
+    "nombre": "PasaLED", "promo": "pasaled"}
   ],
   "canales": [
    "organico",
