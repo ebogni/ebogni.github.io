@@ -15,6 +15,7 @@ html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui
 body{padding:calc(14px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(90px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));max-width:1100px;margin:0 auto}
 header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 header h1{font-size:1.35em;margin:0;flex:1}
+header a{color:var(--tx);text-decoration:none;background:var(--card2);border-radius:999px;padding:8px 14px;font-size:.9em;white-space:nowrap}
 .nota{color:var(--mu);font-size:.85em;margin:0 0 10px}
 .aviso{background:#3a2f12;border:1px solid #6b5520;color:#ffe2a0;border-radius:12px;padding:10px 12px;font-size:.9em;margin-bottom:12px}
 .nueva{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:12px;margin-bottom:14px}
@@ -25,27 +26,45 @@ header h1{font-size:1.35em;margin:0;flex:1}
 button{font:inherit;border:0;border-radius:999px;padding:9px 16px;cursor:pointer;background:var(--card2);color:var(--tx)}
 button.pri{background:var(--oro);color:#1b1500;font-weight:700}
 button:disabled{opacity:.5;cursor:default}
+.pestanas{display:flex;gap:6px;margin-bottom:12px;background:var(--card);border:1px solid var(--bd);border-radius:999px;padding:4px}
+.pestanas button{flex:1;background:transparent;color:var(--mu);padding:8px 10px}
+.pestanas button.on{background:var(--card2);color:var(--tx);font-weight:700}
 .barra{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
 .buscar{background:var(--card);border:1px solid var(--bd);border-radius:999px;padding:9px 14px;flex:1 1 180px;width:auto}
 .grilla{columns:280px;column-gap:12px}
 .idea{break-inside:avoid;background:var(--card);border:1px solid var(--bd);border-top:5px solid var(--bd);border-radius:var(--r);padding:12px 14px;margin:0 0 12px;display:block;width:100%}
+.idea.hecha{border-top-color:var(--verde)}
+.idea.descartada{border-top-color:var(--rojo);opacity:.85}
 .idea h3{margin:0 0 4px;font-size:1.03em}
-.cat{display:inline-block;font-size:.75em;font-weight:700;color:#1b1500;background:var(--oro);border-radius:999px;padding:2px 9px;margin-bottom:6px}
+.cat{display:inline-block;font-size:.75em;font-weight:700;color:#1b1500;background:var(--oro);border-radius:999px;padding:2px 9px;margin:0 4px 6px 0}
+.est{display:inline-block;font-size:.75em;font-weight:700;border-radius:999px;padding:2px 9px;margin-bottom:6px}
+.est.hecha{background:var(--verde);color:#062012}.est.descartada{background:var(--rojo);color:#2a0705}
 .chip{padding:7px 12px;font-size:.88em;border:1px solid var(--bd);background:transparent;color:var(--mu)}.chip.on{background:var(--card2);color:var(--tx);border-color:#454b5e}
 .nueva select{background:var(--card2);color:var(--tx);border:0;border-radius:999px;padding:8px 12px;font:inherit;flex:1 1 auto;min-width:0;max-width:60%;margin-right:auto}
 .idea .txt{white-space:pre-wrap;overflow-wrap:anywhere;color:#d9dce6;font-size:.95em}
+.idea .seg{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--card2);border-radius:10px;padding:8px 10px;margin-top:8px;font-size:.9em}
+.idea .seg b{display:block;font-size:.8em;color:var(--mu);margin-bottom:2px}
 .idea .fecha{color:var(--mu);font-size:.78em;margin-top:6px}
-.viable .acc{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.acc{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .acc button{padding:6px 12px;font-size:.85em}
 .vacio{color:var(--mu);text-align:center;padding:30px 10px}
 dialog{background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:var(--r);max-width:420px;width:calc(100% - 30px)}
 dialog::backdrop{background:#000a}
+dialog input,dialog textarea{width:100%;background:var(--card2);color:var(--tx);border:0;border-radius:10px;padding:10px;font:inherit;resize:vertical}
+dialog .acc{justify-content:flex-end}
+.pie-pag{text-align:center;margin-top:24px}
+.pie-pag button{background:transparent;color:var(--mu);font-size:.85em}
 </style>
 </head>
 <body>
-<header><h1>💡 Almacén de ideas</h1></header>
+<header><h1>💡 Almacén de ideas</h1><a href="https://vikingzone.app/tablero/" id="aTablero">📊 Tablero</a></header>
 <p class="nota" id="estado">Cargando tus ideas…</p>
 <div class="aviso" id="aviso" hidden></div>
+
+<div class="pestanas" id="pestanas">
+  <button data-p="pendientes" class="on">💡 Pendientes</button>
+  <button data-p="historial">📜 Historial</button>
+</div>
 
 <form class="nueva" id="fNueva">
   <input id="titulo" placeholder="Título (opcional)" maxlength="120" autocomplete="off">
@@ -56,108 +75,208 @@ dialog::backdrop{background:#000a}
 <div class="barra">
   <input class="buscar" id="buscar" placeholder="🔎 Buscar…" autocomplete="off">
 </div>
-<div class="barra" id="cats">
-</div>
+<div class="barra" id="cats"></div>
 <div class="grilla" id="grilla"></div>
+<div class="pie-pag"><button id="btnClave">🔑 Clave del servidor</button></div>
 
-<dialog id="dlgCat"><form><p>Nombre de la categoría nueva</p><input id="dlgCatNombre" maxlength="40" autocomplete="off" style="width:100%;background:var(--card2);color:var(--tx);border:0;border-radius:10px;padding:10px;font:inherit"><div class="acc" style="justify-content:flex-end"><button type="button" id="dlgCatNo">Cancelar</button><button class="pri" id="dlgCatSi">Crear</button></div></form></dialog>
-<dialog id="dlg"><p id="dlgTxt"></p><div class="acc" style="justify-content:flex-end"><button id="dlgNo">Cancelar</button><button class="pri" id="dlgSi">Borrar</button></div></dialog>
+<dialog id="dlgCat"><form><p>Nombre de la categoría nueva</p><input id="dlgCatNombre" maxlength="40" autocomplete="off"><div class="acc"><button type="button" id="dlgCatNo">Cancelar</button><button class="pri" id="dlgCatSi">Crear</button></div></form></dialog>
+<dialog id="dlg"><p id="dlgTxt"></p><div class="acc"><button id="dlgNo">Cancelar</button><button class="pri" id="dlgSi">Borrar</button></div></dialog>
+<dialog id="dlgCierre"><form><p id="dlgCierreTxt"></p><textarea id="dlgCierreNota" rows="4" maxlength="4000" placeholder="Opcional: cómo salió, qué faltó, qué aprendiste…"></textarea><div class="acc"><button type="button" id="dlgCierreNo">Cancelar</button><button class="pri" id="dlgCierreSi">Listo</button></div></form></dialog>
+<dialog id="dlgClave"><form><p id="dlgClaveTxt"></p><input id="dlgClaveIn" type="password" autocomplete="current-password" maxlength="100"><p class="nota" id="dlgClaveErr"></p><div class="acc"><button type="button" id="dlgClaveNo">Ahora no</button><button class="pri" id="dlgClaveSi">Entrar</button></div></form></dialog>
 
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-let IDEAS = [], texto = '', filtroCat = '';
-const LSC = 'almacen-ideas-categorias';
-let CATS = (() => { try { return JSON.parse(localStorage.getItem(LSC)) || null; } catch (e) { return null; } })() || ['Apps', 'Juegos', 'Diseños 3D', 'MundoLEDs', 'Casa y domótica', 'Otras'];
-const guardarCats = () => { try { localStorage.setItem(LSC, JSON.stringify(CATS)); } catch (e) { } };
-let col = null, local = false;
+const ahora = () => new Date().toISOString();
+const API = location.hostname.endsWith('vikingzone.app') ? 'api.php' : 'https://vikingzone.app/ideas/api.php';
 
-// ---------- Guardado: en tu cuenta (privado) o, si no se puede, en este navegador ----------
-const LS = 'almacen-ideas';
-const leerLocal = () => { try { return JSON.parse(localStorage.getItem(LS) || '[]'); } catch (e) { return []; } };
-const guardarLocal = () => { try { localStorage.setItem(LS, JSON.stringify(IDEAS)); } catch (e) { } };
-async function guardar(idea) {
-  if (local) { const i = IDEAS.findIndex(x => x.id === idea.id); if (i >= 0) IDEAS[i] = idea; else IDEAS.push(idea); guardarLocal(); pintar(); return; }
-  await col.doc(idea.id).set(idea);
-}
-async function borrar(id) {
-  if (local) { IDEAS = IDEAS.filter(x => x.id !== id); guardarLocal(); pintar(); return; }
-  await col.doc(id).delete();
+// ---------- Datos locales (copia en el celu, para que ande sin internet) ----------
+const LS = 'almacen-ideas', LSC = 'almacen-ideas-categorias', LSP = 'almacen-ideas-pendientes-subir', LSK = 'almacen-ideas-clave';
+const leer = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } };
+const escribir = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } };
+let TODAS = leer(LS, []);              // Incluye las borradas (marcadas), para poder avisarle al servidor
+let CATS = leer(LSC, null) || ['Apps', 'Juegos', 'Diseños 3D', 'MundoLEDs', 'Casa y domótica', 'Otras'];
+let PEND = new Set(leer(LSP, []));     // Ids que cambiaron en el celu y falta subir
+let CLAVE = leer(LSK, '');
+let catsCambiadas = false;
+for (const x of TODAS) { x.estado ||= 'pendiente'; x.actualizada ||= x.creada; }
+const visibles = () => TODAS.filter(x => !x.borrada);
+const guardarLocal = () => { escribir(LS, TODAS); escribir(LSP, [...PEND]); escribir(LSC, CATS); };
+
+function cambiar(idea) {
+  idea.actualizada = ahora();
+  const i = TODAS.findIndex(x => x.id === idea.id);
+  if (i >= 0) TODAS[i] = idea; else TODAS.push(idea);
+  PEND.add(idea.id); guardarLocal(); pintar(); sincronizar();
 }
 
+// ---------- Servidor ----------
+let sincronizando = false, otraVez = false, enLinea = false;
+async function llamar(cuerpo) {
+  const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Clave': CLAVE }, body: JSON.stringify(cuerpo) });
+  const j = await r.json().catch(() => ({ error: 'Respuesta rara del servidor.' }));
+  if (!r.ok) { const e = new Error(j.error || 'Error'); Object.assign(e, j); throw e; }
+  return j;
+}
+async function sincronizar() {
+  if (sincronizando) { otraVez = true; return; }
+  if (!CLAVE) { pedirClave(); return; }
+  sincronizando = true;
+  try {
+    const envio = TODAS.filter(x => PEND.has(x.id));
+    const j = await llamar({ accion: 'sincronizar', ideas: envio, ...(catsCambiadas ? { categorias: CATS } : {}) });
+    const subidas = new Set(envio.map(x => x.id));
+    // Lo del servidor manda, salvo lo que cambió en el celu mientras se subía
+    const locales = new Map(TODAS.filter(x => PEND.has(x.id) && !subidas.has(x.id)).map(x => [x.id, x]));
+    TODAS = j.ideas.map(x => locales.get(x.id) || x);
+    for (const [id, x] of locales) if (!TODAS.some(y => y.id === id)) TODAS.push(x);
+    for (const id of subidas) if (!locales.has(id)) PEND.delete(id);
+    if (j.categorias && !catsCambiadas) CATS = j.categorias;
+    catsCambiadas = false; enLinea = true;
+    guardarLocal(); avisar(''); pintar();
+  } catch (e) {
+    enLinea = false;
+    if (e.claveMal || e.sinClave) { CLAVE = ''; escribir(LSK, ''); pedirClave(e.sinClave ? 'crear' : 'mal'); }
+    else if (e.message && !/fetch|network|Load failed/i.test(e.message)) avisar(e.message);
+    pintarEstado();
+  } finally { sincronizando = false; if (otraVez) { otraVez = false; sincronizar(); } }
+}
+function pintarEstado() {
+  const falta = PEND.size;
+  $('estado').textContent = enLinea ? '☁️ Guardado en el servidor.' : (CLAVE ? '📱 Sin conexión con el servidor: se guarda en el celu y se sube solo después.' : '📱 Guardando solo en este celu. Poné la clave para guardarlo en el servidor.') + (falta && !enLinea ? ` (${falta} sin subir)` : '');
+}
+
+// ---------- Clave ----------
+let modoClave = 'entrar';
+async function pedirClave(motivo) {
+  if ($('dlgClave').open) return;
+  let tiene = true;
+  try { const r = await fetch(API + '?accion=estado'); tiene = (await r.json()).tieneClave; } catch (e) { pintarEstado(); return; }
+  modoClave = tiene ? 'entrar' : 'crear';
+  $('dlgClaveTxt').textContent = tiene ? 'Clave del almacén en el servidor' : 'Primera vez: inventá una clave para el almacén (mínimo 6 letras o números). Te la va a pedir en cada celu o compu nueva.';
+  $('dlgClaveSi').textContent = tiene ? 'Entrar' : 'Crear clave';
+  $('dlgClaveErr').textContent = motivo === 'mal' ? 'La clave guardada no anduvo. Escribila de nuevo.' : '';
+  $('dlgClaveIn').value = ''; $('dlgClave').showModal(); $('dlgClaveIn').focus();
+}
+$('dlgClaveNo').onclick = () => { $('dlgClave').close(); pintarEstado(); };
+$('dlgClaveSi').onclick = async e => {
+  e.preventDefault();
+  const c = $('dlgClaveIn').value; if (!c) return;
+  try {
+    if (modoClave === 'crear') await llamar({ accion: 'crearClave', clave: c });
+    CLAVE = c;
+    await llamar({ accion: 'leer' });
+    escribir(LSK, CLAVE); $('dlgClave').close();
+    // Lo que había en el celu se sube todo la primera vez
+    for (const x of TODAS) PEND.add(x.id);
+    catsCambiadas = modoClave === 'crear'; guardarLocal(); sincronizar();
+  } catch (err) { CLAVE = ''; $('dlgClaveErr').textContent = err.message || 'No se pudo conectar.'; }
+};
+$('btnClave').onclick = () => pedirClave();
 
 // ---------- Pantalla ----------
+let pestana = 'pendientes', texto = '', filtroCat = '', filtroHist = '';
 function avisar(t) { $('aviso').textContent = t; $('aviso').hidden = !t; }
-const fecha = iso => new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+const fecha = iso => iso ? new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '';
+const enPestana = x => pestana === 'pendientes' ? x.estado === 'pendiente' : x.estado !== 'pendiente';
 function pintarCats() {
-  const usadas = [...new Set(IDEAS.map(x => x.categoria).filter(Boolean))];
-  for (const c of usadas) if (!CATS.includes(c)) CATS.push(c);
+  const V = visibles();
+  for (const c of new Set(V.map(x => x.categoria).filter(Boolean))) if (!CATS.includes(c)) CATS.push(c);
   const sel = $('categoria'), elegida = sel.value || CATS[0];
   sel.innerHTML = CATS.map(c => `<option${c === elegida ? ' selected' : ''}>${esc(c)}</option>`).join('') + '<option value="__nueva">➕ Nueva categoría…</option>';
-  const cuenta = c => IDEAS.filter(x => (x.categoria || 'Otras') === c).length;
-  $('cats').innerHTML = `<button class="chip${filtroCat ? '' : ' on'}" data-c="">Todas (${IDEAS.length})</button>` + CATS.filter(c => cuenta(c)).map(c => `<button class="chip${filtroCat === c ? ' on' : ''}" data-c="${esc(c)}">${esc(c)} (${cuenta(c)})</button>`).join('');
+  const L = V.filter(enPestana);
+  const cuenta = c => L.filter(x => (x.categoria || 'Otras') === c).length;
+  let h = `<button class="chip${filtroCat ? '' : ' on'}" data-c="">Todas (${L.length})</button>` + CATS.filter(c => cuenta(c)).map(c => `<button class="chip${filtroCat === c ? ' on' : ''}" data-c="${esc(c)}">${esc(c)} (${cuenta(c)})</button>`).join('');
+  if (pestana === 'historial') {
+    const n = e => L.filter(x => x.estado === e).length;
+    h = `<button class="chip${filtroHist ? '' : ' on'}" data-h="">Todo</button><button class="chip${filtroHist === 'hecha' ? ' on' : ''}" data-h="hecha">✅ Hechas (${n('hecha')})</button><button class="chip${filtroHist === 'descartada' ? ' on' : ''}" data-h="descartada">❌ Descartadas (${n('descartada')})</button><span style="width:100%"></span>` + h;
+  }
+  $('cats').innerHTML = h;
+}
+function tarjeta(x) {
+  const cerrada = x.estado !== 'pendiente';
+  return `<article class="idea ${x.estado}">
+    ${cerrada ? `<span class="est ${x.estado}">${x.estado === 'hecha' ? '✅ Hecha' : '❌ Descartada'} el ${fecha(x.cerrada)}</span> ` : ''}<span class="cat">${esc(x.categoria || 'Otras')}</span>
+    ${x.titulo ? `<h3>${esc(x.titulo)}</h3>` : ''}<div class="txt">${esc(x.texto)}</div>
+    ${cerrada && x.nota ? `<div class="seg"><b>Cómo salió</b>${esc(x.nota)}</div>` : ''}
+    <div class="fecha">Anotada el ${fecha(x.creada)}</div>
+    <div class="acc">${cerrada
+      ? `<button data-a="nota" data-id="${x.id}">📝 ${x.nota ? 'Seguimiento' : 'Anotar cómo salió'}</button><button data-a="volver" data-id="${x.id}">↩️ A pendientes</button><button data-a="borrar" data-id="${x.id}">🗑️</button>`
+      : `<button data-a="hecha" data-id="${x.id}">✅ Hecha</button><button data-a="descartada" data-id="${x.id}">❌ Descartar</button><button data-a="editar" data-id="${x.id}">✏️</button><button data-a="borrar" data-id="${x.id}">🗑️</button>`}</div>
+  </article>`;
 }
 function pintar() {
-  pintarCats();
-  let L = IDEAS.slice().sort((a, b) => b.creada.localeCompare(a.creada));
+  pintarCats(); pintarEstado();
+  $('fNueva').hidden = pestana !== 'pendientes';
+  let L = visibles().filter(enPestana);
+  L.sort(pestana === 'pendientes' ? (a, b) => b.creada.localeCompare(a.creada) : (a, b) => (b.cerrada || '').localeCompare(a.cerrada || ''));
   if (filtroCat) L = L.filter(x => (x.categoria || 'Otras') === filtroCat);
-  if (texto) { const q = texto.toLowerCase(); L = L.filter(x => (x.titulo + ' ' + x.texto + ' ' + (x.categoria || '')).toLowerCase().includes(q)); }
-  $('grilla').innerHTML = L.length ? L.map(x => `<article class="idea">
-      <span class="cat">${esc(x.categoria || 'Otras')}</span>
-      ${x.titulo ? `<h3>${esc(x.titulo)}</h3>` : ''}<div class="txt">${esc(x.texto)}</div>
-      <div class="fecha">Anotada el ${fecha(x.creada)}</div>
-      <div class="acc"><button data-ed="${x.id}">✏️ Editar</button><button data-bo="${x.id}">🗑️</button></div>
-    </article>`).join('') : `<div class="vacio">${IDEAS.length ? 'Ninguna idea coincide con la búsqueda.' : 'Todavía no anotaste ninguna idea. Escribila arriba y tocá "Guardar".'}</div>`;
+  if (pestana === 'historial' && filtroHist) L = L.filter(x => x.estado === filtroHist);
+  if (texto) { const q = texto.toLowerCase(); L = L.filter(x => (x.titulo + ' ' + x.texto + ' ' + (x.categoria || '') + ' ' + (x.nota || '')).toLowerCase().includes(q)); }
+  const vacio = texto || filtroCat || filtroHist ? 'Ninguna idea coincide con la búsqueda.' : pestana === 'pendientes' ? 'No hay ideas pendientes. Escribí una arriba y tocá "Guardar".' : 'Todavía no hay nada en el historial. Cuando marques una idea como hecha o descartada, aparece acá.';
+  $('grilla').innerHTML = L.length ? L.map(tarjeta).join('') : `<div class="vacio">${vacio}</div>`;
 }
 
+// ---------- Acciones ----------
 let editando = null;
-$('fNueva').addEventListener('submit', async e => {
+$('fNueva').addEventListener('submit', e => {
   e.preventDefault();
   const t = $('texto').value.trim(), ti = $('titulo').value.trim();
   if (!t && !ti) { $('texto').focus(); return; }
-  const base = editando ? IDEAS.find(x => x.id === editando) : null;
+  const base = editando ? TODAS.find(x => x.id === editando) : null;
   const cat = $('categoria').value === '__nueva' ? 'Otras' : $('categoria').value;
-  const idea = base ? { ...base, titulo: ti, texto: t || ti, categoria: cat } : { categoria: cat, id: 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), titulo: ti, texto: t || ti, creada: new Date().toISOString() };
-  $('btnGuardar').disabled = true;
-  try { await guardar(idea); $('titulo').value = ''; $('texto').value = ''; editando = null; $('btnGuardar').textContent = 'Guardar'; avisar(''); }
-  catch (err) { avisar(err && err.code === 'quota_exceeded' ? 'Se llenó el almacén: borrá algunas ideas viejas.' : 'No se pudo guardar. Probá de nuevo.'); }
-  finally { $('btnGuardar').disabled = false; }
+  const idea = base ? { ...base, titulo: ti, texto: t || ti, categoria: cat } : { id: 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), titulo: ti, texto: t || ti, categoria: cat, creada: ahora(), estado: 'pendiente', cerrada: null, nota: '', borrada: 0 };
+  cambiar(idea);
+  $('titulo').value = ''; $('texto').value = ''; editando = null; $('btnGuardar').textContent = 'Guardar';
 });
 $('btnLimpiar').onclick = () => { $('titulo').value = ''; $('texto').value = ''; editando = null; $('btnGuardar').textContent = 'Guardar'; };
 $('buscar').oninput = e => { texto = e.target.value.trim(); pintar(); };
-let aBorrar = null;
+$('pestanas').onclick = e => { const b = e.target.closest('[data-p]'); if (!b) return; pestana = b.dataset.p; filtroCat = ''; filtroHist = ''; for (const x of $('pestanas').children) x.classList.toggle('on', x === b); pintar(); };
+
+let aBorrar = null, cierre = null;
 $('grilla').onclick = e => {
-  const b = e.target.closest('button'); if (!b) return;
-  const idea = IDEAS.find(x => x.id === (b.dataset.ed || b.dataset.bo)); if (!idea) return;
-  if (b.dataset.ed) { editando = idea.id; $('titulo').value = idea.titulo; $('categoria').value = idea.categoria || 'Otras'; $('texto').value = idea.texto; $('btnGuardar').textContent = 'Guardar cambios'; window.scrollTo({ top: 0, behavior: 'smooth' }); $('texto').focus(); }
-  if (b.dataset.bo) { aBorrar = idea.id; $('dlgTxt').textContent = '¿Borrar "' + (idea.titulo || idea.texto.slice(0, 60)) + '"? No se puede deshacer.'; $('dlg').showModal(); }
+  const b = e.target.closest('button[data-a]'); if (!b) return;
+  const idea = TODAS.find(x => x.id === b.dataset.id); if (!idea) return;
+  const a = b.dataset.a;
+  if (a === 'editar') { editando = idea.id; $('titulo').value = idea.titulo; $('categoria').value = idea.categoria || 'Otras'; $('texto').value = idea.texto; $('btnGuardar').textContent = 'Guardar cambios'; window.scrollTo({ top: 0, behavior: 'smooth' }); $('texto').focus(); }
+  if (a === 'borrar') { aBorrar = idea.id; $('dlgTxt').textContent = '¿Borrar "' + (idea.titulo || idea.texto.slice(0, 60)) + '"? No se puede deshacer.'; $('dlg').showModal(); }
+  if (a === 'volver') cambiar({ ...idea, estado: 'pendiente', cerrada: null });
+  if (a === 'hecha' || a === 'descartada' || a === 'nota') {
+    cierre = { id: idea.id, estado: a === 'nota' ? idea.estado : a };
+    $('dlgCierreTxt').textContent = a === 'hecha' ? '✅ ¡Bien! ¿Cómo salió?' : a === 'descartada' ? '❌ ¿Por qué la descartás?' : '📝 Seguimiento: cómo salió';
+    $('dlgCierreNota').value = idea.nota || ''; $('dlgCierre').showModal(); $('dlgCierreNota').focus();
+  }
 };
 $('dlgNo').onclick = () => $('dlg').close();
-$('dlgSi').onclick = async () => { $('dlg').close(); try { await borrar(aBorrar); } catch (e) { avisar('No se pudo borrar. Probá de nuevo.'); } };
-
-// ---------- Arranque ----------
-// Categorías: filtrar tocando un botón, crear una nueva desde la lista
-$('cats').onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return; filtroCat = b.dataset.c; pintar(); };
-$('categoria').onchange = () => {
-  if ($('categoria').value !== '__nueva') return;
-  $('dlgCatNombre').value = ''; $('dlgCat').showModal(); $('dlgCatNombre').focus();
+$('dlgSi').onclick = () => { $('dlg').close(); const x = TODAS.find(y => y.id === aBorrar); if (x) cambiar({ ...x, borrada: 1 }); };
+$('dlgCierreNo').onclick = () => $('dlgCierre').close();
+$('dlgCierreSi').onclick = e => {
+  e.preventDefault(); $('dlgCierre').close();
+  const x = TODAS.find(y => y.id === cierre.id); if (!x) return;
+  const nueva = x.estado !== cierre.estado;
+  cambiar({ ...x, estado: cierre.estado, cerrada: nueva ? ahora() : x.cerrada, nota: $('dlgCierreNota').value.trim() });
 };
+
+// Categorías: filtrar tocando un botón, crear una nueva desde la lista
+$('cats').onclick = e => {
+  const h = e.target.closest('[data-h]'); if (h) { filtroHist = h.dataset.h; pintar(); return; }
+  const b = e.target.closest('[data-c]'); if (!b) return; filtroCat = b.dataset.c; pintar();
+};
+$('categoria').onchange = () => { if ($('categoria').value !== '__nueva') return; $('dlgCatNombre').value = ''; $('dlgCat').showModal(); $('dlgCatNombre').focus(); };
 $('dlgCatNo').onclick = () => { $('dlgCat').close(); $('categoria').value = CATS[0]; };
 $('dlgCatSi').onclick = e => {
   e.preventDefault();
   let n = $('dlgCatNombre').value.trim(); if (!n) return;
   n = n[0].toUpperCase() + n.slice(1);
-  if (!CATS.includes(n)) { CATS.push(n); guardarCats(); }
+  if (!CATS.includes(n)) { CATS.push(n); catsCambiadas = true; guardarLocal(); sincronizar(); }
   $('dlgCat').close(); pintarCats(); $('categoria').value = n;
 };
-function modoLocal(motivo) {
-  local = true; IDEAS = leerLocal();
-  $('estado').textContent = 'Guardando solo en este navegador.';
-  if (motivo) avisar(motivo);
-  pintar();
-}
-modoLocal();
-$('estado').textContent = 'Tus ideas se guardan en este celu.';
+
+// ---------- Arranque ----------
+pintar();
+sincronizar();
+addEventListener('online', sincronizar);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) sincronizar(); });
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
