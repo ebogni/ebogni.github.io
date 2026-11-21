@@ -2,7 +2,7 @@
 // y los deja en tablero/datos.json. Lo corre GitHub cada 30 minutos (.github/workflows/tablero.yml).
 // Cada fuente es independiente: si le falta su permiso o falla, el tablero lo muestra y sigue con las demás.
 import fs from 'node:fs';
-import { webcrypto as crypto } from 'node:crypto';
+import { webcrypto as crypto, createHash } from 'node:crypto';
 import gplay from 'google-play-scraper';
 
 const DIR = new URL('.', import.meta.url).pathname;
@@ -49,12 +49,16 @@ async function sugerencias() {
   const col = re => cab.findIndex(c => re.test(c));
   const iF = col(/marca|fecha|time/i), iM = col(/mensaje|sugerencia|idea/i), iT = col(/tipo/i), iA = col(/^app/i), iV = col(/versi/i), iC = col(/contacto/i);
   const v = (f, i) => i >= 0 ? (f[i] || '').trim() : '';
-  const items = filas.slice().reverse().slice(0, 8).map(f => ({
+  // "Ya lo hice" del tablero (tablero/hecho.php): las sugerencias marcadas quedan en sugerencias-hechas.json y no se muestran más.
+  let hechas = []; try { hechas = JSON.parse(fs.readFileSync(DIR + 'sugerencias-hechas.json', 'utf8')); } catch (e) { }
+  const idSug = f => createHash('sha1').update(v(f, iF) + '|' + v(f, iM)).digest('hex').slice(0, 12);
+  const pend = filas.filter(f => !hechas.includes(idSug(f)));
+  const items = pend.slice().reverse().slice(0, 8).map(f => ({ hecho: idSug(f),
     nombre: (/error|falla|bug/i.test(v(f, iT)) ? '🐞 ' : '💡 ') + [v(f, iA) || 'App', v(f, iT)].filter(Boolean).join(' · '), valor: v(f, iF).split(' ')[0] || '—',
     detalle: v(f, iM) + (v(f, iV) ? ` · v${v(f, iV)}` : '') + (v(f, iC) ? ` · contacto: ${v(f, iC)}` : '') }));
   const antes = previo?.secciones?.find(x => x.id === 'sugerencias')?.total;
   const nuevas = antes != null ? filas.length - antes : 0;
-  if (!items.length) items.push({ nombre: 'Todavía no llegó ninguna', valor: '0', detalle: 'Se mandan desde Ajustes → Sugerencias de cada app', estado: 'espera' });
+  if (!items.length) items.push(filas.length ? { nombre: 'Nada pendiente', valor: '✓', detalle: `Las ${filas.length} sugerencias que llegaron ya están marcadas como hechas`, estado: 'bien' } : { nombre: 'Todavía no llegó ninguna', valor: '0', detalle: 'Se mandan desde Ajustes → Sugerencias de cada app', estado: 'espera' });
   return { id: 'sugerencias', titulo: 'Sugerencias de las apps', icono: '💡', items, total: filas.length, nuevas, link: 'https://docs.google.com/spreadsheets/d/' + PLANILLA_SUG };
 }
 
@@ -391,6 +395,7 @@ function enCamino() {
   const dd = f => f ? ' · actualizado el ' + f.slice(8, 10) + '/' + f.slice(5, 7) : '';
   const items = [];
   for (const a of F.enCamino || []) {
+    if (/producci|publicad/i.test(a.etapa)) continue; // ya salió a producción: tiene su propia tarjeta en "Tus apps"
     items.push({ nombre: a.nombre, valor: a.etapa, estado: /publicad/i.test(a.etapa) ? 'bien' : 'espera', detalle: a.que, link: a.link });
     items.push({ nombre: 'Ahora', valor: a.paso, sub: true, detalle: (a.hecho ? 'Hecho: ' + a.hecho : '') + dd(a.visto) });
   }

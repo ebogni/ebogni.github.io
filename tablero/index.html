@@ -356,7 +356,8 @@ function pintar(D) {
       const c = cambio(H[s.id + '|' + it.nombre]);
       const extra = [it.detalle ? `<span>${esc(it.detalle)}</span>` : '', c].filter(Boolean).join('');
       const ag = it.agradecer ? `<button class="agr" data-n="${esc(it.agradecer.nick)}" data-p="${esc(it.agradecer.perfil)}" data-i="${esc(it.agradecer.idioma)}">💌 Agradecer</button>` : '';
-      return `<div class="fila ${it.sub ? 'sub' : ''} ${it.estado || ''}"><span class="n">${nom} ${ag}</span><span class="v">${esc(it.valor)}${it.unidad ? `<small>${esc(it.unidad)}</small>` : ''}</span>${extra ? `<span class="x">${extra}</span>` : ''}</div>`;
+      const hc = it.hecho ? `<button class="agr hecho" data-h="${esc(it.hecho)}">✓ Ya lo hice</button>` : '';
+      return `<div class="fila ${it.sub ? 'sub' : ''} ${it.estado || ''}"><span class="n">${nom} ${ag}${hc}</span><span class="v">${esc(it.valor)}${it.unidad ? `<small>${esc(it.unidad)}</small>` : ''}</span>${extra ? `<span class="x">${extra}</span>` : ''}</div>`;
     }).join('')}</section>`;
   }
   $('grilla').innerHTML = g;
@@ -452,7 +453,19 @@ document.addEventListener('click', async e => {
 });
 // 💌 Agradecer: escribís en castellano, se traduce (traductor gratuito, sin clave), se copia y se abre el perfil en Cults3D para pegarlo.
 let GR = null;
-document.addEventListener('click', e => {
+document.addEventListener("click", async e => {
+  const h = e.target.closest('.hecho');
+  if (h) { // "Ya lo hice": el servidor la anota (firmado con la clave del tablero) y no aparece más
+    e.preventDefault(); h.disabled = true; h.textContent = 'Guardando…';
+    try {
+      const mk = await crypto.subtle.importKey('raw', await crypto.subtle.exportKey('raw', K), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+      const f = [...new Uint8Array(await crypto.subtle.sign('HMAC', mk, new TextEncoder().encode(h.dataset.h)))].map(x => x.toString(16).padStart(2, '0')).join('');
+      const r = await fetch('hecho.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'id=' + encodeURIComponent(h.dataset.h) + '&firma=' + f });
+      if (!r.ok) throw new Error('el servidor dijo ' + r.status);
+      h.closest('.fila').remove();
+    } catch (er) { h.disabled = false; h.textContent = '✓ Ya lo hice'; $('estado').textContent = 'No pude guardar: ' + er.message; }
+    return;
+  }
   const b = e.target.closest('.agr'); if (!b) return;
   GR = { nick: b.dataset.n, perfil: b.dataset.p };
   $('grQuien').textContent = '💌 Agradecer a ' + GR.nick; $('grIdioma').value = b.dataset.i || 'en'; $('grTrad').hidden = true;
