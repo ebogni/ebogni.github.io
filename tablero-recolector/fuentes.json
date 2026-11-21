@@ -91,8 +91,7 @@
    },
    {
     "clave": "tatamigo",
-    "nombre": "TatamiGo"
-   },{
+    "nombre": "TatamiGo", "promo": "tatamigo"},{
     "clave": "pasaled",
     "nombre": "PasaLED"
    }
