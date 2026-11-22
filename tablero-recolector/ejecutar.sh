@@ -2,6 +2,8 @@
 # Lo corre la tarea programada del servidor (Hostinger) CADA MINUTO. Junta los datos del tablero si:
 # alguien tocó ↻ (refrescar.pedido) o pasaron 10 minutos desde la última vez. Nunca corre dos a la vez.
 cd "$(dirname "$0")" || exit 1
+# Tareas diarias de VikingZone (antes "cron" de GitHub): ~/vz-programados/programados.sh decide qué toca hoy. Se edita en la PC (04 - Herramientas\PC\servidor).
+[ -x "$HOME/vz-programados/programados.sh" ] && ( "$HOME/vz-programados/programados.sh" >/dev/null 2>&1 & )
 L=ultimo.ok; P=refrescar.pedido
 # Clave nueva del tablero (la dejó nueva-clave.php): recifrar todo y seguir con la clave nueva.
 if [ -f clave.nueva ]; then exec 9>corriendo.lock; flock -w 600 9 || exit 0; echo "== $(date '+%F %T') cambio de clave" >> registro.txt
