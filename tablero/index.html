@@ -96,6 +96,10 @@ body.moviendo{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .leyenda{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82em;color:var(--mu);margin-top:4px}.leyenda i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 .hb{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;padding:6px 0}.hb .hn{font-weight:600;overflow-wrap:anywhere}.hb .hv{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}.hb .hp{grid-column:1/-1;height:9px;background:var(--card2);border-radius:99px;overflow:hidden}.hb .hp i{display:block;height:100%;background:linear-gradient(90deg,var(--azul),#9fc4ff);border-radius:99px}
 .tabla{max-height:340px;overflow:auto}.tabla table{width:100%;border-collapse:collapse;font-size:.88em;font-variant-numeric:tabular-nums}.tabla th,.tabla td{padding:5px 8px;border-top:1px solid var(--bd);text-align:right}.tabla th:first-child,.tabla td:first-child{text-align:left}.tabla th{color:var(--mu);font-weight:600;position:sticky;top:0;background:var(--card)}
+.conf h2{margin:0 0 6px;font-size:1.05rem}.conf-ayuda{font-size:.82rem;opacity:.75;margin:4px 0 10px}
+.clave{border-top:1px solid var(--card2);padding:9px 0}.clave b{display:block}.clave small{opacity:.7}
+.clave .fila2{display:flex;gap:6px;margin-top:6px}.clave input{flex:1;min-width:0;padding:8px;border-radius:8px;border:1px solid var(--card2);background:var(--bg);color:inherit}
+.clave button{background:#2f9e5a;border:none;color:#fff;font-weight:700;padding:8px 12px;border-radius:8px}.clave .ok{color:#2f9e5a}.clave .falta{color:#d97706}
 </style>
 </head>
 <body>
@@ -107,9 +111,15 @@ body.moviendo{cursor:grabbing;user-select:none;-webkit-user-select:none}
     <p id="msgLogin" class="estado"></p>
   </section>
   <section id="tablero" class="oculto">
-    <header><h1>📊 VikingZone</h1><div class="rango" id="rango" role="group" aria-label="Período"><button data-r="hoy">Hoy</button><button data-r="sem">7 días</button><button data-r="mes">Mes</button></div><button class="ctrl" id="btnAct" aria-label="Actualizar">↻</button><button class="ctrl" id="btnSalir">Salir</button></header>
+    <header><h1>📊 VikingZone</h1><div class="rango" id="rango" role="group" aria-label="Período"><button data-r="hoy">Hoy</button><button data-r="sem">7 días</button><button data-r="mes">Mes</button></div><button class="ctrl" id="btnConf" aria-label="Configuración">⚙️</button><button class="ctrl" id="btnAct" aria-label="Actualizar">↻</button><button class="ctrl" id="btnSalir">Salir</button></header>
     <p class="estado" id="estado"></p>
     <div id="avisos"></div>
+    <section class="card conf" id="conf" hidden>
+      <h2>⚙️ Configuración · Claves de la PC</h2>
+      <p class="conf-ayuda">Se cifran acá mismo con la llave de tu PC y viajan así: ni el servidor ni Claude las pueden leer. Tu PC las guarda en el Administrador de credenciales de Windows en menos de un minuto (tiene que estar prendida).</p>
+      <div id="confLista"></div>
+      <p class="conf-ayuda" id="confPc"></p>
+    </section>
     <div id="arriba">
       <div class="bloque" data-k="kpis"><div class="cuando" id="cuandoKpis"></div><div class="kpis" id="kpis"></div></div>
       <div class="bloque" data-k="ingresos"><section class="card ingresos" id="ingresos" hidden></section></div>
@@ -422,6 +432,40 @@ async function refrescar(fuente, boton, solo) {
 }
 document.addEventListener('click', e => { const b = e.target.closest('.rf'); if (b) refrescar(b.dataset.f, b); });
 // 📣 Armar publicación: larga la Promoción (repo apps-android) para esa app y sigue el pedido hasta que el clip sale para Telegram.
+// ⚙️ Configuración: claves para la PC. Se cifran con la llave pública de la PC (RSA-OAEP) y se firman con la llave del tablero.
+const CLAVES_PC = [
+  ['TELEGRAM_TOKEN', 'Token del bot de Telegram', 'En Telegram: @BotFather → /mybots → tu bot → API Token'],
+  ['TELEGRAM_CHAT_ID', 'Número de chat de Telegram', 'El chat donde te llegan los videos de la promoción'],
+  ['META_APP_SECRET', 'Secreto de la app de Meta', 'developers.facebook.com → VikingZone Publicador → Configuración → Básica → Clave secreta'],
+  ['GEMINI_API_KEY', 'Clave de Gemini', 'aistudio.google.com → Get API key'],
+  ['CULTS_KEY', 'Llave de la API de Cults3D', 'cults3d.com/en/api/keys'],
+  ['CARRERA_CLAVE', 'Contraseña de la clave de subida de la Carrera', 'Está en 00 - Firmas, Datos de la clave'],
+];
+async function verConf() {
+  const c = $('conf'); c.hidden = !c.hidden; if (c.hidden) return;
+  let est = {}; try { est = await (await fetch('claves-pc-estado.json?' + Date.now(), { cache: 'no-store' })).json(); } catch (e) { }
+  const cl = est.claves || {};
+  $('confLista').innerHTML = CLAVES_PC.map(([n, t, d]) => `<div class="clave"><b>${t} ${cl[n] ? '<span class="ok">✓ cargada' + (cl[n] !== 'cargada antes' ? ' el ' + esc(cl[n]) : '') + '</span>' : '<span class="falta">· falta</span>'}</b><small>${d}</small>${cl[n + '_error'] ? '<br><small class="falta">' + esc(cl[n + '_error']) + '</small>' : ''}
+    <div class="fila2"><input type="password" autocomplete="off" placeholder="Pegala acá" data-n="${n}"><button data-g="${n}">Guardar</button></div></div>`).join('');
+  $('confPc').textContent = est.pc ? 'Tu PC se fijó por última vez el ' + est.pc + '.' : 'Tu PC todavía no se conectó (prendela y esperá un minuto).';
+}
+document.addEventListener('click', async e => {
+  if (e.target.id === 'btnConf') { verConf(); return; }
+  const g = e.target.closest('[data-g]'); if (!g) return;
+  const n = g.dataset.g, inp = document.querySelector(`input[data-n="${n}"]`), v = inp.value.trim();
+  if (!v) { inp.focus(); return; }
+  g.disabled = true; g.textContent = 'Cifrando…';
+  try {
+    const pub = await (await fetch('pc-publica.json?' + Date.now(), { cache: 'no-store' })).json();
+    const pk = await crypto.subtle.importKey('jwk', { kty: 'RSA', n: pub.n, e: pub.e, alg: 'RSA-OAEP', ext: true }, { name: 'RSA-OAEP', hash: 'SHA-1' }, false, ['encrypt']);
+    const cif = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, pk, new TextEncoder().encode(v)))));
+    const mk = await crypto.subtle.importKey('raw', await crypto.subtle.exportKey('raw', K), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const f = [...new Uint8Array(await crypto.subtle.sign('HMAC', mk, new TextEncoder().encode(n + '|' + cif)))].map(x => x.toString(16).padStart(2, '0')).join('');
+    const r = await fetch('claves-pc.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'nombre=' + n + '&cifrado=' + encodeURIComponent(cif) + '&firma=' + f });
+    if (!r.ok) throw new Error('el servidor dijo ' + r.status);
+    inp.value = ''; g.textContent = '✓ Enviada'; avisar('Clave enviada', 'Tu PC la guarda en menos de un minuto. Volvé a abrir ⚙️ para ver el ✓.', false, 6);
+  } catch (er) { g.disabled = false; g.textContent = 'Guardar'; avisar('No pude mandar la clave', er.message, true, 8); }
+});
 function avisar(titulo, texto, mal, seg) {
   let d = $('aviso'); if (!d) { d = document.createElement('div'); d.id = 'aviso'; document.body.appendChild(d); d.onclick = () => d.classList.remove('ver'); }
   d.innerHTML = `<b>${titulo}</b>${texto || ''}`; d.classList.toggle('mal', !!mal); d.classList.add('ver');
