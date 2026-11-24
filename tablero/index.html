@@ -474,25 +474,26 @@ function avisar(titulo, texto, mal, seg) {
 document.addEventListener('click', async e => {
   const b = e.target.closest('.promo'); if (!b || b.disabled) return;
   const original = '📣 Armar publicación';
-  if (!ULT?.promoListo) { avisar('Todavía no puedo armar publicaciones desde acá', 'Al permiso de GitHub del tablero le falta acceso al repositorio de las apps (apps-android). Se configura una sola vez: pedíselo a Claude y te guía.', true, 12); return; }
-  if (!confirm('¿Armar una publicación de ' + b.dataset.n + ' ahora? Llega por Telegram en unos 5 a 10 minutos y se publica en Facebook e Instagram.')) return;
-  const API = 'https://api.github.com/repos/ebogni/apps-android/actions/workflows/promo.yml', H = { Authorization: 'Bearer ' + ULT.disparar, Accept: 'application/vnd.github+json' };
-  b.disabled = true; b.textContent = '⏳ Mandando el pedido…'; avisar('⏳ Procesando el pedido', 'Le aviso a GitHub que arme la publicación de ' + esc(b.dataset.n) + '…');
-  const desde = new Date(Date.now() - 60000).toISOString();
+  if (!confirm('¿Armar una publicación de ' + b.dataset.n + ' ahora? La arma tu PC (tiene que estar prendida), te llega por Telegram en unos 5 a 10 minutos y se publica en Facebook e Instagram.')) return;
+  b.disabled = true; b.textContent = '⏳ Mandando el pedido…';
   try {
-    const r = await fetch(API + '/dispatches', { method: 'POST', headers: H, body: JSON.stringify({ ref: 'main', inputs: { app: b.dataset.app } }) });
-    if (!r.ok) throw new Error('GitHub dijo ' + r.status);
+    const mk = await crypto.subtle.importKey('raw', await crypto.subtle.exportKey('raw', K), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const f = [...new Uint8Array(await crypto.subtle.sign('HMAC', mk, new TextEncoder().encode('promo|' + b.dataset.app)))].map(x => x.toString(16).padStart(2, '0')).join('');
+    const r = await fetch('pedir-promo.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'app=' + encodeURIComponent(b.dataset.app) + '&firma=' + f });
+    if (!r.ok) throw new Error('el servidor dijo ' + r.status);
   } catch (err) { b.disabled = false; b.textContent = original; avisar('No pude largar la publicación', esc(err.message), true, 12); return; }
-  b.textContent = '✅ Pedido recibido'; avisar('✅ Pedido recibido', 'Ya se está armando el clip y los textos de ' + esc(b.dataset.n) + '. Te llegan por Telegram en 5 a 10 minutos; podés cerrar el tablero.', false, 15);
-  // Seguimiento: cada 20 s mira la corrida (hasta 15 min).
+  b.textContent = '✅ Pedido recibido'; avisar('✅ Pedido recibido', 'Tu PC lo toma en menos de un minuto y arma la publicación de ' + esc(b.dataset.n) + '. Te llega por Telegram en 5 a 10 minutos; podés cerrar el tablero.', false, 15);
+  // Seguimiento: la PC va contando en estado-promo.json (pedido → armando → listo / falló). Cada 20 s, hasta 15 min.
+  const t0 = Date.now() / 1000 - 5;
   for (let i = 0; i < 45; i++) {
     await new Promise(r => setTimeout(r, 20000));
     try {
-      const j = await (await fetch(API + '/runs?event=workflow_dispatch&per_page=3&created=>' + desde, { headers: H })).json();
-      const run = (j.workflow_runs || [])[0]; if (!run) continue;
-      if (run.status !== 'completed') { b.textContent = '🎬 Armando el clip… (' + Math.round((Date.now() - new Date(run.created_at)) / 60000) + ' min)'; continue; }
-      if (run.conclusion === 'success') { b.textContent = '📨 ¡Listo! Mirá Telegram'; avisar('📨 Publicación lista', 'La de ' + esc(b.dataset.n) + ' ya salió para Telegram (y Facebook e Instagram).', false, 20); }
-      else { b.textContent = '⚠️ Falló: probá de nuevo'; avisar('⚠️ La publicación falló', 'GitHub no pudo terminarla (' + esc(run.conclusion) + '). Probá de nuevo o avisale a Claude.', true, 20); }
+      const s = await (await fetch('estado-promo.json?' + Date.now(), { cache: 'no-store' })).json();
+      if (s.app !== b.dataset.app || s.cuando < t0) continue;
+      if (s.estado === 'pedido') { b.textContent = '⏳ Esperando a tu PC…'; if (i === 5) avisar('⏳ Tu PC todavía no lo tomó', '¿Está prendida? Apenas se prenda, lo arma.', true, 10); continue; }
+      if (s.estado === 'armando') { b.textContent = '🎬 Armando el clip… (' + Math.max(1, Math.round((Date.now() / 1000 - s.cuando) / 60)) + ' min)'; continue; }
+      if (s.estado === 'listo') { b.textContent = '📨 ¡Listo! Mirá Telegram'; avisar('📨 Publicación lista', 'La de ' + esc(b.dataset.n) + ' ya salió para Telegram, Facebook e Instagram.', false, 15); }
+      else { b.textContent = '⚠️ Falló: probá de nuevo'; avisar('⚠️ La publicación falló', esc(s.detalle || 'Probá de nuevo o avisale a Claude.'), true, 15); }
       setTimeout(() => { b.disabled = false; b.textContent = original; }, 60000); return;
     } catch (err) { }
   }
