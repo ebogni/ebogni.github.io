@@ -390,7 +390,40 @@ function rentabilidad() {
   return { id: 'rentabilidad', titulo: 'Rentabilidad por app', icono: '💵', items, cuando: { hasta: 'instante', periodo: 'este mes', nota: 'usuarios activos del informe de Play' } };
 }
 
-function enCamino() {
+// 📋 Encuestas de las apps en camino: si la app tiene "encuesta": {"id": "<id de la planilla de respuestas>", "abiertas": [7, 8], "varias": [2]} (o solo el id) en fuentes.json > enCamino,
+// se leen solas las respuestas (mismo permiso de Google que Sugerencias) y se muestran: cuántas, nuevas, lo más elegido y las últimas ideas.
+async function encuesta(a) {
+  if (!a.encuesta || !E.ADMOB_REFRESH_TOKEN) return [];
+  const tok = TOKG || (TOKG = await tokenGoogle(E.GOOGLE_CLIENT_ID || F.admob.clientId, E.GOOGLE_CLIENT_SECRET, E.ADMOB_REFRESH_TOKEN));
+  const idE = typeof a.encuesta === 'object' ? a.encuesta.id : a.encuesta;
+  const link = 'https://docs.google.com/spreadsheets/d/' + idE;
+  const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${idE}/values/A1:Z2000`, { headers: { Authorization: 'Bearer ' + tok } });
+  const j = await r.json();
+  if (!r.ok) return [{ nombre: 'Encuesta', valor: 'No pude leerla', sub: true, estado: 'espera', detalle: j.error?.message || String(r.status), link }];
+  const [cab = [], ...filas] = j.values || [];
+  const hoyAR = new Date().toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', year: 'numeric' });
+  const nuevas = filas.filter(f => { const [d, m, y] = (f[0] || '').split(' ')[0].split('/'); return d && `${d.padStart(2, '0')}/${(m || '').padStart(2, '0')}/${y}` === hoyAR; }).length;
+  const out = [{ nombre: 'Encuesta', valor: filas.length + (filas.length === 1 ? ' respuesta' : ' respuestas') + (nuevas > 0 ? ` (+${nuevas} hoy)` : ''), sub: true, estado: filas.length ? 'bien' : 'espera', detalle: filas.length ? 'Última: ' + (filas[filas.length - 1][0] || '') : 'Todavía nadie contestó', link }];
+  if (!filas.length) return out;
+  // Columnas: "abiertas" = respuestas de texto libre, "varias" = casillas de varias opciones (separadas por coma). Números = número de pregunta (1 = primera).
+  // Si no vienen, se adivina por el título (idea, qué te pasó, comentario, contanos, sugerencia = abierta).
+  const cfg = typeof a.encuesta === 'object' ? a.encuesta : {};
+  const abiertas = new Set(cfg.abiertas || []), varias = new Set(cfg.varias || []);
+  const largas = [], cortas = [];
+  for (let i = 1; i < cab.length; i++) {
+    const vals = filas.map(f => (f[i] || '').trim()).filter(Boolean);
+    if (!vals.length) continue;
+    if (abiertas.has(i) || (!cfg.abiertas && /idea|qu[eé] te pas[oó]|comentario|contanos|sugerencia|algo m[aá]s/i.test(cab[i]))) { largas.push([cab[i], vals]); continue; }
+    const cuenta = {};
+    for (const v of vals) for (const o of (varias.has(i) ? v.split(/,\s*/) : [v])) cuenta[o] = (cuenta[o] || 0) + 1;
+    cortas.push(cab[i].replace(/\?\s*$/, '') + '? ' + Object.entries(cuenta).sort((x, y) => y[1] - x[1]).slice(0, 3).map(([o, n]) => `${o} (${n})`).join(', '));
+  }
+  if (cortas.length) out.push({ nombre: 'Lo más elegido', valor: '📊', sub: true, detalle: cortas.join(' · ') });
+  for (const [preg, vals] of largas) out.push({ nombre: preg.length > 45 ? preg.slice(0, 44) + '…' : preg, valor: vals.length + (vals.length === 1 ? ' texto' : ' textos'), sub: true, detalle: vals.slice(-3).reverse().map(v => '“' + (v.length > 140 ? v.slice(0, 139) + '…' : v) + '”').join(' · ') });
+  return out;
+}
+
+async function enCamino() {
   // Apps nuevas que van por el protocolo (01 - Apps). No hay API: Claude actualiza fuentes.json > enCamino al cerrar cada paso.
   const dd = f => f ? ' · actualizado el ' + f.slice(8, 10) + '/' + f.slice(5, 7) : '';
   const items = [];
@@ -398,6 +431,7 @@ function enCamino() {
     if (/producci|publicad/i.test(a.etapa)) continue; // ya salió a producción: tiene su propia tarjeta en "Tus apps"
     items.push({ nombre: a.nombre, valor: a.etapa, estado: /publicad/i.test(a.etapa) ? 'bien' : 'espera', detalle: a.que, link: a.link });
     items.push({ nombre: 'Ahora', valor: a.paso, sub: true, detalle: (a.hecho ? 'Hecho: ' + a.hecho : '') + dd(a.visto) });
+    try { items.push(...await encuesta(a)); } catch (e) { items.push({ nombre: 'Encuesta', valor: 'Error', sub: true, estado: 'espera', detalle: e.message }); }
   }
   if (!items.length) items.push({ nombre: 'Ninguna por ahora', valor: '—', estado: 'espera' });
   return { id: 'camino', titulo: 'Apps en camino', icono: '🛠️', items };
