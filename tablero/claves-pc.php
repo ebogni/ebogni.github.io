@@ -5,7 +5,7 @@
 header('Content-Type: text/plain'); header('Cache-Control: no-store');
 $base = explode('/domains/', __DIR__)[0] . '/tablero-recolector';
 $f = "$base/claves-pendientes.json";
-$ok = ['GEMINI_API_KEY', 'CULTS_KEY', 'CARRERA_CLAVE', 'TELEGRAM_TOKEN', 'TELEGRAM_CHAT_ID', 'META_APP_SECRET', 'CARIMAGE_API_KEY'];
+$ok = ['GEMINI_API_KEY', 'CULTS_KEY', 'CARRERA_CLAVE', 'TELEGRAM_TOKEN', 'TELEGRAM_CHAT_ID', 'META_APP_SECRET', 'CARIMAGE_API_KEY', 'DEEPSEEK_API_KEY'];
 if (isset($_GET['hay'])) { $h = @json_decode(@file_get_contents($f), true) ?: []; exit((string)count($h)); }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); exit('no'); }
 $nombre = (string)($_POST['nombre'] ?? ''); $cif = (string)($_POST['cifrado'] ?? '');
