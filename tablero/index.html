@@ -362,7 +362,7 @@ function pintar(D) {
   for (const s of D.secciones) {
     if (s.oculta || ['rentabilidad', 'salud', 'viva'].includes(s.id) || (s.id === 'play' && A.length)) continue;
     const nums = s.items.filter(it => !it.sub && nro(it.num ?? it.valor) != null).map(it => ({ n: it.nombre.replace(/^· /, ''), v: nro(it.num ?? it.valor), t: it.valor + (it.unidad ? ' ' + it.unidad : '') }));
-    const puedeG = nums.length >= 2, vS = puedeG ? vistaDe(s.id, 'lista') : 'lista';
+    const puedeG = nums.length >= 2 && !['camino', 'sugerencias'].includes(s.id), vS = puedeG ? vistaDe(s.id, 'lista') : 'lista';
     if (vS === 'graf') { g += `<section class="card" data-k="${s.id}"><h2>${s.icono} ${esc(s.titulo)}${btnVista(s.id, vS)}${rf(s.id)}</h2>${lineaCuando(s)}${hbarras(nums)}</section>`; continue; }
     g += `<section class="card" data-k="${s.id}"><h2>${s.icono} ${esc(s.titulo)}${s.viejo ? '<small>dato anterior</small>' : ''}${puedeG ? btnVista(s.id, vS) : ''}${rf(s.id)}</h2>${lineaCuando(s)}${s.items.map(it => {
       const nom = it.link ? `<a href="${esc(it.link)}" target="_blank" rel="noopener">${esc(it.nombre)} ↗</a>` : esc(it.nombre);
